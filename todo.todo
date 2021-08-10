@@ -1,0 +1,139 @@
+TODO LIST:
+
+ Fait afficher les faces liées à 3G3M (même si pas de face)
+ fait Gérer les notifs de comptage de point
+ fait Ajouter un tableau de décompte de points à la fin
+ fait Vérifier le game progression 
+ Fait Intégrer les joueurs zombies (car il faut pas bloquer le mode choix) => Changement de state =)
+ Fait Ressource selector : modifier pour que si uniquement Or et pas hammer, ne pas afficher les boutons +/-
+ fait Ajouter des tool tip (contenu à définir) : sur les exploits FAIT, sur les pouvoirs. sur les face à choix?
+ fait Gestion du retour des exceptions pour les dialogs
+ Fait Dans le PHP gérer le simple miroir et double miroir dans le steal2 (takeResources)
+ Fait Modifier dans le ressourceSelector pour ne pas slider mais cloner la face avant de la slider
+ Fait Dans le JS gérer le simple miroir et double miroir dans le diceSelector
+ fait Corriger les icones dans les logs
+ Fait Rajouter le couleur sur le pseudo du mec qui se fait OUSTER
+ Fait Ordre des notifs quand on finit un hammer
+ Fait Ajouter du temps aux joueurs qui doivent choisir les ressources
+ Fait Si suraffectation de marteau, mettre le reste en Or
+ Fait Vérifier les sprites stock dans le JS
+ Fait Vérifier pkoi le chest (extension) ne marche pas
+ fait Ajouter des icônes de chest si le player en a
+ fait Gérer l'ajout du chest a l'achat
+ Fait Lors du choix de face à acheter, passer les dés du joueur à plat pour faciliter le choix
+ ✔ Truc pour mettre le dé à plat?
+ Fait dans le JS bloquer si toutes les ressources pas affectées
+ Fait Cas du minotaure => a réussi a tomber dans le négatif
+
+ 
+
+ ✔ Ajouter les stats
+    - manque a gérer nb_used_gold / fireshard / moonshard
+				=> modifier les fonctions decrease pour gérer nb_minotaur_gold / FS/MS (sinon faut modifier partout)
+    
+ Nice to have:
+    fait les autres joueurs devraient pouvoir voir quels renforts ont déjà été utilisés
+    fait titre tooltip power
+    ☐ avoir les faces de dés rollées dans le log ( $joueur rolls [faces] and gets [ressources] ) ?
+    Ignore possibilité de Cancel sur le ressource select lors d'un steal2 (satyrs) pour revenir au dice select ?
+    fait notif du Doe
+    fait changer le compteur de tour :)
+    fait Voir pour réduire les plateaux aussi, car ca marche sur les grossseeeees résolutions
+    fait Afficher/masquer le div forge de manière smooth
+    Ignore Gérer les animations de ressources qui apparaissent a tel ou tel endroit (vers panel)
+    fait Information du 2e tour deja joué ?
+    fait Information de savoir a qui c'est le tour par une couleur ou autre ?
+    fait Gérer la fusion des piles
+    Fait Dans le toolTip des exploits, afficher le nombre de carte restante
+				
+		✔	Mettre des icones de cochons au niveau des plateaux de joueurs (quand possédés)
+		✔  Ne pas griser les faces qu'on ne peut pas acheter @done (18-03-09 23:33)
+		✔  Lors de la forge, il faudrait pouvoir acheter la face et cliquer sur la face du dé pour activer la forge de la face en direct. activer le truc face par face @done (18-03-09 23:33)
+	 X Playerpanel : 
+				Fait ressource afficher le max (genre 3/12), 
+				Fait aligner les ressources via un boardblock (class = boardblock) 
+				Fait Passer le first player token sur le playerboard du joueur
+				fait Répartir les ressources sous 33% pour que ca soit harmonieux
+		Fait supprimer l'action roll dice pour que ca marche autoamtiquement
+		Fait Compte tour : mettre 2/ sur X tour
+		Fait Notif spéciale pour la fin de tour pour afficher un message
+		Fait Lors du choix ressource : afficher dans le status bar des boutons pour le choix des ressources.
+		Fait Pouvoir chouette : mettre les boutons en gris
+		Fait Second action : ajouter que ca coûte 2 feu
+		Ignore choix de ressource : si marteau + choix de ressource, bug sur ligne 2056
+		Fait transition sur player board supprimé car sinon ca fait bugger le mobile
+		Ignore cas du miroir + 1G : copie de face triple => ca a  envoyé 1G : > actOustedRessources.html?side1=G1&side2=&side1-gold=1&side1-hammer=0&side1-vp=0&side1-moonshard=0&side1-fireshard=0&side2-gold=0&side2-hammer=0&side2-vp=0&side2-moonshard=0&side2-fireshard=0&table=44643&testuser=230553
+		Fait Passer la fonction shuffle à random_int dans la fonction rollDice
+		Fait Dans les exploits, hoover pour acheter la carte
+		Fait dans le décompte quand on revient y'a un bug sur les faces qui bougent ( lié à la class roll), supprimer la class roll
+		Fait Ajouter le nombre de cartes restantes 
+	
+Gestion du choix de ressource:
+	Ignore Faire un state choix de face
+	Fait Ensuite, faire le choix de ressources, face par face
+	Fait Afficher la combinatoire possible dans le status bar
+	Fait	Réduire le nombre de combinaisons en fonction de ce qui est posisble pour le marteau
+	
+en synthèse dégager le double client state
+	
+A confirmer :
+	- mettre le nombre de tour quelque part sur le board
+	
+	
+Nouvelles cartes:
+		✔ Gestion du matériel (cartes + faces)
+		✔ Modifier les states pour gérer (Moteur & JS)
+		    ✔ Forge du dé en clic-clic @done (18-03-09 23:50)
+						  Si provient d'un exploit, autoriser la forge et pas de coût => notif différente
+								
+			✔ Gestion de la forge sur un lancer de dé (ship)
+			✔ aTTENTION : Si ressource du dé risque de faire perdre de l'or et que y'a ship, il peut choisir l'ordre de résolution. : 
+			✔ Utilisation des tokens Cerberus (n'importe quel lancer) (ralenti le jeu!! car action user à chaque fois => state special)
+			✔ Utilisation token Triton
+			✔ Cas de la biche & ousting qui donne un boar => doit passer l'autre utilisateur multiactif (pas prévu actuellement)
+		✔ Carte Great bear
+		    ✔ Moteur - Ousting scoring
+						✔ JS : afficher un indicateur du nombre d'ours tenu par les joueurs
+		✔ Carte Tenacious boar
+			✔ Moteur - forge : ajouter le user_id lors de la forge + pas vérif même dé
+			✔ Moteur - blessing / ressource choice
+			  Le mec qui achète choisi un joueur, qui lui choisira où forger la carte
+			✔ JS - forge
+			✔ Afficher une icône du boar appartenant au joueur
+		✔ Carte Celestial Ship
+			✔ Moteur - forge avec choix coût -2G MAIS dans l'ordre du tour! (impact state)?
+			✔ JS - forge
+			✔ Moteur : le faire pour blessing, Doe, ousting et exploit
+		✔ Carte Guardian's shield
+	       ✔ Moteur - forge avec choix
+		   ✔ Moteur - Blessing et sidechoice
+		   ✔ en cas de chooseRessource, on doit laisser le choix avant de faire la suite, car en fonction on obtient VP ou ressource
+		✔ Carte Cerberus
+		    ✔ Moteur - achat carte
+					✔ Moteur - utilisation token (re-scoring) (!! limite un token par lancer de dé & ne s'applique qu'a ce qui a été lancé)
+					✔ JS - trigger token
+					✔ JS - gestion du state pr passer
+		✔ Carte Sentinel
+		    ✔ Moteur - achat carte avec ressource Choice spécifique
+		✔ Carte Triton
+			✔ Moteur - achat carte
+			✔ Moteur - utilisation token
+			✔ JS - trigger token
+		✔ Carte Cyclop
+			✔ Moteur - achat carte avec ressource Choice spécifique
+		✔ Carte Typhon
+		    ✔ Moteur - Achat carte et scoring. Action de forge a déjà l'info :)
+		✔ Moteur
+		     ✔ Blessing / takeRessource : impact du guardian's shield, boar, ship
+		✔ modification player board
+		✔ Gestion du zombie qui déconnait
+		✔ Modifier le fichier state & fonctions args pour gérer le cas du boar avec activation de plusieurs joueurs
+								
+							
+		reste : zombie, nombre de faces discard, log des faces rolled, nettoyer code mort, supprimer bouton flat
+				Regarder les exceptions pour que ca log et pas que des user Exception
+				
+				
+	Dans le JS, forge mirroir + x3, ne pas demander de choix
+	commentaire nom + email
+	tooltip sur le shield

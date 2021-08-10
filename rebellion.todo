@@ -1,0 +1,54 @@
+Bugs:
+  ☐ Sentinel double bouclier 10808
+  ☐ Dscription des pouvoirs à poser dans le JS à la place du matériel
+  ☐ Forge des faces si plus de faces
+
+Sprites:
+  ☐ ajout des nouveaux exploits dans le sprite
+  ☐ Ajout des nouvelles faces dans le sprite (+ dé céleste)
+  Ajout des nouvelles icones/renforts dans le sprite:
+    ☐ Fragment originel
+    ☐ Chien doré
+    ☐ Les paliques?
+    ☐ Oracle légendaire
+    ☐ Thyrse
+    ☐ Hypérion
+    ☐ Phébé
+    ☐ Coéos
+  Module Déesse :
+    ☐ Labyrinthe
+    ☐ 3 jetons pour le labyrinthe 
+    ☐ Jetons des joueurs dans le lab
+  
+  Module Titan:
+    ☐ Titan
+    ☐ Mnémosyne (token)s
+
+Affichage & JS:
+  HTML:
+   ☐ Gérer le positionnement/emplacement du labyrinthe
+   ☐ Comment afficher le chien doré et l'oracle légendaire?
+   ☐ Affichage du fragment originel dans les player boards sans que ca nique tout :)
+   ☐ Positionner le dé celeste (ou juste notifier le lancer?)
+
+  Actions utilisateurs:
+   ☐ Lancement du dé céleste?
+   ☐ choix de l'ordre de rezo des dés
+   ☐ ...
+
+Moteur:
+ ☐ Ajout du matériel
+  Init:
+   ☐ Gestion des options de démarrage pour choix module
+   ☐ Gestion des decks de setup potentiels
+   ☐ Mode draft
+   ☐ 
+  Blessing:
+   ☐ Gestion de la position dans le module titan
+   ☐ Avec le module titan, besoin de choisir l'ordre d'obtention de chaque face
+   ☐ 
+  Pouvoirs:
+   ☐ Hyperion: si plusieurs cartes, une seule face peut être améliorée
+   ☐ ..
+   ☐ Phébé
+   ☐ 
