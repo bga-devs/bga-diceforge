@@ -41,7 +41,7 @@
 
 	var jstpl_ancient_shard ='\
 		<div id="ancient_shard_container_p${id}" class="ressource-container ressource-container-ancient-shard">\
-			<div class="ressources-small ressources-ancient-shard" id="ancient_shard_p${id}"></div><span id="ancientshardcount_p${id}" class="ressource-display">${nb_ancient_shard}</span><span class="text-small">/<span id="ancient_shard_max_p${id}">6</span></span>\
+			<div class="ressources-small ressources-ancient-shard" id="ancient_shard_p${id}"></div><span id="ancientshardcount_p${id}" class="ressource-display"></span><span class="text-small">/<span id="ancient_shard_max_p${id}">6</span></span>\
 		</div>\
 	';
 
@@ -55,6 +55,7 @@
 	var jstpl_token         = '<div class="token-${size} token-${type}" alt="${type}"></div>';
 	var jstpl_token_id      = '<div id="token-${type}-${player_id}-${num}" class="token-${size} token-${type}"></div>';
 	var jstpl_token_scepter = '<div id="token-${type}-${player_id}-${num}" class="token-${size} token-${type}"><span id=countscepter_${num} class="ressource-display">0</span></div>';
+	var jstpl_memory_id     = '<div id="${id}" class="token-small ${type}"></div>';
 	
 	var jstpl_player_pawn = '<div class="pawn ${color}" id="player_${color}"></div>';
 	var jstpl_golem = '<span class="token-small token-${color}-golem golem" id="${color}-golem"></span>';
@@ -283,7 +284,7 @@
 		<div class="board-right">
 			<div id="board">
 				<!-- BEGIN exploit -->
-				<div id="exploit-{CARD_POSITION}" class="exploit-pool"></div>
+				<div id="exploit-{CARD_POSITION}" class="exploit-pool" data-costFire="{COST_FIRE}" data-costMoon="{COST_MOON}"></div>
 				<!-- END exploit -->
 			
 				<div class="turn{TURN}" id="turncount"></div>
@@ -295,6 +296,13 @@
 				<div class="position" id="position-5"></div>
 				<div class="position" id="position-6"></div>
 				<div class="position" id="position-7"></div>
+				<div class='memory' id='memory-1'></div>
+				<div class='memory' id='memory-2'></div>
+				<div class='memory' id='memory-3'></div>
+				<div class='memory' id='memory-4'></div>
+				<div class='memory' id='memory-5'></div>
+				<div class='memory' id='memory-6'></div>
+				<div class='memory' id='memory-7'></div>
 
 				<div class="position" id="position-init-blue"></div>
 				<div class="position" id="position-init-green"></div>

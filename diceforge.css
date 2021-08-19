@@ -358,6 +358,7 @@
 .ressources-effect-red-misfortune { background-position: 60% 40%; }
 .ressources-effect-blue-misfortune { background-position: 70% 40%; }
 .ressources-effect-yellow-misfortune { background-position: 80% 40%; }
+.ressources-effect-other-misfortune { background-position: 80% 40%; }
 .ressources-twins { background-position: 30% 50%; }
 .ressources-effect-yellow-memory { background-position: 10% 60%; }
 .ressources-effect-blue-memory { background-position: 20% 60%; }
@@ -750,15 +751,19 @@
 .maze-tile.highlight:before,
 .maze-tile {width: 40px;height: 40px; border-radius: 50%;position: absolute; }
 
-.maze-tile .golem:nth-child(2) {
+.maze-tile .golem:nth-child(2),
+.maze-tile .player:nth-child(2){
     margin-left: -45px;
     margin-top: -15px;
 }
-.maze-tile .golem:nth-child(3) {
+
+.maze-tile .golem:nth-child(3),
+.maze-tile .player:nth-child(3) {
     margin-left: -45px;
     margin-top: -30px;
 }
-.maze-tile .golem:nth-child(4) {
+.maze-tile .golem:nth-child(4),
+.maze-tile .player:nth-child(4) {
     margin-left: -45px;
     margin-top: -45px;
 }
@@ -1058,6 +1063,18 @@
     border: 1px hidden;
 }
 
+.position.clickable
+{
+    height:28x;
+    width:28px;
+    position:absolute;
+    display: inline-block;
+    border:4px red dashed;
+    border-radius:50%;
+    animation: island-effect 2s ease-in-out .1s infinite;
+    -webkit-animation: island-effect 2s ease-in-out .1s infinite;
+}
+
 #position-1 {top: 127px; left: 374px;}
 #position-2 {top: 381px; left: 374px; }
 #position-3 {top: 638px; left: 374px; }
@@ -1161,6 +1178,44 @@
     color: red;
     text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
 }
+
+body:not(.logs_on_additional_column) .memory {
+    /*border: 2px red solid;*/
+    height:40px;
+    width:160px; /* +1 pour stock */
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-flow: row;
+}
+
+body:not(.logs_on_additional_column) #memory-1 {top: 292px; left: 54px;}
+body:not(.logs_on_additional_column) #memory-2 {top: 292px; left: 315px;}
+body:not(.logs_on_additional_column) #memory-3 {top: 292px; left: 565px;}
+body:not(.logs_on_additional_column) #memory-4 {top: 292px; left: 802px; height:160px; width:40px; flex-flow: column;}
+body:not(.logs_on_additional_column) #memory-5 {top: 408px; left: 565px;}
+body:not(.logs_on_additional_column) #memory-6 {top: 408px; left: 315px;}
+body:not(.logs_on_additional_column) #memory-7 {top: 408px; left: 54px;}
+
+.logs_on_additional_column .memory {
+    /*border: 2px red solid;*/
+    height:160px;
+    width:40px; /* +1 pour stock */
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-flow: column;
+}
+
+.logs_on_additional_column #memory-7 {top: 52px; left: 212px;}
+.logs_on_additional_column #memory-6 {top: 322px; left: 212px;}
+.logs_on_additional_column #memory-5 {top: 572px; left: 212px;}
+.logs_on_additional_column #memory-4 {top: 802px; left: 206px; height:40px; width:160px; flex-flow: row;}
+.logs_on_additional_column #memory-3 {top: 572px; left: 325px;}
+.logs_on_additional_column #memory-2 {top: 322px; left: 325px;}
+.logs_on_additional_column #memory-1 {top: 52px; left: 325px;}
 
 .ressource {
     padding-right:10px;
@@ -1507,6 +1562,7 @@
 .side-blue-misfortune {background-position: 40% 30% !important; }
 .side-yellow-misfortune {background-position: 50% 30% !important; }
 .side-red-misfortune {background-position: 60% 30% !important; }
+.side-other-misfortune {background-position: 60% 30% !important; }
 .side-green-misfortune {background-position: 70% 30% !important; }
 .side-moon-golem {background-position: 80% 30% !important; }
 .side-sun-golem {background-position: 90% 30% !important; }
@@ -1691,6 +1747,49 @@
     body:not(.logs_on_additional_column) #board {
         margin:0 auto 50px;
     }
+    
+
+
+}
+
+@media screen and (min-width: 200px) and (max-width: 1829px) {
+    body:not(.logs_on_additional_column) .memory {
+        /*border: 2px green solid;*/
+        height:160px;
+        width:40px;
+        position: absolute;
+        justify-content: center;
+        align-items: center;
+        display: flex;
+        flex-flow: column;
+    }
+    
+    body:not(.logs_on_additional_column) #memory-7 {top: 52px; left: 212px;}
+    body:not(.logs_on_additional_column) #memory-6 {top: 322px; left: 212px;}
+    body:not(.logs_on_additional_column) #memory-5 {top: 572px; left: 212px;}
+    body:not(.logs_on_additional_column) #memory-4 {top: 802px; left: 206px; height:40px; width:160px; flex-flow: row;}
+    body:not(.logs_on_additional_column) #memory-3 {top: 572px; left: 325px;}
+    body:not(.logs_on_additional_column) #memory-2 {top: 322px; left: 325px;}
+    body:not(.logs_on_additional_column) #memory-1 {top: 52px; left: 325px;}
+    
+    .logs_on_additional_column .memory {
+        /*border: 2px green solid;*/
+        height:160px;
+        width:40px;
+        position: absolute;
+        justify-content: center;
+        align-items: center;
+        display: flex;
+        flex-flow: column;
+    }
+    
+    .logs_on_additional_column #memory-7 {top: 52px; left: 212px;}
+    .logs_on_additional_column #memory-6 {top: 322px; left: 212px;}
+    .logs_on_additional_column #memory-5 {top: 572px; left: 212px;}
+    .logs_on_additional_column #memory-4 {top: 802px; left: 206px; height:40px; width:160px; flex-flow: row;}
+    .logs_on_additional_column #memory-3 {top: 572px; left: 325px;}
+    .logs_on_additional_column #memory-2 {top: 322px; left: 325px;}
+    .logs_on_additional_column #memory-1 {top: 52px; left: 325px;}
 }
 
 @media screen and (min-width: 200px) and (max-width: 1680px) {
@@ -2100,4 +2199,18 @@
   0% {opacity: 0.3; } 
   40% {opacity: 0.5; box-shadow: 0 0 0 5px black, 0 0 10px 10px black, 0 0 0 10px black; }
   100% {box-shadow: 0 0 0 5px black, 0 0 10px 10px black, 0 0 0 10px black; -webkit-transform: scale(1.1); opacity: 0; }
+}
+
+@keyframes island-effect {
+  0% {opacity: 0.3; }
+  40% {opacity: 0.5;}
+  80% {opacity: 0.9;}
+  100% {opacity: 1;}
+}
+
+@-webkit-keyframes island-effect {
+    0% {opacity: 0.3; }
+    40% {opacity: 0.5;}
+    80% {opacity: 0.9;}
+    100% {opacity: 1;}  
 }

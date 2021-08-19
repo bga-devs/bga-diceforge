@@ -75,6 +75,7 @@ if ( !defined('STATE_BEGIN_TURN') )
   define("STATE_EXPLOIT_FORGE_BOAR", 23);
   define("STATE_DRAFT", 24);
   define("STATE_DRAFT_PLAYER", 25);
+  define("STATE_MISFORTUNE", 26);
   define("STATE_END_GAME", 99);
 }
 
@@ -162,7 +163,7 @@ $machinestates = array(
         "descriptionmyturn" => clienttranslate('${you} roll your dice'),
         "type"              => "game",
         "action"            => "stBlessing",
-        "transitions"       => array( "reinforcement" => STATE_REINFORCEMENT, "blessing" => STATE_BLESSING, "ressourceChoice" => STATE_RESSOURCE_CHOICE, "forgeShip" => STATE_FORGE_SHIP, 'nextState' => STATE_BLESSING)
+        "transitions"       => array( "reinforcement" => STATE_REINFORCEMENT, "blessing" => STATE_BLESSING, "ressourceChoice" => STATE_RESSOURCE_CHOICE, "forgeShip" => STATE_FORGE_SHIP, 'nextState' => STATE_BLESSING, 'misfortune' => STATE_MISFORTUNE)
     ),
     
     /*
@@ -182,7 +183,7 @@ $machinestates = array(
         "action"            => "stRessourceChoice",
         "possibleactions"   => array('actRessourceChoice', 'actSideChoice', 'actActionChoice', 'actUseCerberusToken', 'actUseTritonToken', 'actAutoHammer', 'actChooseMazePath', 'actChooseTreasure', 'actMazePowerConfirm', 'actPuzzleCelestial', 'actPuzzleMaze'),
         //"transitions"       => array( "reinforcement" => STATE_REINFORCEMENT, "blessing" => STATE_BLESSING )
-		"transitions"       => array( "blessing" => STATE_BLESSING, 'choice' => STATE_RESSOURCE_CHOICE, 'nextState' => STATE_BLESSING )
+		"transitions"       => array( "blessing" => STATE_BLESSING, 'choice' => STATE_RESSOURCE_CHOICE, 'nextState' => STATE_BLESSING, 'misfortune' => STATE_MISFORTUNE )
     ),
     
     /*
@@ -218,9 +219,24 @@ $machinestates = array(
         "action"            => "stReinforcement",
         "possibleactions"   => array('actReinforcement', 'actReinforcementPass', 'actUseTritonToken', 'actAutoHammer'),
         "transitions"       => array( "reinforcement" => STATE_REINFORCEMENT, "playerAction" => STATE_PLAYER_ACTION,
-                                      "choice" => STATE_DOE_RESSOURCE_CHOICE, "forgeShip" => STATE_DOE_FORGE_SHIP)
+                                      "choice" => STATE_DOE_RESSOURCE_CHOICE, "forgeShip" => STATE_DOE_FORGE_SHIP, 'misfortune' => STATE_MISFORTUNE)
     ),
 
+    /*
+     * Player can select ressources linked to the misfortune effect
+     *
+    **/
+    STATE_MISFORTUNE => array(
+        "name"              => "misfortuneChoice",
+        "description"       => clienttranslate('Mirror of Misfortune effect: Player is choosing resources'),
+        "descriptionmyturn" => clienttranslate('Mirror of Misfortune effect: ${you} choose the resources for the side  ${loyalty}'),
+        "type"              => "multipleactiveplayer",
+        "action"            => 'stMisfortuneChoice',
+        "args"              => "argsMisfortune",
+        "possibleactions"   => array('actMisfortuneChoice', 'actActionMisfortune', 'actAutoHammer'),
+        "transitions"       => array( "nextState" => STATE_MISFORTUNE, 'choice' => STATE_MISFORTUNE, "blessing" => STATE_BLESSING, "reinforcement" => STATE_REINFORCEMENT, 'exploitEffect' => STATE_EXPLOIT_EFFECT, 'exploitRessource' => STATE_EXPLOIT_RESSOURCE, 'ousting' => STATE_PLAYER_OUSTING )
+    ),
+    
     /*
      * Active player use his doe and needs to choose a ressource
      *
@@ -228,11 +244,11 @@ $machinestates = array(
     STATE_DOE_RESSOURCE_CHOICE => array(
         "name"              => "doeRessourceChoice",
         "description"       => clienttranslate('Players are choosing resources'),
-        "descriptionmyturn" => clienttranslate('${you} choose the resources for the side '),
+        "descriptionmyturn" => clienttranslate('${you} choose the resources for the side  ${loyalty}'),
         "type"              => "multipleactiveplayer",
         "args"              => "argsRessourceChoice",
         "possibleactions"   => array('actDoeTakeRessource', 'actActionChoice', 'actSideChoice', 'actUseCerberusToken', 'actUseTritonToken', 'actAutoHammer', 'actChooseMazePath', 'actChooseTreasure', 'actMazePowerConfirm', 'actPuzzleCelestial', 'actPuzzleMaze'),
-        "transitions"       => array( "nextState" => STATE_REINFORCEMENT, 'choice' => STATE_DOE_RESSOURCE_CHOICE, "forgeShip" => STATE_DOE_FORGE_SHIP )
+        "transitions"       => array( "nextState" => STATE_REINFORCEMENT, 'choice' => STATE_DOE_RESSOURCE_CHOICE, "forgeShip" => STATE_DOE_FORGE_SHIP, 'misfortune' => STATE_MISFORTUNE )
     ),
     
 	/*
@@ -316,7 +332,7 @@ $machinestates = array(
         "descriptionmyturn" => "",
         "type"              => "game",
         "action"            => "stOusting",
-        "transitions"       => array( "exploitEffect" => STATE_EXPLOIT_EFFECT, "choice" => STATE_OUSTED_PLAYER_CHOICE, "forgeShip" => STATE_OUSTED_FORGE_SHIP, "nextState" => STATE_PLAYER_OUSTING)
+        "transitions"       => array( "exploitEffect" => STATE_EXPLOIT_EFFECT, "choice" => STATE_OUSTED_PLAYER_CHOICE, "forgeShip" => STATE_OUSTED_FORGE_SHIP, "nextState" => STATE_PLAYER_OUSTING, 'misfortune' => STATE_MISFORTUNE)
     ),
     
     /*
@@ -329,12 +345,12 @@ $machinestates = array(
         //"description"       => clienttranslate('${actplayer} has been ousted and must choose a ressource'),
         //"descriptionmyturn" => clienttranslate('${you} have been ousted and must choose a ressource'),
         "description"       => clienttranslate('Players are choosing resources due to ousting'),
-        "descriptionmyturn" => clienttranslate('${you} choose the resources for the side '),
+        "descriptionmyturn" => clienttranslate('${you} choose the resources for the side  ${loyalty}'),
         "type"              => "multipleactiveplayer",
         "args"              => "argsRessourceChoice",
         //"action"            => "stRessourceChoiceAdvanced",
         "possibleactions"   => array("actOustedRessources", 'actSideChoice', 'actActionChoice', 'actUseCerberusToken', 'actUseTritonToken', 'actAutoHammer', 'actChooseMazePath', 'actChooseTreasure', 'actMazePowerConfirm', 'actPuzzleCelestial', 'actPuzzleMaze'),
-        "transitions"       => array( "nextState" => STATE_PLAYER_OUSTING, 'choice' => STATE_OUSTED_PLAYER_CHOICE, "forgeShip" => STATE_OUSTED_FORGE_SHIP )
+        "transitions"       => array( "nextState" => STATE_PLAYER_OUSTING, 'choice' => STATE_OUSTED_PLAYER_CHOICE, "forgeShip" => STATE_OUSTED_FORGE_SHIP, 'misfortune' => STATE_MISFORTUNE )
     ),
 	
 	/*
@@ -368,9 +384,9 @@ $machinestates = array(
         "type"              => "activeplayer",
         "args"              => "argExploitEffect",
         "action"            => "stEffectExploit",
-        "possibleactions"   => array("actBuyForge", "actExploitEnigma", "actExploitBoar", 'actUseTritonToken', 'actAutoHammer', 'actBuyExploit', 'actCelestialUpgrade', 'actForgeNymphPass', 'actAncestorSelect'), 
+        "possibleactions"   => array("actBuyForge", "actExploitEnigma", "actExploitBoar", 'actUseTritonToken', 'actAutoHammer', 'actBuyExploit', 'actCelestialUpgrade', 'actForgeNymphPass', 'actAncestorSelect', 'actMemoryToken'), 
         "transitions"       => array( "playerSecondAction" => STATE_SECOND_ACTION, "endPlayerTurn" =>  STATE_END_PLAYER_TURN, "choice" => STATE_EXPLOIT_RESSOURCE,
-                                      "exploitEffect" =>STATE_EXPLOIT_EFFECT, "forgeShip" => STATE_EXPLOIT_FORGE_SHIP, "forgeBoar" => STATE_EXPLOIT_FORGE_BOAR, "nextState" => STATE_EXPLOIT_EFFECT)
+                                      "exploitEffect" =>STATE_EXPLOIT_EFFECT, "forgeShip" => STATE_EXPLOIT_FORGE_SHIP, "forgeBoar" => STATE_EXPLOIT_FORGE_BOAR, "nextState" => STATE_EXPLOIT_EFFECT, 'misfortune' => STATE_MISFORTUNE)
     ),
 
     STATE_EXPLOIT_RESSOURCE => array(
@@ -381,7 +397,7 @@ $machinestates = array(
         //"action"            => "stExploitRessource",
         "args"              =>  "argExploitRessource",
         "possibleactions"   => array("actExploitRessource", 'actSideChoice', 'actActionChoice', 'actUseCerberusToken', 'actUseTritonToken', 'actAutoHammer', 'actChooseMazePath', 'actChooseTreasure', 'actMazePowerConfirm', 'actPuzzleCelestial', 'actPuzzleMaze', 'actRessourceChoice'), 
-        "transitions"       => array( "nextState" => STATE_EXPLOIT_EFFECT, 'choice' => STATE_EXPLOIT_RESSOURCE, "forgeShip" => STATE_EXPLOIT_FORGE_SHIP)
+        "transitions"       => array( "nextState" => STATE_EXPLOIT_EFFECT, 'choice' => STATE_EXPLOIT_RESSOURCE, "forgeShip" => STATE_EXPLOIT_FORGE_SHIP, 'misfortune' => STATE_MISFORTUNE)
     ),
   
 	/*
@@ -410,8 +426,8 @@ $machinestates = array(
     **/
     STATE_EXPLOIT_FORGE_BOAR => array(
         "name"              => "exploitForgeBoar",
-        "description"       => clienttranslate('${actplayer} is forging a boar side'),
-        "descriptionmyturn" => clienttranslate('${you} must forge the selected boar side'),
+        "description"       => clienttranslate('${actplayer} is forging a ${card_name} side'),
+        "descriptionmyturn" => clienttranslate('${you} must forge the selected ${card_name} side'),
         "type"              => "multipleactiveplayer",
         "args"              => "argsForgeBoar",
         "possibleactions"   => array('actBuyForge', 'actAutoHammer'),

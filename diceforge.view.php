@@ -69,7 +69,9 @@ class view_diceforge_diceforge extends game_view
 
         foreach ($this->game->exploit_slot as $name => $exploit) {
             $this->page->insert_block( "exploit", array( 
-                "CARD_POSITION" => $exploit
+                "CARD_POSITION" => $exploit,
+                "COST_FIRE" => $this->game->exploit_cost[$exploit]['costFire'],
+                "COST_MOON" => $this->game->exploit_cost[$exploit]['costMoon']
             ));
         }
 

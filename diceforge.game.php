@@ -2163,6 +2163,8 @@ class diceforge extends Table
         else
             $toTransform = array('ressource' => array(), 'vp' => 1);
         
+        //throw new feException(debug_print_backtrace());
+        
         if ($sideNum == 98)
             $celestial = true;
         //throw new feException($exploit);
@@ -4621,13 +4623,27 @@ class diceforge extends Table
                     $ousted_player_id = $this->getGameStateValue('oustedPlayerId');
                     $ousted_info      = $this->getPlayersAdditionnalInfo()[$ousted_player_id];
                     
-                    $side = $this->sides->getCard($ousted_info['throw_1']);
-                    $result_sides[0] = $side;
-                    $side = $this->sides->getCard($ousted_info['throw_2']);
-                    $result_sides[1] = $side;
-            
-                    $notifPlayerArgs['dice1'] = $result_sides[0]['type'];
-                    $notifPlayerArgs['dice2'] = $result_sides[1]['type'];
+                    if ($dice1 && $dice2) {
+                        $side = $this->sides->getCard($ousted_info['throw_1']);
+                        $result_sides[0] = $side;
+                        $side = $this->sides->getCard($ousted_info['throw_2']);
+                        $result_sides[1] = $side;
+                
+                        $notifPlayerArgs['dice1'] = $result_sides[0]['type'];
+                        $notifPlayerArgs['dice2'] = $result_sides[1]['type'];
+                    }
+                    elseif ($dice1 && !$dice2) {
+                        $side = $this->sides->getCard($ousted_info['throw_1']);
+                        $result_sides[0] = $side;
+                        $notifPlayerArgs['dice1'] = $result_sides[0]['type'];
+                        $otherSide =  $this->sides->getCard($ousted_info['throw_2'])['type'];
+                    }
+                    elseif (!$dice1 && $dice2) {
+                        $side = $this->sides->getCard($ousted_info['throw_2']);
+                        $result_sides[0] = $side;
+                        $notifPlayerArgs['dice2'] = $result_sides[0]['type'];
+                        $otherSide =  $this->sides->getCard($ousted_info['throw_1'])['type'];
+                    }
                     break ;
             }
         }
@@ -6946,6 +6962,8 @@ class diceforge extends Table
             $this->gamestate->nextState('endPlayerTurn');
         elseif ($this->gamestate->state()['name'] == 'reinforcement')
             $this->gamestate->nextState('reinforcement');
+        else
+            $this->gamestate->nextState('current');
         
     }
     
@@ -6995,8 +7013,11 @@ class diceforge extends Table
         
         self::notifyAllPlayers("updateCounters", "", $this->getPlayersRessources());
         
-        if ($this->gamestate->state()['name'] == 'secondAction' && !$this->hasCompanionToken($player_id) && !$this->canTakeSecondAction($player_id))
+        if ($this->gamestate->state()['name'] == 'secondAction' && !$this->hasCompanionToken($player_id) && !$this->canTakeSecondAction($player_id)) {
             $this->gamestate->nextState('endPlayerTurn');
+        }
+        else
+            $this->gamestate->nextState('current');
     }
     
     /*
@@ -8938,16 +8959,23 @@ class diceforge extends Table
                 case '3G3M':
                 case 'forge4G':
                 case 'forgeVP':
-                case 'oustAll':
                 case 'chooseSides':
                 case 'greatGolem':
                 case 'timeGolem':
+                case 'oustAll':
                     // mode die1
                     $disable = $this->takeRessource2($player_id, 'dice1', $sideNum, $side, $ressources);
                     // Even if player has a cerberus token, should not be asked to rethrow
                     $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
                     $disable = true;
                     break;
+                //case 'oustAll':
+                //    // mode die1
+                //    $disable = $this->takeRessource2($player_id, 'blessing', $sideNum, $side, $ressources);
+                //    // Even if player has a cerberus token, should not be asked to rethrow
+                //    $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+                //    $disable = true;
+                //    break;
                 case 'throwCelestialDie':
                     $disable = $this->takeRessource2($player_id, 'dice1', $sideNum, $side, $ressources);
                     break ;
@@ -10374,7 +10402,7 @@ class diceforge extends Table
 
         // there is a ressource Choice on one of the players
         // #35073 : add check of misfortune
-        if ($this->isRessourceChoice() || $this->hasMazeStock() || $this->hasUnresolvedSides() || $this->tokens->getTokenInfo('resolveMisfortune')['state'] != 0) {
+        if ($this->isRessourceChoice() || $this->hasMazeStock() || $this->hasUnresolvedSides() || $this->misfortuneState() != 0) {
             // No conflict : all the necessary players are activated
             // Ship management, only one at a time
 
@@ -10432,7 +10460,7 @@ class diceforge extends Table
                     self::notifyAllPlayers("updateCounters", "", $this->getPlayersRessources());
                     $this->gamestate->nextState('blessing');
                 }
-                elseif ($this->tokens->getTokenInfo('resolveMisfortune')['state'] != 0) {
+                elseif ($this->misfortuneState() != 0) {
                     $toEnable = $this->misfortuneAllocation();
                     
                     // allocate if choice ==> token
@@ -10490,7 +10518,7 @@ class diceforge extends Table
                         $this->gamestate->nextState('blessing');
                         return ;
                     }
-                    elseif ($this->tokens->getTokenInfo('resolveMisfortune')['state'] != 0) {
+                    elseif ($this->misfortuneState() != 0) {
                         
                         $toEnable = $this->misfortuneAllocation();
                         
@@ -10757,7 +10785,7 @@ class diceforge extends Table
                 return ;
             }
         }
-        elseif ($this->tokens->getTokenInfo('resolveMisfortune')['state'] != 0) {
+        elseif ($this->misfortuneState() != 0) {
                         
             $toEnable = $this->misfortuneAllocation();
             
@@ -10803,7 +10831,7 @@ class diceforge extends Table
         $player_id = $this->getGameStateValue('oustedPlayerId');
         $this->setGameStateValue("oracleReinforcement", 0);
         
-        if ($this->tokens->getTokenInfo('resolveMisfortune')['state'] != 0) {
+        if ($this->misfortuneState() != 0) {
             
             $toEnable = $this->misfortuneAllocation();
             
@@ -10982,7 +11010,7 @@ class diceforge extends Table
             $this->gamestate->nextState('nextState');
             return ;
         }
-        elseif ($this->tokens->getTokenInfo('resolveMisfortune')['state'] != 0) {
+        elseif ($this->misfortuneState() != 0) {
             
             $toEnable = $this->misfortuneAllocation();
             
@@ -11407,7 +11435,8 @@ class diceforge extends Table
                         break ;
                     case 'convertGoldToVP':
                         // right hand
-                        if ($this->getGoldResource($player_id) > 0) {
+                        // #35764 replace of getgoldResource to getGold
+                        if ($this->getGold($player_id) > 0) {
                             $this->dbSetChoice($player_id, self::RC_RESSOURCE);
                             $ressourceChoice = true;
                         }
@@ -11718,6 +11747,7 @@ class diceforge extends Table
                     self::notifyAllPlayers("updateCounters", "", $this->getPlayersRessources());
                     
                 }
+                $this->titanMove($player_id);
             }
         }
         
@@ -11735,7 +11765,7 @@ class diceforge extends Table
         }
 
         // #35073 : add check of misfortune
-        if ($this->isRessourceChoice() || $this->hasMazeStock($player_id) || $goAgain || $this->hasUnresolvedSides($player_id) || $this->tokens->getTokenInfo('resolveMisfortune')['state'] != 0)
+        if ($this->isRessourceChoice() || $this->hasMazeStock($player_id) || $goAgain || $this->hasUnresolvedSides($player_id) || $this->misfortuneState() != 0)
             $this->gamestate->nextState("exploitEffect");
         elseif ($forge || $this->getGameStateValue( "celestialRunning")) 
             // do nothing as action will be triggered
@@ -11750,8 +11780,18 @@ class diceforge extends Table
             $this->gamestate->nextState("exploitEffect");
     }
     
+    function misfortuneState() {
+        $token = $this->tokens->getTokenInfo('resolveMisfortune');
+        
+        if (is_array($token))
+            return $token['state'];
+        else
+            return 0;
+
+    }
+    
     function debugVTO($player_id) {
-        //throw new feException($this->getGameStateValue('celestialRunning'));
+        //throw new feException($this->misfortuneState());
         $retour = $this->getPlayersAdditionnalInfo()[$player_id];
         $retour["puzzle"] = $this->tokens->getTokenState("puzzle_" . $player_id);
         $retour["canTwin"] = $this->canUseTwins($player_id);

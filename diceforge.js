@@ -2663,11 +2663,11 @@ function (dojo, declare) {
                         //if (args[this.player_id]['sides'][0] == 'ship')
                         //    this.addActionButton('action_forgeShip1', this.sidesTextToIcon( '[ship]' ), 'onClickConfirmActionForgeShip');
                         //else
-                        if (args[this.player_id]['sides'].hasOwnProperty(0)) {
+                        if (args[this.player_id].hasOwnProperty('sides') && args[this.player_id]['sides'].hasOwnProperty(0)) {
                             this.addActionButton('action_getRessource1', this.sidesTextToIcon( '[' + args[this.player_id]['sides'][0] + ']' ), 'onClickConfirmActionGetRessource1');
                         } 
                         
-                        if (args[this.player_id]['sides'].hasOwnProperty(1)) {
+                        if (args[this.player_id].hasOwnProperty('sides') && args[this.player_id]['sides'].hasOwnProperty(1)) {
                             this.addActionButton('action_getRessource2', this.sidesTextToIcon( '[' + args[this.player_id]['sides'][1] + ']' ), 'onClickConfirmActionGetRessource2');
                         }
                     }
@@ -2748,6 +2748,7 @@ function (dojo, declare) {
                     
                 } else if (args[this.player_id].action == 'mazeConfirm') {
                     $('pagemaintitletext').innerHTML = this.translatableTexts.mazeConfirmReward;
+                    // #35312
                     this.activateTritonToken(true);
                     switch (args[this.player_id].reward) {
                         case 'convert6Gto6VP':

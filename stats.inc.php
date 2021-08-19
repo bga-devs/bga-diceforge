@@ -179,6 +179,9 @@ $stats_type = array(
         "nb_used_ancientshard" => array("id"=> 54,
                     "name" => totranslate("Number of used moonshard"),
                     "type" => "int" ),
+        "nb_minotaur_ancientshard" => array("id"=> 55,
+                    "name" => totranslate("Minotaur: Amount of lost ancientshard"),
+                    "type" => "int" ),
     
 /*
     Nombre de ressources récoltées via dé (pour chaque)

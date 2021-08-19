@@ -1541,7 +1541,7 @@ $this->dice_sides = array(
 $this->celestialDie = ["G12", "V5", "V3G3orFS1orMS1", "celestialMirror", "chooseSide", "doubleUpgrade"];
 $this->celestialInfo = [
 	'name'        => 'The Celestial Die',
-	'description' => clienttranslate('[G12] Gain 12 [G]<br />[V5] Gain 5 [VP]<br />[V3G3orFS1orMS1] Gain 3 [VP] and choose 3 [G] or 1 [MS] or 1 [FS]<br />[celestialMirror] Apply the effect(s) of one of your opponents’ dice, or one of your own dice<br />[chooseSide] Choose a die face from one of your dice, place it face up and apply its effect.<br />[doubleUpgrade] Upgrade one of your dice face by two levels at once. See the Merchant card for details about upgrading die face.'),
+	'description' => clienttranslate('[G12] Gain 12 [G]<br />[V5] Gain 5 [VP]<br />[V3G3orFS1orMS1] Gain 3 [VP] and choose 3 [G] or 1 [MS] or 1 [FS]<br />[celestialMirror] Apply the effect(s) of one of your opponents’ dice, or one of your own dice<br />[chooseSide] Choose a die face from one of your dice, place it face up and apply its effect.<br />[doubleUpgrade] Upgrade one of your dice face by two levels at once. Upgrading a die face means that you can replace it with a die face from a higher pool for free. The level of a pool is determined by the cost of the face.<br />To upgrade a die face by one level, choose one of your die faces, then take a die face from the pool of the next level. You may now forge that die face.<br />Note: If the chosen face has no equivalent in the Sanctuary, then it is considered a level 0.<br />Note 2: If the pool from which you would take your upgraded die face is empty, then choose a die face from the next non-empty pool.'),
 ];
 
 // Will contain the initialisation number of each side in the pool

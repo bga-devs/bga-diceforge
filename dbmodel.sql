@@ -70,6 +70,8 @@ ALTER TABLE `player` ADD `twins` int(1) DEFAULT 0;
 
 ALTER TABLE `player` ADD `res_ancient` int(1) DEFAULT 0;
 
+--ALTER TABLE `player` ADD `misfortune` int(1) DEFAULT 0;
+
 --- ### EXPLOIT CARDS ###
 --- card_type : exploit name, from material $this->exploit_types
 --- card_type_arg : not used

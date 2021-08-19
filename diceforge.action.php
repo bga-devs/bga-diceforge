@@ -79,6 +79,37 @@ class action_diceforge extends APP_GameAction
 		self::ajaxResponse( );
 	}
 	
+	public function actMisfortuneChoice() 
+	{
+		self::setAjaxMode();
+	
+		$side           = self::getArg( "side", AT_alphanum, true );
+		$side_gold      = self::getArg( "side-gold", AT_int, false );
+		$side_hammer    = self::getArg( "side-hammer", AT_int, false );
+		$side_vp        = self::getArg( "side-vp", AT_int, false );
+		$side_moonshard = self::getArg( "side-moonshard", AT_int, false );
+		$side_fireshard = self::getArg( "side-fireshard", AT_int, false );
+		$side_loyalty   = self::getArg( "side-loyalty", AT_int, false );
+		$side_ancientshard   = self::getArg( "side-ancientshard", AT_int, false );
+		$side_maze   = self::getArg( "side-maze", AT_int, false );
+		$sideNum        = self::getArg( "sideNum", AT_int, true );
+		
+		$ressources = array(
+				'gold'      => $side_gold,
+				'vp'        => $side_vp,
+				'hammer'    => $side_hammer,
+				'moonshard' => $side_moonshard,
+				'fireshard' => $side_fireshard,
+				'ancientshard' => $side_ancientshard,
+				'loyalty'	=> $side_loyalty,
+				'maze'		=> $side_maze
+		);
+		
+		$this->game->actMisfortuneChoice($sideNum, $side, $ressources);
+		
+		self::ajaxResponse( );
+	}
+	
 	public function actOustedRessources() 
 	{
 		self::setAjaxMode();
@@ -343,6 +374,17 @@ class action_diceforge extends APP_GameAction
 		$this->game->actActionChoice($action, $die);
 		self::ajaxResponse( );
 	}
+	
+	public function actActionMisfortune()
+	{
+		self::setAjaxMode();
+		
+		$action = self::getArg( "actionChoice", AT_alphanum, true );
+		$die = self::getArg( "die", AT_int, false );
+		
+		$this->game->actActionMisfortune($action, $die);
+		self::ajaxResponse( );
+	}
 
 	public function actUseScepter() 
 	{
@@ -398,7 +440,13 @@ class action_diceforge extends APP_GameAction
 	function actBuyExploit() {
 		self::setAjaxMode();
 		$card_id = self::getArg( "card_id", AT_int, true );
-		$this->game->actBuyExploit($card_id);
+		$fireshard = self::getArg( "fireshard", AT_int, false );
+		$moonshard = self::getArg( "moonshard", AT_int, false );
+		$ancientshard = self::getArg( "ancientshard", AT_int, false );
+		$resources = ['fireshard'		=> $fireshard,
+					  'moonshard'		=> $moonshard,
+					  'ancientshard'	=> $ancientshard];
+		$this->game->actBuyExploit($card_id, $resources);
 		
 		self::ajaxResponse( );
 	}
@@ -460,11 +508,24 @@ class action_diceforge extends APP_GameAction
 		self::setAjaxMode();
 		
 		$play = self::getArg( "play", AT_bool, true );
-		
-		$this->game->actSecondAction($play);
+		$fireshard = self::getArg( "fireshard", AT_int, false );
+		$ancientshard = self::getArg( "ancientshard", AT_int, false );
+		$resources = ['fireshard'		=> $fireshard,
+					  'ancientshard'	=> $ancientshard];
+		$this->game->actSecondAction($play, $resources);
 		self::ajaxResponse( );
 	}
 
+	function actMemoryToken() {
+		self::setAjaxMode();
+
+		$token = self::getArg( "token", AT_alphanum, true );
+		$island = self::getArg( "island", AT_alphanum, true );
+		$choice = self::getArg( "choice", AT_alphanum, true );
+		$this->game->actMemoryToken($token, $island, $choice);
+		self::ajaxResponse( );
+	}
+	
 	function actEndPlayerTurn() {
 		self::setAjaxMode();
 		$this->game->actEndPlayerTurn();
