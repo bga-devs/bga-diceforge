@@ -2992,7 +2992,7 @@ class diceforge extends Table
 
     function processedExploit() {
         $card_id = $this->getGameStateValue( "exploitBought");
-        if ($card_id != -1 && $this->gamestate->state()['name'] == 'exploitRessource') {
+        if ($card_id != -1 && ($this->gamestate->state()['name'] == 'exploitRessource' ||$this->gamestate->state()['name'] == 'exploitEffect' )) {
             $card = $this->exploits->getCard($card_id);
             $card_info = $this->exploit_types[$card['type']];
             //$exploit = true;
@@ -5551,7 +5551,7 @@ class diceforge extends Table
         $doubleThrow = false;
         $choice = $notifPlayerArgs['choice'];
 
-        if (($this->tokens->getTokenState("throw1_$player_id") && $this->tokens->getTokenState("throw2_$player_id")) || $this->processedExploit() == 'steal2')
+        if (($this->tokens->getTokenState("throw1_$player_id") && $this->tokens->getTokenState("throw2_$player_id")) || $this->processedExploit() == 'steal2' || $this->processedExploit() == 'oustAll')
             $doubleThrow = true;
 
         // check all side choosen
@@ -7191,11 +7191,17 @@ class diceforge extends Table
         self::checkAction("actActionChoice");
         $player_id = self::getCurrentPlayerId();
         $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
+        $multiple = 1;
 
         $exploit = false;
         $card_id = $this->getGameStateValue( "exploitBought");
         if ($card_id != -1 && $this->gamestate->state()['name'] == 'exploitRessource') {
             $exploit = true;
+            $card = $this->exploits->getCard($card_id);
+            $card_info = $this->exploit_types[$card['type']];
+            if ($card_info['action'] == 'looseThrow') {
+                $multiple = -1;
+            }
         }
 
         // management of celestial dice
@@ -7270,9 +7276,9 @@ class diceforge extends Table
                     }
                     else {
                         if ($die == 1)
-                            $did = $this->blessing($player_id, true, false, 1, $exploit, false);
+                            $did = $this->blessing($player_id, true, false, $multiple, $exploit, false);
                         else
-                            $did = $this->blessing($player_id, false, true, 1, $exploit, false);
+                            $did = $this->blessing($player_id, false, true, $multiple, $exploit, false);
 
                         if ($side == 'triple') {
                             $this->tokens->setTokenState("triple_$player_id", 1);
@@ -9755,7 +9761,7 @@ class diceforge extends Table
 
             $card_name = $this->exploit_types[$card['type']]['name'];
         }
-        return array('id' => $sideToForge, 'type' => $card_type, 'card_name' => $card_name);
+        return array('id' => $sideToForge, 'type' => $card_type, 'card_name' => $card_name, 'i18n' => ['card_name']);
     }
 
     function argExploitEffect()
@@ -11335,7 +11341,7 @@ class diceforge extends Table
                         $players_info = $this->getPlayersAdditionnalInfo();
                         $vp = 0;
                         $min_gold = -1;
-                        $sql = "select player_id, sum(gold) gold from ( select player_id, res_gold gold from player union all select token_location player_id, token_state gold from token where token_key like 'scepter%' and token_location != 'deck') aa WHERE player_id != $player_id group by player_id ORDER BY sum(gold) ASC";
+                        $sql = "select player_id, sum(gold) gold from ( select player_id, res_gold gold from player union all select token_location player_id, token_state gold from token where token_key like 'scepter%' and token_location != 'deck') aa  group by player_id ORDER BY sum(gold) ASC";
                         $players = self::getObjectListFromDB($sql);
                         foreach ($players as $aff_player_id => $player) {
                             if ($min_gold == -1)
@@ -11486,7 +11492,7 @@ class diceforge extends Table
                         $notifPlayerArgs['vp'] = $nbFeats * 2;
                         $notifPlayerArgs['ressources'] = $this->buildRessourceNotif( $notifPlayerArgs );
                         $notifPlayerArgs['nbFeats'] = $nbFeats;
-                        self::notifyAllPlayers("notifBlessing", '${player_name} gets ${ressources} (${nbFeats} exploit(s))', $notifPlayerArgs );
+                        self::notifyAllPlayers("notifBlessing", clienttranslate('${player_name} gets ${ressources} (${nbFeats} exploit(s))'), $notifPlayerArgs );
                         break ;
                     case 'countVP':
                         // omniscient
