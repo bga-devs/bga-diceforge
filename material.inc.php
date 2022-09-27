@@ -84,6 +84,7 @@ $this->decks = array(
     'mirror',
     'eternalFire',
   ],
+  'challenge2021final' => ['hammer', 'companion', 'doe', 'satyres', 'ancestor', 'invisible', 'eternalNight', 'titan', 'ancient', 'woodNymph', 'owl', "shield", 'omniscient', 'mirror', 'eternalFire'],
 );
 
 $this->decks['random'] = array_unique(array_merge($this->decks['beginner'], $this->decks['alternate']));
@@ -1849,7 +1850,7 @@ $this->maze = array(
     ),
   22 => array (
     "path"      => [23],
-    "reverse"   => [18],
+    "reverse"   => [21],
     "reward"    => "MS2orFS2",
     "hasGold"   => false,
     "needChoice"=> true,
@@ -1988,13 +1989,16 @@ $this->titan_passives = [
 		'description' => clienttranslate('[hourglass] - <b>activation conditions</b>: When you are the first one to perform a Heroic feat in this game.<br />[hourglass]: Gain 3 [VP].<hr />[hourglass] - <b>activation conditions</b>: When you are not and if you did not perform it during this game<br />[hourglass]: Gain 2 [VP].')
 	],
 	'loyaltyPassive1' => [
-		'description' => clienttranslate('[hourglass] - <b>activation conditions</b>: When you gain [G] when receiving a <b>divine blessing</b> or a <b>minor blessing</b> with <b>your own dice</b>.<br />[hourglass]: Add 1 extra [G] to your reserve.') . $loyaltyEndTooltip
+		'description' => clienttranslate('[hourglass] - <b>activation conditions</b>: When you gain [G] when receiving a <b>divine blessing</b> or a <b>minor blessing</b> with <b>your own dice</b>.<br />[hourglass]: Add 1 extra [G] to your reserve.<hr />Note: Always consider the effect of the zone where your token is when you apply the die face effect.<br />Note 2: When you receive a <b>divine blessing</b>, apply the effect each time that you meet the
+		activation condition, ie twice if both of your dice meet that condition.<br />Note 3:  Converting resources into [VP] thanks to a “Sentinel” or “Cyclop” card does not trigger the [hourglass] extra [VP] effect<br />Note 4: You cannot use [G] gained through [hourglass] extra [G] effects to apply the “Cyclop” card effect')
 	],
 	'loyaltyPassive2' => [
-		'description' => clienttranslate('[hourglass] - <b>activation conditions</b>: When you gain [G] when receiving a <b>divine blessing</b> or a <b>minor blessing</b> with <b>your own dice</b>.<br />[hourglass]: Add 1 extra [G] and 1 extra [VP] to your reserve.') . $loyaltyEndTooltip
+		'description' => clienttranslate('[hourglass] - <b>activation conditions</b>: When you gain [G] when receiving a <b>divine blessing</b> or a <b>minor blessing</b> with <b>your own dice</b>.<br />[hourglass]: Add 1 extra [G] and 1 extra [VP] to your reserve.<hr />Note: Always consider the effect of the zone where your token is when you apply the die face effect.<br />Note 2: When you receive a <b>divine blessing</b>, apply the effect each time that you meet the
+		activation condition, ie twice if both of your dice meet that condition.<br />Note 3:  Converting resources into [VP] thanks to a “Sentinel” or “Cyclop” card does not trigger the [hourglass] extra [VP] effect<br />Note 4: You cannot use [G] gained through [hourglass] extra [G] effects to apply the “Cyclop” card effect')
 	],
 	'loyaltyPassive3' => [
-		'description' => clienttranslate('[hourglass] - <b>activation conditions</b>: When you gain [VP] when receiving a <b>divine blessing</b> or a <b>minor blessing</b> with <b>your own dice</b>.<br />[hourglass]: Add 1 extra [VP] to your reserve.<hr />[hourglass] - <b>activation conditions</b>: When you gain [G] when receiving a <b>divine blessing</b> or a <b>minor blessing</b> with <b>your own dice</b>.<br />[hourglass]: Add 1 extra [G] and 1 extra [VP] to your reserve.') . $loyaltyEndTooltip
+		'description' => clienttranslate('[hourglass] - <b>activation conditions</b>: When you gain [VP] when receiving a <b>divine blessing</b> or a <b>minor blessing</b> with <b>your own dice</b>.<br />[hourglass]: Add 1 extra [VP] to your reserve.<hr />[hourglass] - <b>activation conditions</b>: When you gain [G] when receiving a <b>divine blessing</b> or a <b>minor blessing</b> with <b>your own dice</b>.<br />[hourglass]: Add 1 extra [G] and 1 extra [VP] to your reserve.<hr />Note: Always consider the effect of the zone where your token is when you apply the die face effect.<br />Note 2: When you receive a <b>divine blessing</b>, apply the effect each time that you meet the
+		activation condition, ie twice if both of your dice meet that condition.<br />Note 3:  Converting resources into [VP] thanks to a “Sentinel” or “Cyclop” card does not trigger the [hourglass] extra [VP] effect<br />Note 4: You cannot use [G] gained through [hourglass] extra [G] effects to apply the “Cyclop” card effect')
 	],
 ];
 

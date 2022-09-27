@@ -63,6 +63,7 @@ $game_options = [
         'name' => totranslate('Recommended (extension)'),
         'nobeginner' => true,
         'tmdisplay' => totranslate('Recommended set (extension)'),
+        'description' => totranslate('Perfect set to discover the expansion')
       ],
       5 => [
         'name' => totranslate('Perfect for 2 players'),
@@ -98,6 +99,11 @@ $game_options = [
         'name' => totranslate('2021 : Challenge of the gods'),
         'nobeginner' => true,
         'tmdisplay' => totranslate('2021 : Challenge of the gods'),
+      ],
+      12 => [
+        'name' => totranslate('2021 : Challenge of the gods - Final'),
+        'nobeginner' => true,
+        'tmdisplay' => totranslate('2021 : Challenge of the gods - Final'),
       ],
     ],
     'startcondition' => [
@@ -285,6 +291,36 @@ $game_options = [
           'message' => totranslate('This setup is for a 2 players game only'),
         ],
       ],
+      12 => [
+        [
+          'type' => 'otheroptionisnot',
+          'id' => 102,
+          'value' => '1',
+          'message' => totranslate('You must enable Rebellion with "Cards only" option'),
+        ],
+        [
+          'type' => 'otheroptionisnot',
+          'id' => 102,
+          'value' => '3',
+          'message' => totranslate('You must enable Rebellion with "Cards only" option'),
+        ],
+        [
+          'type' => 'otheroptionisnot',
+          'id' => 102,
+          'value' => '4',
+          'message' => totranslate('You must enable Rebellion with "Cards only" option'),
+        ],
+        [
+          'type' => 'maxplayers',
+          'value' => 2,
+          'message' => totranslate('This setup is for a 2 players game only'),
+        ],
+        [
+          'type' => 'minplayers',
+          'value' => 2,
+          'message' => totranslate('This setup is for a 2 players game only'),
+        ],
+      ],
     ],
   ],
   103 => [
@@ -321,6 +357,23 @@ $game_options = [
         'value' => [2, 3],
       ],
     ],
+  ],
+  104 => [
+      'name' => totranslate('Remove 6 gold die face'),
+      'values' => [
+        0 => ['name' => totranslate('No')],
+        1 => ['name' => totranslate('Yes')],
+      ],
+      'displaycondition' => [
+          [
+            'type' => 'maxplayers',
+            'value' => 2,
+          ],
+          [
+            'type' => 'minplayers',
+            'value' => 2,
+          ],
+      ],
   ],
 ];
 
