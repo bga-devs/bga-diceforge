@@ -10,7 +10,7 @@
  * diceforge.js
  *
  * diceforge user interface script
- * 
+ *
  * In this file, you are describing the logic of your user interface, in Javascript language.
  *
  */
@@ -196,7 +196,7 @@ function (dojo, declare) {
                     // console.log('selectForge.deactivatePoolSidess');
                     for (var pool in self.pools)
                     {
-                        if ( self.connexions.hasOwnProperty("pool" + pool) ) 
+                        if ( self.connexions.hasOwnProperty("pool" + pool) )
                         {
                             dojo.disconnect( self.connexions["pool" + pool] );
                             delete self.connexions["pool" + pool];
@@ -232,7 +232,7 @@ function (dojo, declare) {
                 sidesSelected : [],
                 selectionMode : '',
                 selectionCallback : '',
-                activate: function(selectionMode, callback) { 
+                activate: function(selectionMode, callback) {
                     this.selectionMode = (selectionMode == undefined) ? 'OneSidePerDice' : selectionMode;
                     this.selectionCallback = (callback == undefined) ? 'onClickConfirmSelfSideSelection' : callback;
 
@@ -280,7 +280,7 @@ function (dojo, declare) {
 
                     // If nb of selected sides equal number of dices in HTML then we are done
                     // todo, maybe add a confirm for cautious users
-                    if (sides.length == dojo.query('.current-player-play-area .dice-flat').length) 
+                    if (sides.length == dojo.query('.current-player-play-area .dice-flat').length)
                         self[ this.selectionCallback ]();
                 },
                 onClickOneSide: function( event ) {
@@ -326,7 +326,7 @@ function (dojo, declare) {
             //    askMove: function(player_id, nb_move) {
             //        // look for player position
             //        // suggest every possible path while highlighting them + rewards
-            //        // returns      
+            //        // returns
             //    },
             //    movePlayer: function(player_id, tile_from, tile_to) {
             //
@@ -447,11 +447,11 @@ function (dojo, declare) {
                 'doubleUpgrade'     : 'side-double-upgrade',
                 'twins'             : 'ressources-twins'
             };
-            
+
             this.mazeClass = {
                 'mFS1'              : 'maze-fs1',
                 'mV3'               : 'maze-vp3',
-                'mG6orV3'           : 'maze-g6-or-vp3', 
+                'mG6orV3'           : 'maze-g6-or-vp3',
                 'mV5'               : 'maze-vp5',
                 'mFS1MS1V3'         : 'maze-vp3-fs1-ms1',
                 'mSteal2VP'         : 'maze-steal-vp2',
@@ -515,7 +515,7 @@ function (dojo, declare) {
                 "9"  : 8,
                 "10" : 12,
             };
-            
+
             this.memoryMap = {
                 'blueMemory'       : 'token-blue-memory-',
                 'yellowMemory'     : 'token-yellow-memory-',
@@ -627,20 +627,20 @@ function (dojo, declare) {
             // window.addEventListener('resize', function() {
             // });
         },
-        
+
         /*
             setup:
-            
+
             This method must set up the game user interface according to current game situation specified
             in parameters.
-            
+
             The method is called each time the game interface is displayed to a player, ie:
             _ when the game starts
             _ when a player refreshes the game page (F5)
-            
+
             "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
         */
-        
+
         setup: function( gamedatas )
         {
             console.log( "Starting game setup" );
@@ -712,25 +712,26 @@ function (dojo, declare) {
                 "forgeOriginalSide"             : _("Do you confirm the replacement of an updagred side?"),
                 "notEnoughResource"             : _("Not enough resources"),
                 "memoryIsland"                  : _("Select an island on which to put the reward on it"),
+                'fortuneWheel'                  : _("Select one side of each die as a prediction for the Wheel of Fortune"),
             }
-        
+
             this.exploitTypes = gamedatas.exploitTypes;
             this.sidesInit    = gamedatas.sides_init;
             this.initPools    = gamedatas.initPools;
 
             var nbPlayers = Object.keys(gamedatas.players).length;
-            if ( nbPlayers == 2 ) 
+            if ( nbPlayers == 2 )
                 dojo.addClass('game_play_area', 'two-players');
-            else if ( nbPlayers == 3 ) 
-                dojo.addClass('game_play_area', 'three-players');            
-            else if ( nbPlayers == 4 ) 
+            else if ( nbPlayers == 3 )
+                dojo.addClass('game_play_area', 'three-players');
+            else if ( nbPlayers == 4 )
                 dojo.addClass('game_play_area', 'four-players');
 
             // document.getElementById("lastTurn").innerHTML = this.translatableTexts.lastTurnMessage;
 
             // TODO: Comment for PROD
             dojo.addClass( 'loader_mask', 'hide' );
-            
+
             var celestial = [
                 {'id':1111, 'type':'G12', 'class':this.sideClass['G12'] },
                 {'id':1112, 'type':'V5', 'class':this.sideClass['V5'] },
@@ -739,16 +740,16 @@ function (dojo, declare) {
                 {'id':1115, 'type':'chooseSide', 'class':this.sideClass['chooseSide'] },
                 {'id':1161, 'type':'doubleUpgrade', 'class':this.sideClass['doubleUpgrade'] },
             ];
-            
+
             //dojo.place(this.format_block('jstpl_celestial_dice', celestial), 'turn-container');
             dojo.place(this.format_block('jstpl_celestial_dice', celestial), 'pool-1', 'before');
-            
+
             // Setting up player boards
             for( var player_id in gamedatas.players )
             {
                 // console.log ('player id ' + player_id);
                 var player = gamedatas.players[player_id];
-                
+
                 var player_panel     = $('player_board_' + player_id);
                 var player_play_area = $('player-container-' + player_id);
 
@@ -779,7 +780,7 @@ function (dojo, declare) {
 
                     $discardOverlay = document.querySelector('.fixed-center');
                     dojo.connect( $discardOverlay , 'onclick', this, 'onClickHideDiscard' );
-                    
+
 
                     var btnShowChooser = dojo.place( this.format_block('jstpl_bga_btn', {
                         'color'   : 'blue',
@@ -787,7 +788,7 @@ function (dojo, declare) {
                         'id'      : 'btn-show-chooser',
                         'text'    : this.translatableTexts.showChooseDialog,
                     } ), player_panel );
-                    
+
                     dojo.connect( btnShowChooser , 'onclick', this, 'onClickShowDialog' );
                     dojo.addClass(btnShowChooser, 'hide');
                 }
@@ -805,7 +806,7 @@ function (dojo, declare) {
                 this.addTooltipHtml( 'container_discarded_sides_p' + player_id, this.format_block('jstpl_tooltip_classic', {
                     'title' : this.translatableTexts.discardedSidesTooltipTitle
                 } ));
-                
+
                 // Ressources container
                 dojo.place(this.format_block('jstpl_player_ressource', player), 'first-flex-container-' + player_id, 'first');
 
@@ -824,13 +825,13 @@ function (dojo, declare) {
                 }
 
                 dojo.place(this.format_block('jstpl_hammer', player), 'ressources_container_p' + player_id, 'last');
-                
+
                 // Hammer token if card is owned
-                if (this.gamedatas.counters['hammercount_p' + player_id]) {    
+                if (this.gamedatas.counters['hammercount_p' + player_id]) {
                     dojo.query('#hammercount_p' + player_id)[0].innerHTML = this.gamedatas.counters[ 'hammercount_p' + player_id ];
                     dojo.query('#hammers_p' + player_id)[0].innerHTML = player.nbHammer;
                     dojo.removeClass('hammer_container_p' + player_id, 'hide');
-                
+
                     if (~~(this.gamedatas.players[player_id]['hammer_position']/15)&1)
                         // phase 2
                         dojo.addClass('hammer_p' + player_id, 'ressources-hammer2');
@@ -838,18 +839,18 @@ function (dojo, declare) {
                         // phase 1
                         dojo.addClass('hammer_p' + player_id, 'ressources-hammer1');
 
-                    if (player.remainingHammer > 1) 
+                    if (player.remainingHammer > 1)
                         dojo.removeClass('hammersleft_p' + player_id, 'hide');
                 }
 
                 merchant = 0;
-                for(var card in this.gamedatas.exploits['pile3-'+player_id]) 
+                for(var card in this.gamedatas.exploits['pile3-'+player_id])
                 {
-                    if( this.gamedatas.exploitTypes[ this.gamedatas.exploits[ 'pile3-' + player_id ][card]['type'] ]['actionType'] == 'recurrent' ) 
+                    if( this.gamedatas.exploitTypes[ this.gamedatas.exploits[ 'pile3-' + player_id ][card]['type'] ]['actionType'] == 'recurrent' )
                     {
                         var card_id   = this.gamedatas.exploits['pile3-' + player_id][card]['id'];
                         var card_type = this.gamedatas.exploits['pile3-' + player_id][card]['type'];
-                        
+
                         if (card_type == 'merchant') {
                             merchant++;
 
@@ -858,7 +859,7 @@ function (dojo, declare) {
                                 continue;
                             }
                         }
-                        
+
                         dojo.place( this.format_block('jstpl_power', {
                             'id'   : card_id,
                             'type' : card_type,
@@ -871,9 +872,9 @@ function (dojo, declare) {
                     $merchant = document.querySelector('#powers_p' + player_id + ' .power-merchant');
                     $merchant.innerHTML = merchant
                 }
-                
+
                 // Display of triton & cerberus tokens on the player panel
-                for (i=0; i< player['triton']; i++) 
+                for (i=0; i< player['triton']; i++)
                 {
                     dojo.place( this.format_block('jstpl_token_id', {
                         'size'      : 'small',
@@ -883,8 +884,8 @@ function (dojo, declare) {
                     }), 'tokens_p' + player_id );
                     this.addPowerToolTip('token-triton-' + player_id + '-' + i, 'triton');
                 }
-                
-                for (i=0; i< player['cerberus']; i++) 
+
+                for (i=0; i< player['cerberus']; i++)
                 {
                     dojo.place( this.format_block('jstpl_token_id', {
                         'size'      : 'small',
@@ -896,7 +897,7 @@ function (dojo, declare) {
                 }
 
                 // First player token
-                if (firstPlayerID == player_id) 
+                if (firstPlayerID == player_id)
                 {
                     dojo.place(this.format_block('jstpl_ressource_id', {'id':'first-player-token','size':'small', 'type':'first'}), 'action_p' + player_id, 'before');
 
@@ -904,18 +905,18 @@ function (dojo, declare) {
                         'title' : this.translatableTexts.firstPlayerTooltipTitle
                     } ));
                 }
-                
+
                 // Pawn position
-                if(player['position']== 'begin') 
+                if(player['position']== 'begin')
                     dojo.place (this.format_block('jstpl_player_pawn', {'color': this.colors[player['color']]}), 'position-init-'+ this.colors[player['color']]);
                 else
                     dojo.place (this.format_block('jstpl_player_pawn', {'color': this.colors[player['color']]}), 'position-'+ player['position']);
-                    
+
                 // Init of dices
                 this.lastSideUp[ player_id ] = {};
                 var dices = gamedatas.playersDice[player_id];
 
-                var dice1 = dices.dice1.map( function(value){ 
+                var dice1 = dices.dice1.map( function(value){
                     return {
                         "id"    : value.id,
                         "class" : self.sideClass[value.type],
@@ -950,13 +951,13 @@ function (dojo, declare) {
 
                 dojo.place(this.format_block('jstpl_dice', dice1), 'player-'+ player_id + '-dice-3D-1');
                 dojo.place(this.format_block('jstpl_dice', dice2), 'player-'+ player_id + '-dice-3D-2');
-                
+
                 dojo.place(this.format_block('jstpl_dice_flat', dice1), 'player-'+ player_id + '-dice-1');
                 dojo.place(this.format_block('jstpl_dice_flat', dice2), 'player-'+ player_id + '-dice-2');
             }
-            
+
             /**
-             * Initialisation of the pools 
+             * Initialisation of the pools
              **/
             for (var poolId in this.gamedatas.sides) {
                 this.pools[poolId] = new ebg.stock();
@@ -966,17 +967,17 @@ function (dojo, declare) {
                 this.pools[poolId].setSelectionMode(0);
                 this.pools[poolId].setSelectionAppearance('class');
                 this.pools[poolId].onItemCreate = dojo.hitch( this, 'addSideStuff' );
-                
+
                 for (var sideIndex in this.gamedatas.sides[poolId]) {
                     var side = this.gamedatas.sides[poolId][sideIndex];
                     var sideType = side.type; // ex: G6, mirror, FS2...
-                    
+
                     // Position of the side in the sprite ressource
-                    var sidePosition = this.sidePosition.indexOf(sideType); 
+                    var sidePosition = this.sidePosition.indexOf(sideType);
 
                     this.pools[poolId].addItemType(sidePosition, 0, g_gamethemeurl, sidePosition);
                     this.pools[poolId].addToStockWithId(sidePosition, side['id'], 'pool-' + poolId);
-                    
+
                     if (this.gamedatas.dice_sides[sideType].hasOwnProperty('tooltip')) {
                         this.addTooltipHtml('pool-' + poolId + '_item_' + side['id'],
                             this.format_block('jstpl_tooltip_side', {'description' : this.replaceTextWithIcons(_(this.gamedatas.dice_sides[sideType]['tooltip'] ))})
@@ -995,7 +996,7 @@ function (dojo, declare) {
                 this.exploits[slot].setOverlap(0.25,0.25);
                 this.exploits[slot].setSelectionMode(0);
                 this.exploits[slot].item_margin = 0;
-                this.exploits[slot].onItemCreate = dojo.hitch( this, 'addCardStuff' ); 
+                this.exploits[slot].onItemCreate = dojo.hitch( this, 'addCardStuff' );
 
                 if (this.gamedatas.exploits.hasOwnProperty(slot)) {
                     var nb_exploits_left = Object.keys( this.gamedatas.exploits[slot] ).length;
@@ -1012,7 +1013,7 @@ function (dojo, declare) {
                     }
                 }
             }
-            
+
             // exploit played
             for( var player_id in this.gamedatas.players ) {
                 var playerPile = 'pile-' + player_id;
@@ -1026,27 +1027,27 @@ function (dojo, declare) {
 
                 for (var pile in this.pileList) {
                     exp = this.pileList[pile] + '-' + player_id;
-     
+
                     // add the type for each card
                     for (var exp_card in this.gamedatas.exploitTypes) {
                         card_exploit = this.gamedatas.exploitTypes[exp_card];
                         this.exploits[playerPile].addItemType(exp_card, 0, g_gamethemeurl + 'img/sprite-cards-reb.jpg', this.exploitSpritePosition[exp_card] * 2 + 1);
                     }
-                    
-                    // only for cards owned  
-                    if (this.exploitSlot.indexOf(exp) == -1 && exp.substr(0, 5) != 'table') {  
+
+                    // only for cards owned
+                    if (this.exploitSlot.indexOf(exp) == -1 && exp.substr(0, 5) != 'table') {
                         for(var position in this.gamedatas.exploits[exp]) {
                             card_exploit = this.gamedatas.exploits[exp][position];
                             card_type = card_exploit.type;
                             if ( this.classEffect[ card_type ] != undefined ) {
                                 var elId = 'token-' + player_id + '-' + card_exploit.id;
-                                dojo.place( 
+                                dojo.place(
                                     this.format_block('jstpl_ressource_id', {
                                         'id'   : elId,
                                         'size' : 'small',
                                         'type' : this.classEffect[ card_type ]
-                                    }), 
-                                    'action_p' + player_id, 'before' 
+                                    }),
+                                    'action_p' + player_id, 'before'
                                 );
 
                                 this.addPowerToolTip( elId, card_type );
@@ -1068,13 +1069,13 @@ function (dojo, declare) {
                 }
 
                 if ( gamedatas.exploits.hasOwnProperty( 'table-' + player_id ) ) {
-                    for ( var index in gamedatas.exploits[ 'table-' + player_id ] ) 
+                    for ( var index in gamedatas.exploits[ 'table-' + player_id ] )
                     {
                         var card = gamedatas.exploits[ 'table-' + player_id ][ index ];
                         this.exploits[ 'pile-' + player_id ].addToStockWithId(card['type'], card['id']);
                     }
                 }
-                
+
                 if ( this.gamedatas.powerTokens.hasOwnProperty(player_id)) {
                     for (var power in this.gamedatas.powerTokens[player_id]) {
                         //console.log('tata', this.gamedatas.powerTokens[player_id][power].state);
@@ -1093,7 +1094,7 @@ function (dojo, declare) {
                         // Companion should not be added if used
                         else if (pow[0] == 'companion') {
                             this.notifCompanion({args : {card_id : 'power-' + pow[1], val : this.gamedatas.powerTokens[player_id][power].state}});
-                            
+
                         }
                         this.addPowerToolTip('token-' + pow[0] + '-' + player_id + '-' + pow[1], pow[0]);
                     }
@@ -1131,7 +1132,7 @@ function (dojo, declare) {
             }), 'nb-turns-container' );
 
             this.turnPlayerId = gamedatas.turnPlayerId;
-            
+
             if (this.turnPlayerId != 0) {
                 dojo.addClass( 'overall_player_board_' + gamedatas.turnPlayerId, 'active' );
                 dojo.addClass( 'player-container-' + gamedatas.turnPlayerId, 'active' );
@@ -1187,7 +1188,7 @@ function (dojo, declare) {
                         'description' : this.ressourcesTextToIcon(_(passive.description)),
                     }));
                 }
-                
+
                 for( var player_id in this.gamedatas.players ) {
                     var position = this.gamedatas.zones['position_' + player_id].state;
 
@@ -1200,11 +1201,11 @@ function (dojo, declare) {
                     //    'type' : this.colors[this.gamedatas.players[player_id]['color']] + '-player',
                     //});
 
-                    
+
                 }
-                
+
                 for (var token in this.gamedatas.memoryTokens) {
-                    if (this.gamedatas.memoryTokens[token].location == 'none' || this.gamedatas.memoryTokens[token].location == 'used' ) 
+                    if (this.gamedatas.memoryTokens[token].location == 'none' || this.gamedatas.memoryTokens[token].location == 'used' )
                         continue ;
 
                     var token_split = token.split('_');
@@ -1212,7 +1213,7 @@ function (dojo, declare) {
                     var token_owner = "";
                     let ressource = "";
                     //console.debug(notif.args);
-                    
+
                     if (this.gamedatas.memoryTokens[token].state == '1') {
                         side = 'sun';
                         ressource = '2 [L] 1 [FS]';
@@ -1221,14 +1222,14 @@ function (dojo, declare) {
                         side = 'moon';
                         ressource = '2 [AS] 1 [MS]';
                     }
-                    
+
                     dojo.place(
                             this.format_block('jstpl_memory_id', {
                                 'id'   :  token,
                                 'type' : this.memoryMap[token_split[0]] + side,
                             }), 'memory-' + this.gamedatas.memoryTokens[token].location
                         );
-                    
+
                     token_owner = '<span style="font-weight:bold;color:#' + this.gamedatas.players[token_split[2]]['color'] + '">' + this.gamedatas.players[token_split[2]]['name'] + '</span>';
 
                     this.addTooltipHtml(token, this.format_block('jstpl_tooltip_title', {
@@ -1236,7 +1237,7 @@ function (dojo, declare) {
                                 'description' : _('Gain ') + this.ressourcesTextToIcon(ressource)}));
 
                 }
-                
+
             }
             // Goddess
             else if (this.gamedatas.rebellion == 4) {
@@ -1261,7 +1262,7 @@ function (dojo, declare) {
                         'type' : this.mazeClass['m' + this.gamedatas.maze['firstFinish'].reward ],
                     }),
                 }));
- 
+
                 // setup golems and player info
                 for( var player_id in this.gamedatas.players ) {
                     var position = this.gamedatas.zones['position_' + player_id].state;
@@ -1280,20 +1281,20 @@ function (dojo, declare) {
                         'color' : this.colors[this.gamedatas.players[player_id]['color']],
                         'name' : this.gamedatas.players[player_id]['name'],
                     }), 'maze-caption');
-                    
+
                 }
-                
+
                 // treasure init
                 for (var treasure in this.gamedatas.treasures) {
                     if (this.gamedatas.treasures[treasure]['location'] != 'none') {
                         var reward = treasure.split('_');
-                        
+
                         this.addTreasureToolTip(this.gamedatas.treasures[treasure]['location'], reward[1]);
                     }
                 }
             }
-            
-            
+
+
 
             //$mazeOpacityRange = document.getElementById('maze-opacity');
             //console.log('dfMazeOpacity', this.getMyCookie('dfMazeOpacity'));
@@ -1312,10 +1313,10 @@ function (dojo, declare) {
             }
 
             this.connexions['mazePulse'] = dojo.connect($mazeBoard, 'onclick', this, 'onClickMazePulse');
-            
+
             if (this.gamedatas.hasOwnProperty('celestial'))
                 this.rollCelestialDice(gamedatas.celestial, false);
-            
+
             this.activateTritonToken();
 
             // scepter management
@@ -1333,7 +1334,7 @@ function (dojo, declare) {
             this.setupNotifications();
         },
 
-        onClickShowDiscard: function(event) 
+        onClickShowDiscard: function(event)
         {
             //console.log('onClickShowDiscard', event);
             dojo.stopEvent(event);
@@ -1352,7 +1353,7 @@ function (dojo, declare) {
             })
         },
 
-        onClickHideDiscard: function(event) 
+        onClickHideDiscard: function(event)
         {
             //console.log('onClickHideDiscard', event);
             dojo.stopEvent(event);
@@ -1364,14 +1365,14 @@ function (dojo, declare) {
 
         ///////////////////////////////////////////////////
         //// Game & client states
-        
+
         // fState: this method is called each time we are entering into a new game state.
         //                  You can use this method to perform some user interface changes at this moment.
         //
         onEnteringState: function( stateName, args )
         {
             console.log('Entering state: ' + stateName, args );
-            
+
             switch( stateName ) {
                 case 'draft':
                     // hide players board
@@ -1379,7 +1380,7 @@ function (dojo, declare) {
 
                     // show draft block
                     dojo.query("#draft-container").removeClass('hide');
-                    
+
                     // add cards inside + tooltips + connexions
                     var slot = args.args.slot;
                     for (var index in args.args.exploits) {
@@ -1400,52 +1401,54 @@ function (dojo, declare) {
                     break;
                 case 'exploitRessource':
                     this.playedAction = args.args.card.action;
-
-                    if ((this.isCurrentPlayerActive() || args.active_player == this.player_id) 
-                        && args.args.hasOwnProperty(this.player_id) 
+                    if ((this.isCurrentPlayerActive() || args.active_player == this.player_id)
+                        && args.args.hasOwnProperty(this.player_id)
                         && args.args[this.player_id].action == 'side'
                     ) {
+                        console.log('Played action' + this.playedAction);
+
                         if (args.args[this.player_id].firstFinish) {
                             $('pagemaintitletext').innerHTML = this.translatableTexts.celestialChooseSides;
                             // Activate flat side to allow one selection on each dice
                             this.selfSides.activate('OneSidePerDice', 'onClickConfirmGoddessCard');
                         } else {
                             if (args.args.celestial != '' || args.args[this.player_id].side_choice.side98) {
+                                console.log("non pas la");
                                 this.prepareChoiceState({'args':args.args}, args.args[this.player_id].action);
                                 break ;
                             }
                             switch (this.playedAction) {
                                 case 'steal2':
                                     $('pagemaintitletext').innerHTML = this.translatableTexts.satyrsDescriptionMyTurn;
-    
+
                                     var dices    = [];
                                     nbMirror = 0;
-    
+
                                     this.clientStateArgs.side_choice = {'side1': true, 'side2': true};
-                                    
+
                                     // GET ALL DICES/SIDES BUT MIRRORS
                                     for (var player_id in this.gamedatas.players) {
                                         if (player_id != this.player_id) {
                                             for (var i = 1 ; i <= 2 ; i++) {
                                                 var is_mirror = this.lastSideUp[ player_id ][ i ].type == 'mirror' ? true : false;
-    
+
                                                 dices.push( {
                                                     "player_id" : player_id,
                                                     "dice"      : i,
                                                     "is_mirror" : is_mirror
                                                 } );
-    
+
                                                 if ( is_mirror )
                                                     nbMirror++;
                                             }
                                         }
                                     }
-    
+
                                     // if at least one enemy mirror, add self sides
                                     if ( nbMirror ) {
                                         for (var i = 1 ; i <= 2 ; i++) {
                                             var is_mirror = this.lastSideUp[ this.player_id ][ i ].type == 'mirror' ? true : false;
-    
+
                                             dices.push( {
                                                 "player_id" : this.player_id,
                                                 "dice"      : i,
@@ -1453,10 +1456,10 @@ function (dojo, declare) {
                                             } );
                                         }
                                     }
-    
+
                                     var args = {
                                         "title"           : this.translatableTexts.satyrsDescriptionMyTurn, // titre de la dialog
-                                        "selectMode"      : 'sides', 
+                                        "selectMode"      : 'sides',
                                         "nbToSelect"      : 2,
                                         "sameSelectable"  : ( nbMirror >= 2 ) ? true : false,
                                         "limitSelfSelect" : ( nbMirror == 1 ) ? true : false,
@@ -1465,9 +1468,9 @@ function (dojo, declare) {
                                         "action"          : 'onClickSideChoiceConfirm',
                                         "hideMirror"      : true
                                     };
-    
+
                                     this.initDiceSelection( args );
-                          
+
                                     break;
                                 case 'chooseSides':
                                     // only activate self sides if we should...
@@ -1477,16 +1480,16 @@ function (dojo, declare) {
                                         $('pagemaintitletext').innerHTML = this.translatableTexts.celestialChooseSides;
                                         this.selfSides.activate('OneSidePerDice', 'onClickConfirmGoddessCard');
                                     }
-                                    
+
                                     break ;
                                 case 'throwCelestialDie':
                                     //console.log(args.args.celestial);
                                     switch (args.args.celestial) {
                                         case 'celestialMirror':
                                             this.clientStateArgs.side_choice = {'side1': true, 'side2': false};
-                                            
+
                                             var dices    = [];
-                                            
+
                                             // GET ALL DICES/SIDES BUT MIRRORS
                                             for (var player_id in this.gamedatas.players) {
                                                 for (var i = 1 ; i <= 2 ; i++) {
@@ -1497,10 +1500,10 @@ function (dojo, declare) {
                                                     } );
                                                 }
                                             }
-                                            
+
                                             var args = {
                                                 "title"         : this.translatableTexts.celestialMirror,
-                                                "selectMode"    : 'sides', 
+                                                "selectMode"    : 'sides',
                                                 "nbToSelect"    : 1,
                                                 "mirrorVisible" : false,
                                                 "dices"         : dices,
@@ -1514,29 +1517,35 @@ function (dojo, declare) {
                                             $('pagemaintitletext').innerHTML = this.translatableTexts.celestialChooseSide;
                                             this.selfSides.activate('OneSide', 'onClickConfirmCelestialMirror');
                                             break ;
-                                    }
+                                        }
+                                case 'fortuneWheel':
+                                    $('pagemaintitletext').innerHTML = this.translatableTexts.fortuneWheel;
+                                    // Activate flat side to allow one selection on each dice
+                                    this.selfSides.activate('OneSidePerDice', 'onClickConfirmGoddessCard');
+                                    break;
+
                             }
                         }
                     }
                     //if ((this.isCurrentPlayerActive() || args.active_player == this.player_id) && args.args.hasOwnProperty(this.player_id) && this.playedAction == 'looseThrow') {
                     //if ((this.isCurrentPlayerActive() || args.active_player == this.player_id) && this.playedAction == 'looseThrow') {
                     // Bug #13038 & 10356
-                    if (this.isCurrentPlayerActive() 
+                    if (this.isCurrentPlayerActive()
                         && this.playedAction == 'looseThrow'
-                        && (args.args.hasOwnProperty(this.player_id) 
-                        && args.args[this.player_id].action != 'cerberusToken' 
-                        && (!args.args[this.player_id].sides.hasOwnProperty('0') || parseInt(args.args[this.player_id].sides[0].num) <= 2))  
+                        && (args.args.hasOwnProperty(this.player_id)
+                        && args.args[this.player_id].action != 'cerberusToken'
+                        && (!args.args[this.player_id].sides.hasOwnProperty('0') || parseInt(args.args[this.player_id].sides[0].num) <= 2))
                     ) {
                         $('pagemaintitletext').innerHTML = this.translatableTexts.minotaurDescriptionMyTurn;
                     }
-                    break;              
+                    break;
                 case 'reinforcement':
                     if( this.isCurrentPlayerActive() ) {
                         // stock server states args if user cancel
                         // BEWARE, override old statesInfo when new data comes from server
                         if ( this.statesInfo[ stateName ] == undefined || args != this.statesInfo[ stateName ] )
                             this.statesInfo[ stateName ] = this.duplicateObject(args);
-                    } 
+                    }
 
                     this.activateReinforcement( args.args );
                     break;
@@ -1556,7 +1565,7 @@ function (dojo, declare) {
                             else
                                 this.enablePlayerActionHelp();
                         }
-                        else if (this.prefs[100].value == 2) { 
+                        else if (this.prefs[100].value == 2) {
                             if ( args.args.isForging ) {
                                 $('pagemaintitletext').innerHTML = this.translatableTexts.isForgingDescriptionMyTurn;
                                 this.selectForge.init( {
@@ -1566,7 +1575,7 @@ function (dojo, declare) {
                             else {
                                 // console.log("coucoou");
                                 this.selectForge.init();
-                                this.activateExploits();  
+                                this.activateExploits();
                                 // console.log("coucoou22");
                             }
                         }
@@ -1574,14 +1583,14 @@ function (dojo, declare) {
                     }
                     break;
                 case 'chooseForge':
-                    // This is a client state so no need to check if it's active player 
+                    // This is a client state so no need to check if it's active player
                     var isForging = args.args.hasOwnProperty('isForging') && args.args.isForging ? true : false;
                     this.selectForge.init( {
                         'isForging' : isForging
                     } );
-                    
+
                     break;
-                case 'chooseExploit': 
+                case 'chooseExploit':
                     // This is a client state so no need to check if it's active player
                     if (args.slots)
                         this.activateExploits(args.slots);
@@ -1591,7 +1600,7 @@ function (dojo, declare) {
                         this.clientStateArgs.free = true;
                         this.removeActionButtons();
                     }
-                    
+
                     break;
                 case 'exploitEffect':
                     if ( this.statesInfo[ stateName ] == undefined )
@@ -1603,24 +1612,24 @@ function (dojo, declare) {
                         if (!args.args.effectRunning) {
                             //alert('--' + args.args.info.power_you+'--');
                             $('pagemaintitletext').innerHTML = args.args.info.player + " " + this.replaceTextWithIcons(_(args.args.info.power_desc));
-                            if (this.isCurrentPlayerActive() || args.active_player == this.player_id) 
+                            if (this.isCurrentPlayerActive() || args.active_player == this.player_id)
                                 $('pagemaintitletext').innerHTML = this.divYou() + " " + this.replaceTextWithIcons(_(args.args.info.power_you));
                         }
                         //console.log(args.args.celestial);
                         //if (args.args.celestial != '') {
                         //    console.log("boug");
                         //    break ;
-                        //}    
+                        //}
                         switch (this.playedAction) {
                             case '4Throws':
                             case '4ThrowsTransform':
                                 if ( ( this.isCurrentPlayerActive() || args.active_player == this.player_id ) && !args.args.effectRunning ) {
-        
+
                                     $('pagemaintitletext').innerHTML = this.translatableTexts.sphinxDescriptionMyTurn;
-        
+
                                     var args = {
                                         "title"      : this.translatableTexts.sphinxDescriptionMyTurn, // titre de la dialog
-                                        "selectMode" : 'flat', 
+                                        "selectMode" : 'flat',
                                         "nbToSelect" : 1,
                                         "canCancel"  : 0,
                                         "action"     : 'onDiceSelection4Throws',
@@ -1636,7 +1645,7 @@ function (dojo, declare) {
                                         ],
                                         "hideMirror"      : true
                                     };
-        
+
                                     this.initDiceSelection( args );
                                 }
                                 break;
@@ -1645,63 +1654,63 @@ function (dojo, declare) {
                                 var idSide = dojo.query('#pool-15 .bside').length ? dojo.query('#pool-15 .bside')[0].id.match(/pool-15_item_([0-9]+)/)[1] : 0;
                                 params = {'sideToForge': idSide, 'forgeType' : 'triple'};
 
-                                if ( this.isCurrentPlayerActive() && idSide ) 
+                                if ( this.isCurrentPlayerActive() && idSide )
                                     this.selectForge.init(params);
-                                
+
                                 break;
                             case 'sideShip' :
                                 var idSide = dojo.query('#pool-13 .bside').length ? dojo.query('#pool-13 .bside')[0].id.match(/pool-13_item_([0-9]+)/)[1] : 0;
                                 params = {'sideToForge': idSide, 'forgeType' : 'ship'};
-                                
-                                if ( this.isCurrentPlayerActive() && idSide ) 
+
+                                if ( this.isCurrentPlayerActive() && idSide )
                                     this.selectForge.init(params);
-                                
+
                                 break;
                             case 'shieldForge' :
                                 params = {'forgeType' : 'shield'};
-                                
-                                if( this.isCurrentPlayerActive() ) 
+
+                                if( this.isCurrentPlayerActive() )
                                     this.selectForge.init(params);
-                                
+
                                 break;
                             case 'sideMirror':
                                 var idSide = dojo.query('#pool-11 .bside').length ? dojo.query('#pool-11 .bside')[0].id.match(/pool-11_item_([0-9]+)/)[1] : 0;
                                 params = {'sideToForge': idSide, 'forgeType' : 'mirror'};
-                                
-                                if ( this.isCurrentPlayerActive() && idSide ) 
+
+                                if ( this.isCurrentPlayerActive() && idSide )
                                     this.selectForge.init(params);
-                                
+
                                 break;
                             case 'boarForge':
                             case 'sideMisfortune':
                                 if (this.isCurrentPlayerActive()) {
                                     for( var player_id in this.gamedatas.players ) {
                                         if (player_id != this.player_id)
-                                            this.addActionButton( 'boar_player_' + player_id, '<span style="font-weight:bold;color:#' + this.gamedatas.players[player_id]['color'] + '">' + this.gamedatas.players[player_id]['name'] + '</span>', 'onClickBoarPlayer', null, null, 'gray'); 
+                                            this.addActionButton( 'boar_player_' + player_id, '<span style="font-weight:bold;color:#' + this.gamedatas.players[player_id]['color'] + '">' + this.gamedatas.players[player_id]['name'] + '</span>', 'onClickBoarPlayer', null, null, 'gray');
                                     }
                                 }
-                    
+
                                 break;
                             case 'forge4G':
                                 params = {'forgeType' : 'gold'};
-                                
-                                if( this.isCurrentPlayerActive() ) 
+
+                                if( this.isCurrentPlayerActive() )
                                     this.selectForge.init(params);
                                 break ;
                             case 'forgeVP':
                                 // choose of side
                                 if (args.args.poolToForge != null && args.args.poolToForge != -1) {
                                     param = {'forgeType' : 'select', 'poolList' : [args.args.poolToForge]};
-                                    if( this.isCurrentPlayerActive() ) 
+                                    if( this.isCurrentPlayerActive() )
                                         this.selectForge.init(param);
                                 }
                                 // no available side, choose of die
                                 else if( this.isCurrentPlayerActive() && args.args.poolToForge == null){
                                    var args = {
                                         "title"      : this.translatableTexts.ancestorNoSide,
-                                        "selectMode" : 'flat', 
+                                        "selectMode" : 'flat',
                                         "nbToSelect" : 1,
-                                        "dices"      : [ 
+                                        "dices"      : [
                                             {
                                                 "player_id" : this.player_id,
                                                 "dice"      : 1
@@ -1709,17 +1718,17 @@ function (dojo, declare) {
                                             {
                                                 "player_id" : this.player_id,
                                                 "dice"      : 2
-                                            } 
+                                            }
                                         ],
                                         "action"     : 'onDiceSelectionAncestor'
                                      };
-                    
-                                    this.initDiceSelection( args ); 
+
+                                    this.initDiceSelection( args );
                                 }
                                 break ;
                             case 'forgeEverywhere':
                                 params = {'forgeType' : 'select', 'poolList' : args.args.poolList};
-                                if( this.isCurrentPlayerActive() ) 
+                                if( this.isCurrentPlayerActive() )
                                     this.selectForge.init(params);
                                 break ;
                             case 'freeExploit':
@@ -1732,7 +1741,7 @@ function (dojo, declare) {
                                     //this.restoreServerGameState();
                                     return ;
                                 }
-                                
+
                                 this.clientStateArgs.merchantNbUpgrade = 2;
                                 this.clientStateArgs.callback = 'onClickCelestialUpgrade';
                                 this.clientStateArgs.canCancel = false;
@@ -1740,35 +1749,35 @@ function (dojo, declare) {
                                 this.setClientState("merchantSecondStep", {
                                     descriptionmyturn : this.translatableTexts.merchantSecondStep
                                 });
-                                
+
                                 break ;
                             case 'sideMoonGolem' :
                                 var idSide = dojo.query('#pool-19 .bside').length ? dojo.query('#pool-19 .bside')[0].id.match(/pool-19_item_([0-9]+)/)[1] : 0;
                                 params = {'sideToForge': idSide, 'forgeType' : 'moonGolem'};
-                                
-                                if ( this.isCurrentPlayerActive() && idSide ) 
+
+                                if ( this.isCurrentPlayerActive() && idSide )
                                     this.selectForge.init(params);
-                                
+
                                 break;
                             case 'sideSunGolem' :
                                 var idSide = dojo.query('#pool-17 .bside').length ? dojo.query('#pool-17 .bside')[0].id.match(/pool-17_item_([0-9]+)/)[1] : 0;
                                 params = {'sideToForge': idSide, 'forgeType' : 'sunGolem'};
-                                
-                                if ( this.isCurrentPlayerActive() && idSide ) 
+
+                                if ( this.isCurrentPlayerActive() && idSide )
                                     this.selectForge.init(params);
-                                
+
                                 break;
                             case 'sideDogged': // forge a dogged side
                                 params = {'forgeType' : 'dogged'};
-                                
-                                if( this.isCurrentPlayerActive() ) 
+
+                                if( this.isCurrentPlayerActive() )
                                     this.selectForge.init(params);
-                                    
+
                                 break ;
                             case 'sideShieldRebellion':
                                  params = {'forgeType' : 'shieldRebellion'};
-                                
-                                if( this.isCurrentPlayerActive() ) 
+
+                                if( this.isCurrentPlayerActive() )
                                     this.selectForge.init(params);
                                 break ;
                             case 'memoryTokens':
@@ -1778,12 +1787,15 @@ function (dojo, declare) {
                                 else
                                     $('pagemaintitletext').innerHTML = $('pagemaintitletext').innerHTML + " 2/2";
                                 break ;
+                            case 'wheelFortune':
+
+                                break ;
                         }
                     }
                     break;
                 case "exploitForgeBoar":
                     params = {'sideToForge' : args.args.id, 'forgeType' : args.args.type};
-                                
+
                     if( this.isCurrentPlayerActive() ) {
                         this.selectForge.init(params);
                     }
@@ -1806,7 +1818,7 @@ function (dojo, declare) {
                             this.exploits[ nom_container ].addToStockWithId( item.type, item.id, stockFrom + "_item_" + item.id );
                             this.exploits[ stockFrom ].removeFromStockById(item.id);
                         }
-                        
+
                     }
                     break;
                 case 'secondAction':
@@ -1822,7 +1834,7 @@ function (dojo, declare) {
                     params = {};
 
                     if (this.isCurrentPlayerActive()) {
-                        
+
                         if (args.args.ship == 'doubleUpgrade') {
                             this.clientStateArgs.merchantNbUpgrade = 2;
                             this.clientStateArgs.callback = 'onClickCelestialUpgrade';
@@ -1832,7 +1844,7 @@ function (dojo, declare) {
                                 descriptionmyturn : this.translatableTexts.merchantSecondStep
                             });
                         }
-                        else                        
+                        else
                             this.selectForge.init(params);
                     }
                     break;
@@ -1871,7 +1883,7 @@ function (dojo, declare) {
                     break;
                 case 'reinforcement':
                     this.deactivateReinforcement();
-                    this.statesInfo = {}; 
+                    this.statesInfo = {};
                     break;
                 case 'playerAction':
                     this.disablePlayerActionHelp();
@@ -1945,12 +1957,12 @@ function (dojo, declare) {
                         delete this.connexions["islands"];
                     }
                     break ;
-            }               
-        }, 
+            }
+        },
 
         // onUpdateActionButtons: in this method you can manage "action buttons" that are displayed in the
         //                        action status bar (ie: the HTML links in the status bar).
-        //        
+        //
         onUpdateActionButtons: function( stateName, args )
         {
             console.log('onUpdateActionButtons: ' + stateName, args);
@@ -1958,7 +1970,7 @@ function (dojo, declare) {
             $('pagemaintitletext').innerHTML = this.replaceTextWithIcons( $('pagemaintitletext').innerHTML );
 
             // Fail fast
-            if( ! this.isCurrentPlayerActive() ) { 
+            if( ! this.isCurrentPlayerActive() ) {
                 return;
             }
 
@@ -1972,18 +1984,18 @@ function (dojo, declare) {
 
                 case 'playerAction':
                     if (this.prefs[100].value == 1) {
-                        this.addActionButton('player_action_button_forge', _('Forge'), 'onClickPlayerAction'); 
-                        this.addActionButton('player_action_button_exploit', _('Heroic Feat'), 'onClickPlayerAction'); 
+                        this.addActionButton('player_action_button_forge', _('Forge'), 'onClickPlayerAction');
+                        this.addActionButton('player_action_button_exploit', _('Heroic Feat'), 'onClickPlayerAction');
                         this.addActionButton( 'player_action_button_end', this.translatableTexts.endTurnButton, 'onClickPlayerAction', null, null, 'red' );
-                    } 
+                    }
                     else if (this.prefs[100].value == 2) {
                         if ( args.isForging )
                             this.addActionButton( 'forge_action_button_end', this.translatableTexts.endForgeButton, 'onClickEndForge', null, null, 'red' );
                         else
-                            this.addActionButton( 'player_action_button_end', this.translatableTexts.endTurnButton, 'onClickPlayerAction', null, null, 'red' ); 
+                            this.addActionButton( 'player_action_button_end', this.translatableTexts.endTurnButton, 'onClickPlayerAction', null, null, 'red' );
                     }
                     if (args.scepters != 0)
-                        this.addActionButton( 'player_action_cancel_scepters', this.translatableTexts.cancelScepters, 'onClickCancelScepter', null, null, 'red' ); 
+                        this.addActionButton( 'player_action_cancel_scepters', this.translatableTexts.cancelScepters, 'onClickCancelScepter', null, null, 'red' );
                     break;
 
                 case 'forgeShip':
@@ -1992,19 +2004,19 @@ function (dojo, declare) {
                 case 'exploitForgeShip':
                     if (args.ship == "mForge")
                         $('pagemaintitletext').innerHTML = this.replaceTextWithIcons( this.translatableTexts.mazeClassicalForge );
-                        
+
                     if (!args[this.player_id].hasOwnProperty('sides')) {
                         toUse = '123456';
                     }
                     else
                         toUse = args[this.player_id].sides[0].num;
-                        
-                    this.addActionButton('forge_ship_pass_' + toUse, this.translatableTexts.pass, 'onClickForgeShipPass', null, null, 'red'); 
+
+                    this.addActionButton('forge_ship_pass_' + toUse, this.translatableTexts.pass, 'onClickForgeShipPass', null, null, 'red');
                     break;
                 case 'merchantFirstStep':
                     //console.log("toto");
                     //console.debug(this.clientStateArgs);
-                    
+
                     // force unselection of all sides in the pool
                     for (var pool in this.pools) {
                         this.pools[ pool ].unselectAll();
@@ -2019,7 +2031,7 @@ function (dojo, declare) {
                         else
                             merchantText = this.replaceTextWithIcons(i + " " + upg + " " + parseInt(j) * 2 + "[VP]");
 
-                        this.addActionButton( 'merchant' + i + '_' + i + '_' + j, merchantText, 'onClickMerchantStepOne', null, null, 'gray'); 
+                        this.addActionButton( 'merchant' + i + '_' + i + '_' + j, merchantText, 'onClickMerchantStepOne', null, null, 'gray');
                     }
 
                     this.addActionButton('merchantCancel', this.translatableTexts.cancel, 'restoreServerGameState', null, null, 'red');
@@ -2032,28 +2044,28 @@ function (dojo, declare) {
                     break ;
                 case 'chooseForge':
                     if ( args.isForging )
-                        this.addActionButton('forge_action_button_end', this.translatableTexts.endForgeButton, 'onClickEndForge', null, null, 'red'); 
+                        this.addActionButton('forge_action_button_end', this.translatableTexts.endForgeButton, 'onClickEndForge', null, null, 'red');
                     else
-                        this.addActionButton('forge_action_button_cancel', this.translatableTexts.cancel, 'onClickCancelForge', null, null, 'red'); 
+                        this.addActionButton('forge_action_button_cancel', this.translatableTexts.cancel, 'onClickCancelForge', null, null, 'red');
                     break;
 
                 case 'chooseExploit':
                     this.addActionButton('exploit_action_button_cancel', this.translatableTexts.cancel, 'onClickCancelPlayerAction', null, null, 'red');
                     break;
-                
+
                 case 'secondAction':
                     var ressources = this.getPlayerRessources();
-                    
+
                     var validCombinations = [];
                     var fireCost = 2;
-                
+
                     let combinations = [];
                     for(var i = 0; i <= fireCost; i++){
                         let text = i + ' [FS] ' + (fireCost - i) + ' [AS]';
                         combinations.push([i, 0, fireCost - i, text]);
                     }
                     validCombinations = combinations.filter(c => c[0] <= ressources.fireshard && c[2] <= ressources.ancientshard);
-                    
+
                     validCombinations = this.generateButtonText(validCombinations);
                     validCombinations = validCombinations.sort(
                         function (a, b) {
@@ -2068,16 +2080,16 @@ function (dojo, declare) {
                     );
                     let z = 0;
                     for ( let comb in validCombinations ) {
-                        this.addActionButton( 'secondAction' + z + '_' + validCombinations[comb][0] + '_' + validCombinations[comb][1] + '_' + validCombinations[comb][2] , this.replaceTextWithIcons(validCombinations[comb][4]), 'onClickSecondActionPlay', null, null, 'gray'); 
+                        this.addActionButton( 'secondAction' + z + '_' + validCombinations[comb][0] + '_' + validCombinations[comb][1] + '_' + validCombinations[comb][2] , this.replaceTextWithIcons(validCombinations[comb][4]), 'onClickSecondActionPlay', null, null, 'gray');
                         z++;
                     }
 
                     //this.addActionButton('secondaction_confirm_button', this.translatableTexts.yes + this.replaceTextWithIcons(' - 2 [FS]'), 'onClickSecondActionPlay', null, null, 'gray');
                     this.addActionButton('secondAction_0_0_0', this.translatableTexts.no, 'onClickSecondActionPass', null, null, 'gray');
                     if (args.scepters != 0)
-                        this.addActionButton( 'player_action_cancel_scepters', this.translatableTexts.cancelScepters, 'onClickCancelScepter', null, null, 'red' ); 
+                        this.addActionButton( 'player_action_cancel_scepters', this.translatableTexts.cancelScepters, 'onClickCancelScepter', null, null, 'red' );
                     break;
-                
+
                 case 'owlChoose':
                     this.addActionButton('owlGold', this.format_block('jstpl_ressource', {
                         'size' : 'small',
@@ -2098,7 +2110,7 @@ function (dojo, declare) {
                     }), 'onClickOwlMoonshard', null, null, 'gray');
                     this.addActionButton('ownCancel', this.translatableTexts.cancel, 'restoreServerGameState', null, null, 'red');
                     break;
-                
+
                  case 'guardianChoose':
                     this.addActionButton('guardianAncient', this.format_block('jstpl_ressource', {
                         'size' : 'small',
@@ -2110,7 +2122,7 @@ function (dojo, declare) {
                     }), 'onClickGuardianLoyalty', null, null, 'gray');
                     this.addActionButton('ownCancel', this.translatableTexts.cancel, 'restoreServerGameState', null, null, 'red');
                     break;
-                
+
                 case 'ressourceChoice':
                     var action = "actRessourceChoice";
                     this.preActionChoice( args, action );
@@ -2130,13 +2142,13 @@ function (dojo, declare) {
                     break ;
                 case 'exploitRessource':
                     var action = "";
-                    if ( args.hasOwnProperty(this.player_id) 
+                    if ( args.hasOwnProperty(this.player_id)
                         && args[this.player_id].action == 'side'
                     ) {
                         console.log(1);
-                        
-                        if ((args.card.action != 'steal2' 
-                            && args.card.action != 'throwCelestialDie')
+
+                        if ((args.card.action != 'steal2'
+                            && args.card.action != 'throwCelestialDie') && args.card.action != 'fortuneWheel'
                             && (args.card.action != 'chooseSides' || args.card.action == 'chooseSides' && args[this.player_id].mirror != 0)
                         ) {
                             console.log(2);
@@ -2169,7 +2181,7 @@ function (dojo, declare) {
                                 this.addActionButton('help_button_shieldForge', this.translatableTexts.question, 'onClickHelpForgeButton', null, null, 'gray');
                             break;
                             case 'forge4G':
-                                this.addActionButton('forge_ship_pass_11' , this.translatableTexts.pass, 'onClickForgeNymphPass', null, null, 'red'); 
+                                this.addActionButton('forge_ship_pass_11' , this.translatableTexts.pass, 'onClickForgeNymphPass', null, null, 'red');
                                 break ;
                             case 'memoryTokens':
                                 console.debug(args.memory);
@@ -2185,7 +2197,7 @@ function (dojo, declare) {
                     break;
                 case 'useScepter':
                     console.log(this.clientStateArgs.actionData);
-                    
+
                     this.addActionButton('scepterFireshard', this.replaceTextWithIcons(this.clientStateArgs.actionData.amount + ' [FS]'), 'onClickScepterFireshard', null, null, 'gray');
                     this.addActionButton('scepterMoonshard', this.replaceTextWithIcons(this.clientStateArgs.actionData.amount + ' [MS]'), 'onClickScepterMoonshard', null, null, 'gray');
                     this.addActionButton('scepterCancel', this.translatableTexts.cancel, 'restoreServerGameState', null, null, 'red');
@@ -2193,10 +2205,10 @@ function (dojo, declare) {
                 case 'buyWithAncientshard':
                     //console.log(this.clientStateArgs.actionData);
                     var ressources = this.getPlayerRessources();
-                    
+
                     var fireCost = parseInt(dojo.byId('exploit-' + this.clientStateArgs.actionData.slot + '_item_' + this.clientStateArgs.actionData.card_id).parentElement.getAttribute('data-costfire'));
                     var moonCost = parseInt(dojo.byId('exploit-' + this.clientStateArgs.actionData.slot + '_item_' + this.clientStateArgs.actionData.card_id).parentElement.getAttribute('data-costmoon'));
-                    
+
                     if (((ressources.fireshard + ressources.ancientshard) < fireCost) ||
                          ((ressources.moonshard + ressources.ancientshard) < moonCost) ||
                          (moonCost != 0 && fireCost != 0 && ((ressources.moonshard + ressources.fireshard + ressources.ancientshard) < (moonCost + fireCost)))
@@ -2206,7 +2218,7 @@ function (dojo, declare) {
                         this.cancelLocalStateAndClean();
                         return ;
                     }
-                    
+
                     var validCombinations = [];
                     if (fireCost != 0 && moonCost == 0) {
                         let combinations = [];
@@ -2232,7 +2244,7 @@ function (dojo, declare) {
                         }
                         validCombinations = combinations.filter(c => c[0] <= ressources.fireshard && c[1] <= ressources.moonshard && c[2] <= ressources.ancientshard);
                     }
-                    
+
                     if (validCombinations.length == 1) {
                         // trigger buy
                         this.onClickBuyExploitWithAncient(
@@ -2256,7 +2268,7 @@ function (dojo, declare) {
                         );
                         let z = 0;
                         for ( let comb in validCombinations ) {
-                            this.addActionButton( 'exploitChoice' + z + '_' + validCombinations[comb][0] + '_' + validCombinations[comb][1] + '_' + validCombinations[comb][2] , this.replaceTextWithIcons(validCombinations[comb][4]), 'onClickBuyExploitWithAncient', null, null, 'gray'); 
+                            this.addActionButton( 'exploitChoice' + z + '_' + validCombinations[comb][0] + '_' + validCombinations[comb][1] + '_' + validCombinations[comb][2] , this.replaceTextWithIcons(validCombinations[comb][4]), 'onClickBuyExploitWithAncient', null, null, 'gray');
                             z++;
                         }
                     }
@@ -2267,22 +2279,22 @@ function (dojo, declare) {
                     this.addActionButton('tokenCancel', this.translatableTexts.cancel, 'cancelLocalStateAndClean', null, null, 'red');
                     break ;
             }
-        },        
+        },
 
         ///////////////////////////////////////////////////
         //// Utility methods
-        
+
         generateButtonText: function (combinations) {
             for (let index in combinations) {
                 let text = '';
                 if (combinations[index][0] != 0) {
                     text += combinations[index][0] + ' [FS] ';
                 }
-                
+
                 if (combinations[index][1] != 0) {
                     text += combinations[index][1] + ' [MS] ';
                 }
-                
+
                 if (combinations[index][2] != 0) {
                     text += combinations[index][2] + ' [AS] ';
                 }
@@ -2290,19 +2302,19 @@ function (dojo, declare) {
             }
             return combinations;
         },
-        
 
-        
+
+
         getPlayerRessources: function () {
             let ressources = { 'fireshard' : 0, 'moonshard' : 0, 'ancientshard' : 0 };
-            
+
             if (dojo.byId('ancientshardcount_p' + this.player_id)) {
                 ressources.ancientshard = parseInt(dojo.byId('ancientshardcount_p' + this.player_id).innerHTML);
             }
-            
-            ressources.fireshard = parseInt(dojo.byId('firecount_p' + this.player_id).innerHTML); 
+
+            ressources.fireshard = parseInt(dojo.byId('firecount_p' + this.player_id).innerHTML);
             ressources.moonshard = parseInt(dojo.byId('mooncount_p' + this.player_id).innerHTML);
-                    
+
             if (dojo.byId('scepter_fire_' +  this.player_id).innerHTML != '') {
                 ressources.fireshard += parseInt(dojo.byId('scepter_fire_' + this.player_id).innerHTML.substring(1,3));
             }
@@ -2311,7 +2323,7 @@ function (dojo, declare) {
             }
             return ressources;
         },
-        
+
         /** @Override */
         format_string_recursive : function(log, args) {
             try {
@@ -2327,7 +2339,7 @@ function (dojo, declare) {
                             if (res) args[key] = res;
                         }
                     }
-                    
+
                     if (args.hasOwnProperty('ousted_player_name')) {
                         args['ousted_player_name'] = '<span style="font-weight:bold;color:#' + args['ousted_player'] + '">' + args['ousted_player_name'] + '</span>';
                     }
@@ -2372,10 +2384,10 @@ function (dojo, declare) {
 
                         sides[i] = this.getSideIcon( side );
                     }
-                    args[key] = sides.join(" ");    
+                    args[key] = sides.join(" ");
                 break;
             }
-            
+
             return args[key];
         },
 
@@ -2418,7 +2430,7 @@ function (dojo, declare) {
         {
             for (var search in data_source) {
                 text = text.replace(
-                    new RegExp(this.escapeRegExp(search), 'g'), 
+                    new RegExp(this.escapeRegExp(search), 'g'),
                     this.format_block(template, {
                         'size' : 'icon',
                         'type' : data_source[ search ]
@@ -2433,7 +2445,7 @@ function (dojo, declare) {
             for ( var search in this.sideClass ) {
                 text = text.replace(
                     new RegExp(this.escapeRegExp("[" + search + "]"), 'g'),
-                    this.getSideIcon(search) 
+                    this.getSideIcon(search)
                 );
             }
 
@@ -2446,18 +2458,18 @@ function (dojo, declare) {
                 'type'  : side,
             });
         },
-        
+
         mazeTextToIcon: function( text ) {
             for ( var search in this.mazeClass ) {
                 text = text.replace(
                     new RegExp(this.escapeRegExp("[" + search + "]"), 'g'),
-                    this.getMazeIcon(search) 
+                    this.getMazeIcon(search)
                 );
             }
 
             return text;
         },
-        
+
         getMazeIcon: function( maze ) {
             return this.format_block('jstpl_maze_icon', {
                 'class' : this.mazeClass[ maze ] + ' maze-small',
@@ -2489,7 +2501,7 @@ function (dojo, declare) {
                 var card      = this.gamedatas.exploits[card_type_id][idCard];
                 var card_data = this.exploitTypes[ card.type ];
             }
-            
+
             this.addTooltipHtml( card_div.id, this.getCardTooltip( card_data ) );
         },
 
@@ -2518,9 +2530,9 @@ function (dojo, declare) {
                     disp = '1 [MS]';
                     break ;
             }
-            
+
             this.removeTooltip('maze-tile-' + position);
-            
+
             this.addTooltipHtml( 'maze-tile-' + position, this.format_block('jstpl_tooltip_maze', {
                 'description' : this.ressourcesTextToIcon(_('Gain ') + disp),
                 'icon'        : this.format_block('jstpl_token', {
@@ -2538,7 +2550,7 @@ function (dojo, declare) {
                 cost += data.costFire + " [FS] ";
 
             var vp   = data.VP + " [VP] ";
-            
+
             return this.format_block('jstpl_tooltip_card', {
                 'title'       : _( data.name ),
                 'cost'        : this.translatableTexts.tooltipCardCost + this.replaceTextWithIcons( cost ),
@@ -2564,7 +2576,7 @@ function (dojo, declare) {
         },
 
         disablePlayerActionHelp : function() {
-            if ( this.connexions.hasOwnProperty("player-help") ) 
+            if ( this.connexions.hasOwnProperty("player-help") )
             {
                 dojo.forEach(this.connexions["player-help"], function(el) {
                     dojo.disconnect(el);
@@ -2576,7 +2588,7 @@ function (dojo, declare) {
         onClickShowHelpAction: function(event) {
             this.displayTempOverlay('page-title');
         },
-        
+
         onClickShowDialog: function(event) {
             if (this.myDlg) {
                 this.myDlg.show();
@@ -2610,30 +2622,30 @@ function (dojo, declare) {
             // trigger fadeOut then on end of fadeOut
             // remove overlay and class to put div on top
             fadeInArgs.onEnd = function() {
-                fadeOutArgs.onEnd = function() { 
+                fadeOutArgs.onEnd = function() {
                     dojo.destroy('df-overlay');
                     for (var i in elements) {
-                        dojo.query('#' + elements[i]).removeClass('above-overlay'); 
+                        dojo.query('#' + elements[i]).removeClass('above-overlay');
                     }
                 };
                 dojo.fadeOut(fadeOutArgs).play();
             };
-            
+
             for (var i in elements) {
-                dojo.query('#' + elements[i]).addClass('above-overlay'); 
+                dojo.query('#' + elements[i]).addClass('above-overlay');
             }
-            
+
             dojo.fadeIn(fadeInArgs).play();
         },
 
-        preActionChoice : function(args, action) 
+        preActionChoice : function(args, action)
         {
             console.log('preActionChoice', action, args);
 
             if (args.hasOwnProperty(this.player_id)) {
                 if (action)
                     this.prepareChoiceState({'args':args}, action);
-            
+
                 if (args[this.player_id].action == 'actionChoice') {
                     var take = _("Take");
                     $('pagemaintitletext').innerHTML = this.translatableTexts.shipMultipleActionChoice;
@@ -2653,8 +2665,8 @@ function (dojo, declare) {
                     } else if (action == 'actMisfortuneChoice') {
                         if (args[this.player_id]['sides'].hasOwnProperty(0)) {
                             this.addActionButton('action_getRessource1', this.sidesTextToIcon( '[' + args[this.player_id]['sides'][0] + ']' ), 'onClickConfirmActionGetMisfortune1');
-                        } 
-                        
+                        }
+
                         if (args[this.player_id]['sides'].hasOwnProperty(1)) {
                             this.addActionButton('action_getRessource2', this.sidesTextToIcon( '[' + args[this.player_id]['sides'][1] + ']' ), 'onClickConfirmActionGetMisfortune2');
                         }
@@ -2665,16 +2677,16 @@ function (dojo, declare) {
                         //else
                         if (args[this.player_id].hasOwnProperty('sides') && args[this.player_id]['sides'].hasOwnProperty(0)) {
                             this.addActionButton('action_getRessource1', this.sidesTextToIcon( '[' + args[this.player_id]['sides'][0] + ']' ), 'onClickConfirmActionGetRessource1');
-                        } 
-                        
+                        }
+
                         if (args[this.player_id].hasOwnProperty('sides') && args[this.player_id]['sides'].hasOwnProperty(1)) {
                             this.addActionButton('action_getRessource2', this.sidesTextToIcon( '[' + args[this.player_id]['sides'][1] + ']' ), 'onClickConfirmActionGetRessource2');
                         }
                     }
-                    
+
                     //this.addActionButton('action_forgeShip', this.sidesTextToIcon( '[ship]' ), 'onClickConfirmActionForgeShip');
                     //this.addActionButton('action_getRessource', this.sidesTextToIcon( '[' + args[this.player_id]['sides'][0] + ']' ), 'onClickConfirmActionGetRessource');
-                    
+
                 } else if (args[this.player_id].action == 'cerberusToken') {
                     $('pagemaintitletext').innerHTML = this.translatableTexts.actionUseCerberusToken;
                     this.addActionButton('cerberus_yes', this.translatableTexts.yes, 'onClickCerberus');
@@ -2745,7 +2757,7 @@ function (dojo, declare) {
                     $('pagemaintitletext').innerHTML = this.translatableTexts.shipMultipleActionChoice;
                     this.addActionButton('mazePuzzleMaze' , this.ressourcesTextToIcon( '[M]' ), 'onClickConfirmPuzzleMaze', null, null, 'gray');
                     this.addActionButton('mazePuzzleCelestial' , this.mazeTextToIcon( '[mCelestial]' ), 'onClickConfirmPuzzleCelestial', null, null, 'gray');
-                    
+
                 } else if (args[this.player_id].action == 'mazeConfirm') {
                     $('pagemaintitletext').innerHTML = this.translatableTexts.mazeConfirmReward;
                     // #35312
@@ -2760,7 +2772,7 @@ function (dojo, declare) {
                     }
                     this.addActionButton('mazeRewardNo' , _("Do nothing"), 'onClickRejectMazePower', null, null, 'red');
                     //this.addActionButton('mazeRewardNo' , this.mazeTextToIcon( '[mCelestial]' ), 'onClickConfirmPuzzleCelestial', null, null, 'gray');
-                    
+
                 }
             }
         },
@@ -2798,7 +2810,7 @@ function (dojo, declare) {
             }
         },
 
-        initDiceSelection: function( params ) 
+        initDiceSelection: function( params )
         {
             console.log('initDiceSelection', params, this.myDlg);
 
@@ -2817,7 +2829,7 @@ function (dojo, declare) {
              *       action               : string (:function), -> function name for ajax call ** MANDATORY **
              *       dices                : [ {player_id, dice_num, (is_mirror) }, (...) ]  -> list of dices / sides to use ** MANDATORY **
             **/
-            
+
             // DEFAULT values
             params.selectMode           = params.selectMode == undefined || ( params.selectMode != 'flat' && params.selectMode != 'sides' ) ? 'flat' : params.selectMode;
             params.nbToSelect           = params.nbToSelect == undefined ? true : params.nbToSelect;
@@ -2841,7 +2853,7 @@ function (dojo, declare) {
 
             // test
             params.canCancel = true;
-            
+
             // global scope object
             this.diceSelectionArgs = params;
 
@@ -2884,7 +2896,7 @@ function (dojo, declare) {
             }
 
 
-            if (! params.canCancel) 
+            if (! params.canCancel)
                 this.myDlg.hideCloseIcon();
 
             // prepare dices clone and get their html + get players info
@@ -2901,7 +2913,7 @@ function (dojo, declare) {
                 else
                     this.prepareDice(dice_clone);
 
-                
+
                 dojo.addClass(dice_clone, 'clone');
                 dojo.setAttr(dice_clone, "id", "clone-" + diceData.player_id + "-" + diceData.dice);
                 dojo.query(".side", dice_clone).removeClass("die-lining die-lining-fire die-lining-moon");
@@ -2912,7 +2924,7 @@ function (dojo, declare) {
                         classes.push( 'disabled', 'mirror' );
                 } else if ( params.selectMode == "sides" && diceData.is_mirror ) {
                     continue;
-                } 
+                }
 
                 html_content+= this.format_block( 'jstpl_dice_selector_item', {
                     player_id    : diceData.player_id,
@@ -2925,7 +2937,7 @@ function (dojo, declare) {
             }
 
             // add events
-            var btn = this.format_block( 'jstpl_bga_btn', { 
+            var btn = this.format_block( 'jstpl_bga_btn', {
                 color   : 'blue',
                 classes : '',
                 id      : 'dice-selector-confirm',
@@ -2936,16 +2948,16 @@ function (dojo, declare) {
 
             var classes = [];
 
-            if ( params.sameSelectable ) 
+            if ( params.sameSelectable )
                 classes.push( "same" );
 
             classes.push( params.selectMode );
 
             // add everything into selector template
-            var html = this.format_block( 'jstpl_dice_selector', { 
+            var html = this.format_block( 'jstpl_dice_selector', {
                 html:html_content,
                 classes: classes.join(" ")
-            } );  
+            } );
 
             // OLD - show dialog
             // this.myDlg.attr( "content", html );
@@ -2954,9 +2966,9 @@ function (dojo, declare) {
             // -- NEW DIALOG
             this.myDlg.setContent( html ); // Must be set before calling show() so that the size of the content is defined before positioning the dialog
             this.myDlg.show();
-            
+
             // if card is mino, add some class
-            if (params.cardData.action == 'looseThrow') 
+            if (params.cardData.action == 'looseThrow')
                 dojo.query('.standard_popin').addClass('minotaur');
 
             // add events
@@ -2971,7 +2983,7 @@ function (dojo, declare) {
 
         endDiceSelection: function() {
             // deconnexion event
-            if ( this.connexions.hasOwnProperty("dice-selector") ) 
+            if ( this.connexions.hasOwnProperty("dice-selector") )
             {
                 dojo.forEach(this.connexions["dice-selector"], function(el) {
                     dojo.disconnect(el);
@@ -2981,7 +2993,7 @@ function (dojo, declare) {
 
             // empty dialog content
             this.myDlg.hide();
-        
+
             // empty global object
             this.diceSelectionArgs = {};
         },
@@ -2992,19 +3004,19 @@ function (dojo, declare) {
         },
 
         cancelLocalStateEffects: function () {
-            this.restoreServerGameState();       
+            this.restoreServerGameState();
         },
 
         onClickAutoHammer: function(event) {
             dojo.stopEvent( event );
             var enabled = dojo.attr(event.target, 'data-enabled');
 
-            this.ajaxcall('/diceforge/diceforge/actAutoHammer.html', { 
+            this.ajaxcall('/diceforge/diceforge/actAutoHammer.html', {
                 lock: true,
                 'enable': enabled == 1 ? false : true,
             }, this, function( result ) {}, function( is_error ) { } );
         },
- 
+
         onClickFilterRolls: function(event) {
             dojo.stopEvent( event );
             var player_name = event.target.id.match(/btn-filter-log-([a-zA-Z0-9]+)/)[1];
@@ -3025,14 +3037,14 @@ function (dojo, declare) {
             dojo.query(".log").forEach( function(element) {
                 var text   = element.innerText || element.textContent;
                 var search = that.translatableTexts.rollsLogsTextSearch.replace("${logPlayerName}", player_name);
-                if ( text.indexOf( search ) == -1) 
+                if ( text.indexOf( search ) == -1)
                     dojo.addClass(element, 'hide');
             });
         },
 
 
 
-        resetFilterRolls:function() 
+        resetFilterRolls:function()
         {
             // revert buttons in gray
             dojo.query(".btn-filter-log").removeClass('bgabutton_blue').addClass('bgabutton_gray');
@@ -3040,25 +3052,26 @@ function (dojo, declare) {
             dojo.query(".log.hide").removeClass("hide");
         },
 
-        prepareChoiceState: function (args, action) 
+        prepareChoiceState: function (args, action)
         {
             console.log('prepareChoiceState', args, action);
+            console.trace();
 
             this.clientStateArgs.sides      = args.args[this.player_id].sides;
             this.clientStateArgs.ajaxAction = action;
 
             //if (args.args.celestial == "celestialMirror" || args.args.celestial == "chooseSide") {
-            if ((args.args.celestial == "celestialMirror" || args.args.celestial == "chooseSide") 
-                && (! args.args[this.player_id].hasOwnProperty('twins') 
+            if ((args.args.celestial == "celestialMirror" || args.args.celestial == "chooseSide")
+                && (! args.args[this.player_id].hasOwnProperty('twins')
                     || (args.args[this.player_id].hasOwnProperty('twins') && args.args[this.player_id].twins == 0))
             ) {
                 //console.log('dé céleste');
                 switch (args.args.celestial) {
                     case 'celestialMirror':
                         this.clientStateArgs.side_choice = {'side1': true, 'side2': false};
-                        
+
                         var dices    = [];
-                        
+
                         // GET ALL DICES/SIDES BUT MIRRORS
                         for (var player_id in this.gamedatas.players) {
                             for (var i = 1 ; i <= 2 ; i++) {
@@ -3069,10 +3082,10 @@ function (dojo, declare) {
                                 } );
                             }
                         }
-                        
+
                         var args = {
                             "title"         : this.translatableTexts.celestialMirror,
-                            "selectMode"    : 'sides', 
+                            "selectMode"    : 'sides',
                             "nbToSelect"    : 1,
                             "mirrorVisible" : false,
                             "dices"         : dices,
@@ -3096,51 +3109,51 @@ function (dojo, declare) {
                 var dices      = [];
                 var nbMirror   = 0;
                 var selfMirror = 0;
-                
+
                 if (( !args.args.hasOwnProperty('card') ) || args.args.card.action != 'oustAll') {
                     // GET ALL DICES/SIDES BUT MIRRORS
                     for (var player_id in this.gamedatas.players) {
                         if (player_id != this.player_id) {
                             for (var i = 1 ; i <= 2 ; i++) {
                                 var is_mirror = this.lastSideUp[ player_id ][ i ].type == 'mirror' ? true : false;
-    
+
                                 dices.push( {
                                     "player_id" : player_id,
                                     "dice"      : i,
                                     "is_mirror" : is_mirror
                                 } );
-    
+
                                 if ( is_mirror )
                                     nbMirror++;
                             }
                         }
                     }
-    
+
                     // if at least one enemy mirror, add self sides
                     // AND count self mirrors too to add arguments to selector
                     if ( nbMirror ) {
                         for (var i = 1 ; i <= 2 ; i++) {
                             var is_mirror = this.lastSideUp[ this.player_id ][ i ].type == 'mirror' ? true : false;
-    
+
                             dices.push( {
                                 "player_id" : this.player_id,
                                 "dice"      : i,
                                 "is_mirror" : is_mirror
                             } );
-    
+
                             if ( is_mirror )
                                 selfMirror++;
                         }
                     }
-                    
+
                     // if we have sphinx, multiple mirror should be taken only once
                     if ( args.args.hasOwnProperty('card')  && (args.args.card.action == '4Throws' || args.args.card.action == '4ThrowsTransform') && selfMirror > 1) {
                        selfMirror = 1;
                     }
-    
+
                     var argsDice = {
                         "title"           : this.translatableTexts.mirrorDialogTitle, // titre de la dialog
-                        "selectMode"      : 'sides', 
+                        "selectMode"      : 'sides',
                         "nbToSelect"      : args.args[this.player_id].mirror,
                         "canCancel"       : 0,
                         "sameSelectable"  : (( selfMirror == 2 || args.args[this.player_id].mirror == 2 ) && args.args[this.player_id].mirror > 1)  ? 1 : 0,
@@ -3149,7 +3162,7 @@ function (dojo, declare) {
                         "action"          : 'onClickSideChoiceConfirm',
                         "hideMirror"      : true
                     };
-    
+
                     if ( args.args.hasOwnProperty('card') )
                         argsDice.cardData = args.args.card;
                 }
@@ -3161,31 +3174,31 @@ function (dojo, declare) {
                         if (player_id != ousted) {
                             for (var i = 1 ; i <= 2 ; i++) {
                                 var is_mirror = this.lastSideUp[ player_id ][ i ].type == 'mirror' ? true : false;
-    
+
                                 dices.push( {
                                     "player_id" : player_id,
                                     "dice"      : i,
                                     "is_mirror" : is_mirror
                                 } );
-    
+
                                 if ( is_mirror )
                                     nbMirror++;
                             }
                         }
                     }
-    
+
                     // if at least one enemy mirror, add self sides
                     // AND count self mirrors too to add arguments to selector
                     if ( nbMirror ) {
                         for (var i = 1 ; i <= 2 ; i++) {
                             var is_mirror = this.lastSideUp[ ousted ][ i ].type == 'mirror' ? true : false;
-    
+
                             dices.push( {
                                 "player_id" : ousted,
                                 "dice"      : i,
                                 "is_mirror" : is_mirror
                             } );
-    
+
                             if ( is_mirror )
                                 selfMirror++;
                         }
@@ -3193,7 +3206,7 @@ function (dojo, declare) {
 
                     var argsDice = {
                         "title"           : this.translatableTexts.mirrorDialogTitle, // titre de la dialog
-                        "selectMode"      : 'sides', 
+                        "selectMode"      : 'sides',
                         "nbToSelect"      : args.args[this.player_id].mirror,
                         "canCancel"       : 0,
                         "sameSelectable"  : ( selfMirror == 2 || args.args[this.player_id].mirror == 2 ) ? 1 : 0,
@@ -3202,11 +3215,11 @@ function (dojo, declare) {
                         "action"          : 'onClickSideChoiceConfirm',
                         "hideMirror"      : true
                     };
-    
+
                     if ( args.args.hasOwnProperty('card') )
                         argsDice.cardData = args.args.card;
                 }
-                
+
                 this.initDiceSelection( argsDice );
             } else if (args.args[this.player_id].action == 'ressource' || args.args[this.player_id].action == 'mazeRessource') {
 
@@ -3215,14 +3228,14 @@ function (dojo, declare) {
                 this.addRessourceButtons(args.args[this.player_id].action);
             }
         },
-        
-        addRessourceButtons: function(action) 
+
+        addRessourceButtons: function(action)
         {
             var that   = this;
             var sides  = this.clientStateArgs.sides;
             var side   = sides[0]; // We only need the first index here
             var choice = false;
-                       
+
             this.clientStateArgs.side_type = side.type;
             //this.mazeTextToIcon( '[m' + args[this.player_id].mazePath[maze] + ']' )
             if (this.clientStateArgs.possibilities.length > 1) {
@@ -3242,13 +3255,13 @@ function (dojo, declare) {
                 for (var index in this.clientStateArgs.possibilities ) {
                     var possibility = this.clientStateArgs.possibilities[index];
                     possibility.text = this.replaceTextWithIcons(possibility.text);
-                    
-                    this.addActionButton( 'resChoice' + z + '_' + possibility.num + '_' + possibility['[G]'] + '_' + possibility['[H]'] + '_' + possibility['[FS]'] + '_' + possibility['[MS]'] + '_' + possibility['[VP]'] + '_' + possibility['[AS]'] + '_' + possibility['[L]'] + '_' + possibility['[M]'], possibility.text, 'onClickRessourceChoice', null, null, 'gray'); 
+
+                    this.addActionButton( 'resChoice' + z + '_' + possibility.num + '_' + possibility['[G]'] + '_' + possibility['[H]'] + '_' + possibility['[FS]'] + '_' + possibility['[MS]'] + '_' + possibility['[VP]'] + '_' + possibility['[AS]'] + '_' + possibility['[L]'] + '_' + possibility['[M]'], possibility.text, 'onClickRessourceChoice', null, null, 'gray');
                     z++;
                 }
             } else if (this.clientStateArgs.possibilities.length == 1) {
-                // if possibility == 1 
-                this.ajaxcall('/diceforge/diceforge/' + this.clientStateArgs.ajaxAction + '.html', { 
+                // if possibility == 1
+                this.ajaxcall('/diceforge/diceforge/' + this.clientStateArgs.ajaxAction + '.html', {
                     lock: true,
                     'side'           : side.type,
                     'side-gold'      : this.clientStateArgs.possibilities[0]['[G]'],
@@ -3264,7 +3277,7 @@ function (dojo, declare) {
                 return ;
             }
         },
-        
+
         hasHammer: function ( player_id ) {
             var node = dojo.byId('hammer_container_p' + player_id);
 
@@ -3288,7 +3301,7 @@ function (dojo, declare) {
                     var pool = this.pools[ prop ];
 
                     if ( typeof pool.resetItemsPosition == 'function' ) {
-                        pool.resetItemsPosition(); 
+                        pool.resetItemsPosition();
                     }
                 }
             }
@@ -3298,13 +3311,13 @@ function (dojo, declare) {
                     var exploit = this.exploits[ prop ];
 
                     if ( typeof exploit.resetItemsPosition == 'function' ) {
-                        exploit.resetItemsPosition(); 
+                        exploit.resetItemsPosition();
                     }
                 }
             }
         },
 
-        
+
         activateSpecificCards: function( cards ) {
             if (!cards)
                 return;
@@ -3321,21 +3334,21 @@ function (dojo, declare) {
                         if (cards[card_id].type == 'companion')
                             this.connexions[ element.id ] = dojo.connect( element, 'onclick', this, 'onClickUseCompanion' );
                     }
-                } 
-                else 
+                }
+                else
                     dojo.addClass(element, "unusable");
             }
         },
         /*
          * activate listed reinforcement
          *
-         * param (array) data 
+         * param (array) data
          *   9 : {id: "9", type: "doe"}
          *   10 : {id: "10", type: "ancient"}
          *   (...)
          *
          **/
-        activateReinforcement: function( cards ) 
+        activateReinforcement: function( cards )
         {
             if (!cards)
                 return;
@@ -3357,14 +3370,14 @@ function (dojo, declare) {
                         dojo.addClass($el, 'clickable');
                         dojo.setAttr($el, 'data-choice', cards[card_id]['choice']);
                         this.connexions[ $el.id ] = dojo.connect( $el, 'onclick', this, 'onClickReinforcement' + this.capitalize( cards[card_id].type ) );
-                        
+
                     }
                 } else
                     dojo.addClass($el, 'unusable');
             }
 
             // add class used to all active player's reinforcement
-            if ( this.isCurrentPlayerActive() ) 
+            if ( this.isCurrentPlayerActive() )
                 dojo.query('#powers_p' + this.getActivePlayerId() + ' .powers-small:not(.unusable):not(.clickable)').addClass('used');
             else
                 dojo.query('#powers_p' + this.getActivePlayerId() + ' .powers-small:not(.unusable):not(.usable)').addClass('used');
@@ -3381,7 +3394,7 @@ function (dojo, declare) {
                 }
             });
         },
-        
+
         activateTritonToken: function (forceTriton = false) {
             var that = this;
             if (this.player_id == this.turnPlayerId) {
@@ -3412,21 +3425,21 @@ function (dojo, declare) {
                 });
             }
         },
-        
+
         deactivateTritonToken: function () {
             var that = this;
             if (this.player_id == this.turnPlayerId) {
                 dojo.query('#tokens_p' + this.turnPlayerId + ' .token-triton').forEach( function(element) {
-                    dojo.removeClass(element, "clickable");    
+                    dojo.removeClass(element, "clickable");
                     dojo.disconnect( that.connexions[ element.id ] );
                     delete that.connexions[ element.id ];
                 });
             }
         },
 
-        onClickUseTritonToken: function() 
+        onClickUseTritonToken: function()
         {
-            // hide other dialog that could exist            
+            // hide other dialog that could exist
             var params = {'descriptionmyturn' : '', 'args': {}};
             params['descriptionmyturn'] = this.translatableTexts.tritonTokenDescriptionMyTurn;
             params.args[this.player_id] = {'action': 'ressource', 'triple': 1, 'sides' : [], 'possibilities': ''};
@@ -3445,28 +3458,28 @@ function (dojo, declare) {
                 params['args'][this.player_id]['possibilities'].push( {"[G]" : 1, "[H]" : 5, "[FS]" : 0, "[MS]" : 0, "[VP]" : 0, 'text' : '1[G] 5[H]', 'num': 0});
                 params['args'][this.player_id]['possibilities'].push( {"[G]" : 0, "[H]" : 6, "[FS]" : 0, "[MS]" : 0, "[VP]" : 0, 'text' : '6[H]', 'num': 0});
             }
-            
+
             this.removeActionButtons();
             this.setClientState("tritonToken", params);
         },
-        
+
         doForge:function( player_id, old_side_id, new_side_id, new_side_type ) {
             var fromElement = dojo.query(".pools div[id$='_item_" + new_side_id + "']")[0];
             var pool        = fromElement.id.match(/pool-([0-9]+)/)[1];
-            
+
             // empty destination
             var destinationParent       = document.getElementById( 'side_' + old_side_id ).parentElement;
             var destinationFlat         = document.getElementById( 'side_flat_' + old_side_id );
             var destinationFlatParent   = document.getElementById( 'side_flat_' + old_side_id ).parentElement;
             destinationParent.innerHTML = '';
-            
+
             // place new_element to be slided on From element
             dojo.place( this.format_block('jstpl_bside', {
                 'id'    : new_side_id,
                 'class' : this.sideClass[ new_side_type ],
                 'type'  : new_side_type,
             }), fromElement.id);
-            
+
             dojo.place( this.format_block('jstpl_flat_bside', {
                 'id'    : new_side_id,
                 'class' : this.sideClass[ new_side_type ],
@@ -3483,7 +3496,7 @@ function (dojo, declare) {
             var d_result = dojo.query(destinationParent).closest(".dice-result")[0];
             dojo.removeClass(d_result, 'sideup1 sideup2 sideup3 sideup4 sideup5 sideup6');
             dojo.addClass( d_result, "sideup" + destinationParent.getAttribute("data-numside") );
-            
+
             // update of last available dice
             var dice = destinationFlatParent.id.substr(-1, 1);
             this.lastSideUp[ player_id ][ dice ] = {
@@ -3552,17 +3565,17 @@ function (dojo, declare) {
             var sideId = event.target.id.match(/side_flat_([0-9]+)/)[1];
             dojo.query(".bside.selected").removeClass("selected");
             dojo.query( event.target ).addClass("selected");
-            
+
             // confirmation dialog if forging another side than G1
             if (dojo.getAttr(event.target.id, 'data-type') != 'G1' && !confirmed) {
                 this.confirmationDialog( this.translatableTexts.forgeOriginalSide,
                         dojo.hitch( this, function() {
                            this.onClickForgeSelfSide(event, true);
-                        } 
+                        }
                 ) );
                 return ;
             }
-            
+
             this.selectForge.sideToReplace = sideId;
 
             if ( this.selectForge.getSideToForge() )
@@ -3585,7 +3598,7 @@ function (dojo, declare) {
                     return;
                 }
 
-                this.ajaxcall('/diceforge/diceforge/actDraft.html', { 
+                this.ajaxcall('/diceforge/diceforge/actDraft.html', {
                     lock : true,
                     'card_type' : selectedCards[0].type
                 }, this, function( result ) {}, function( is_error ) {} );
@@ -3598,14 +3611,14 @@ function (dojo, declare) {
 
             if ( this.exploits[slot].getSelectedItems().length ) {
                 var cardId = this.exploits[slot].getSelectedItems()[0].id;
-                
+
                 if ( this.isTouchScreen ) {
                     this.confirmationDialog( this.translatableTexts.buyExploitConfirmation,
                         dojo.hitch( this, function() {
                            this.onClickBuyExploitCheck(cardId, slot);
-                        } 
+                        }
                     ) );
-                } 
+                }
                 else {
                     this.onClickBuyExploitCheck(cardId, slot);
                 }
@@ -3622,9 +3635,9 @@ function (dojo, declare) {
             dojo.stopEvent( event );
             var use = event.target.id.match(/cerberus_([a-z]+)/)[1] == 'yes' ? 1 : 0;
 
-            if( this.checkAction( "actUseCerberusToken") ) 
+            if( this.checkAction( "actUseCerberusToken") )
             {
-                this.ajaxcall('/diceforge/diceforge/actUseCerberusToken.html', { 
+                this.ajaxcall('/diceforge/diceforge/actUseCerberusToken.html', {
                     lock  : true,
                     'use' : use
                 }, this, function( result ) {}, function( is_error ) {} );
@@ -3633,28 +3646,28 @@ function (dojo, declare) {
 
         onClickConfirmGoddessCard: function( ) {
             var that = this;
-            
-            if( this.checkAction( "actSideChoice", true ) ) 
+
+            if( this.checkAction( "actSideChoice", true ) )
             {
                 sides = this.pluck(this.selfSides.sidesSelected, 'type'), // ceci est un array de type
-                this.ajaxcall('/diceforge/diceforge/actSideChoice.html', { 
+                this.ajaxcall('/diceforge/diceforge/actSideChoice.html', {
                     lock    : true,
                     'side1' : sides[0],
                     'side2' : sides[1]
                 }, this, function( result ) {
                     that.selfSides.deactivate();
-                }, function( is_error ) { 
+                }, function( is_error ) {
                     console.log(is_error);
                 } );
             }
         },
-        
+
         onClickConfirmCelestialMirror: function( )
         {
             var that = this;
             console.log('onClickConfirmCelestialMirror', this.selfSides);
-            
-            if( this.checkAction( "actSideChoice", true ) ) 
+
+            if( this.checkAction( "actSideChoice", true ) )
             {
                 sides = this.pluck(this.selfSides.sidesSelected, 'type'), // ceci est un array de type
                 sideNum = this.selfSides.sidesSelected[0].diceNum;
@@ -3662,51 +3675,51 @@ function (dojo, declare) {
                 sideTemp[1] = null;
                 sideTemp[2] = null;
                 sideTemp[sideNum] = sides[0];
-                
-                this.ajaxcall('/diceforge/diceforge/actSideChoice.html', { 
+
+                this.ajaxcall('/diceforge/diceforge/actSideChoice.html', {
                     lock    : true,
                     'side1' : sideTemp[1],
                     'side2' : sideTemp[2]
                 }, this, function( result ) {
                     that.selfSides.deactivate();
-                }, function( is_error ) { 
+                }, function( is_error ) {
                     console.log(is_error);
                 } );
             }
         },
-        
+
         onClickConfirmSideSelection: function( )
         {
             var that = this;
-            
-            if( this.checkAction( "actBuyForge", true ) ) 
+
+            if( this.checkAction( "actBuyForge", true ) )
             {
-                this.ajaxcall('/diceforge/diceforge/actBuyForge.html', { 
+                this.ajaxcall('/diceforge/diceforge/actBuyForge.html', {
                     lock            : true,
                     'sideToForge'   : this.selectForge.getSideToForge(),
                     'sideToReplace' : this.selectForge.getSideToReplace()
                 }, this, function( result ) {
                     that.selectForge.deactivateSelfSides();
                     that.selectForge.deactivatePoolSides();
-                }, function( is_error ) { 
+                }, function( is_error ) {
                     that.selectForge.resetSelection();
                 } );
             }
         },
-        
-        onClickConfirmMazePath: function (event) 
+
+        onClickConfirmMazePath: function (event)
         {
             var button_id = event.target.id;
-            
+
             // if not ok, we search for the parent
             if (button_id.indexOf('maze') == -1)
                 button_id = event.target.parentElement.id;
-            
+
             button_info = button_id.split('_');
 
-            if( this.checkAction( "actChooseMazePath") ) 
+            if( this.checkAction( "actChooseMazePath") )
             {
-                this.ajaxcall('/diceforge/diceforge/actChooseMazePath.html', { 
+                this.ajaxcall('/diceforge/diceforge/actChooseMazePath.html', {
                     lock                    : true,
                     newPosition             : button_info[1]
                 }, this, function( result ) {}
@@ -3717,86 +3730,86 @@ function (dojo, declare) {
         onClickConfirmMazeTreasure: function (event)
         {
             var button_id = event.target.id;
-            
+
             // if not ok, we search for the parent
             if (button_id.indexOf('maze') == -1)
                 button_id = event.target.parentElement.id;
-            
+
             button_info = button_id.split('_');
-            if( this.checkAction( "actChooseTreasure") ) 
+            if( this.checkAction( "actChooseTreasure") )
             {
-                this.ajaxcall('/diceforge/diceforge/actChooseTreasure.html', { 
+                this.ajaxcall('/diceforge/diceforge/actChooseTreasure.html', {
                     lock                    : true,
                     treasure                : button_info[2]
                 }, this, function( result ) {}
                 , function( is_error ) { } );
             }
-            
+
         },
-        
+
         onClickConfirmPuzzleMaze: function (event)
         {
             dojo.stopEvent( event );
 
-            if( this.checkAction( "actPuzzleMaze") ) 
+            if( this.checkAction( "actPuzzleMaze") )
             {
-                this.ajaxcall('/diceforge/diceforge/actPuzzleMaze.html', { 
+                this.ajaxcall('/diceforge/diceforge/actPuzzleMaze.html', {
                     lock  : true,
                 }, this, function( result ) {}, function( is_error ) {} );
             }
         },
-        
+
         onClickConfirmMazePower: function (event)
         {
             dojo.stopEvent( event );
 
-            if( this.checkAction( "actMazePowerConfirm") ) 
+            if( this.checkAction( "actMazePowerConfirm") )
             {
-                this.ajaxcall('/diceforge/diceforge/actMazePowerConfirm.html', { 
+                this.ajaxcall('/diceforge/diceforge/actMazePowerConfirm.html', {
                     lock  : true,
                     use   : true
                 }, this, function( result ) {}, function( is_error ) {} );
             }
         },
-        
+
         onClickRejectMazePower: function (event)
         {
             dojo.stopEvent( event );
 
-            if( this.checkAction( "actMazePowerConfirm") ) 
+            if( this.checkAction( "actMazePowerConfirm") )
             {
-                this.ajaxcall('/diceforge/diceforge/actMazePowerConfirm.html', { 
+                this.ajaxcall('/diceforge/diceforge/actMazePowerConfirm.html', {
                     lock  : true,
                     use   : false
                 }, this, function( result ) {}, function( is_error ) {} );
             }
         },
-        
+
         onClickConfirmPuzzleCelestial: function (event)
         {
             dojo.stopEvent( event );
 
-            if( this.checkAction( "actPuzzleCelestial") ) 
+            if( this.checkAction( "actPuzzleCelestial") )
             {
-                this.ajaxcall('/diceforge/diceforge/actPuzzleCelestial.html', { 
+                this.ajaxcall('/diceforge/diceforge/actPuzzleCelestial.html', {
                     lock  : true,
                 }, this, function( result ) {}, function( is_error ) {} );
             }
         },
-        
-        onClickMerchantStepOne: function (event) 
+
+        onClickMerchantStepOne: function (event)
         {
             var button_id = event.target.id;
-            
+
             // if not ok, we search for the parent
             if (button_id.indexOf('merchant') == -1)
                 button_id = event.target.parentElement.id;
             else {
                 button_info = button_id.split('_');
                 if (button_info[1] == "0") {
-                    if( this.checkAction( "actReinforcement", true ) ) 
+                    if( this.checkAction( "actReinforcement", true ) )
                     {
-                        this.ajaxcall('/diceforge/diceforge/actReinforcement.html', { 
+                        this.ajaxcall('/diceforge/diceforge/actReinforcement.html', {
                             lock                    : true,
                             card_id                 : this.clientStateArgs.card_id,
                             merchant_nbupgrade      : button_info[1]
@@ -3813,7 +3826,7 @@ function (dojo, declare) {
                 }
             }
         },
-        
+
         onClickMerchantThirdStep: function (event, bonus, arrSelected)
         {
             if (event === undefined)
@@ -3822,17 +3835,17 @@ function (dojo, declare) {
             if (arrSelected === null || arrSelected === undefined) {
                 arrSelected = [];
             }
-            
+
             bonus = typeof bonus !== 'undefined' ? bonus : 0;
-            
+
             met = 'onClickMerchantConfirm';
-        
+
             // if change of selection
             if (dojo.query(".current-player-play-area .dice-flat .bside.selected")) {
                 dojo.query(".current-player-play-area .dice-flat .bside").removeClass("selected");
                 dojo.query(".pool").removeClass("clickable");
             }
-            
+
             var pool = null;
             var bigPool = 0;
             var self = this;
@@ -3840,7 +3853,7 @@ function (dojo, declare) {
             //dojo.query(".current-player-play-area .dice-flat .bside").removeClass("clickable");
             dojo.query("#" + elementId).addClass("selected");
             this.clientStateArgs.old_side = elementId.match(/([0-9]+)/)[1];
-            
+
             // search of small pool
             side_type = dojo.getAttr(elementId, 'data-type');
             for (var i in this.sidesInit) {
@@ -3861,11 +3874,11 @@ function (dojo, declare) {
                     }
                 }
             }
-            
+
             sourceBigPool = bigPool;
             //console.log("big pool " + bigPool);
-            
-            // cannot be upgraded 
+
+            // cannot be upgraded
             if (bigPool == 7) {
                 this.showMessage( this.translatableTexts.upgradeNotPossible, 'error' );
                 this.restoreServerGameState();
@@ -3874,7 +3887,7 @@ function (dojo, declare) {
             // add of upgrade + empty slots (recursive)
             bigPool = parseInt(bigPool) + parseInt( this.clientStateArgs.merchantNbUpgrade) + parseInt(bonus);
             //console.log("new big pool " + bigPool);
-            
+
             // block upgrading if it doesn't come from celestial upgrade
             if (bigPool > 7 && this.clientStateArgs.callback != 'onClickCelestialUpgrade') {
                 this.showMessage( this.translatableTexts.merchantTooMuchUpgrade, 'error' );
@@ -3882,9 +3895,9 @@ function (dojo, declare) {
             }
             else if(bigPool > 7)
                 bigPool = 7;
-            
+
             newBonus = bonus;
-            
+
             // if we have emty slots in the first run
             if (bonus == 0) {
                 //console.log("source" + sourceBigPool + " bigpool " + bigPool);
@@ -3907,24 +3920,24 @@ function (dojo, declare) {
                 }
             }
             /*console.log*/("new " + newBonus + " bonus " + bonus);
-            
+
             // if empty slots, recursive
             if (bonus != newBonus) {
                 this.onClickMerchantThirdStep(event, newBonus, arrSelected);
                 return ;
             }
-            
+
             if (bonus != 0) {
                 arrSelected.push (bigPool);
             }
-            
+
             // if ends on an empty pool, next pool
             nbSide = 0;
             for (var poolTo in this.initPools[bigPool]) {
                 if (this.pools.hasOwnProperty(this.initPools[bigPool][poolTo]))
                     nbSide = nbSide + this.pools[this.initPools[bigPool][poolTo]].count();
             }
-            
+
             if (nbSide == 0 && bigPool < 7) {
                 this.onClickMerchantThirdStep(event, bonus + 1, arrSelected);
                 return ;
@@ -3933,11 +3946,11 @@ function (dojo, declare) {
                 this.restoreServerGameState();
                 return ;
             }
-            
+
             if (this.clientStateArgs.hasOwnProperty('callback'))
                 met = this.clientStateArgs.callback;
-              
-            //console.debug(arrSelected);  
+
+            //console.debug(arrSelected);
             //console.log ("final bigpool " + bigPool);
             // enabling the "bigPools"
             for (var j in arrSelected) {
@@ -3951,23 +3964,23 @@ function (dojo, declare) {
                 }
             }
         },
-        
-        onClickMerchantConfirm: function( ) 
+
+        onClickMerchantConfirm: function( )
         {
             var that = this;
             //console.log (this.selectForge.getSideToForge() + " "  + this.clientStateArgs.old_side);
-            
-            var params = { 
+
+            var params = {
                     lock                    : true,
                     card_id                 : this.clientStateArgs.card_id,
                     merchant_nbupgrade      : this.clientStateArgs.merchantNbUpgrade,
                     sideToForge             : this.selectForge.getSideToForge(),
                     sideToReplace           : this.clientStateArgs.old_side
             };
-            
-            if( this.checkAction( "actReinforcement", true )) 
+
+            if( this.checkAction( "actReinforcement", true ))
             {
-                this.ajaxcall('/diceforge/diceforge/actReinforcement.html', { 
+                this.ajaxcall('/diceforge/diceforge/actReinforcement.html', {
                     lock                    : true,
                     card_id                 : this.clientStateArgs.card_id,
                     merchant_nbupgrade      : this.clientStateArgs.merchantNbUpgrade,
@@ -3977,7 +3990,7 @@ function (dojo, declare) {
                 , function( is_error ) { } );
             }
             else if (this.checkAction("actCelestialUpgrade", true)) {
-                this.ajaxcall('/diceforge/diceforge/actCelestialUpgrade.html', { 
+                this.ajaxcall('/diceforge/diceforge/actCelestialUpgrade.html', {
                     lock                    : true,
                     sideToForge             : this.selectForge.getSideToForge(),
                     sideToReplace           : this.clientStateArgs.old_side
@@ -3985,33 +3998,33 @@ function (dojo, declare) {
                 , function( is_error ) { } );
             }
             return ;
-                    
+
         },
-        
+
         onClickCancelCelestial: function ( ) {
             if (this.checkAction("actCancelCelestial", true)) {
-                this.ajaxcall('/diceforge/diceforge/actCancelCelestial.html', { 
+                this.ajaxcall('/diceforge/diceforge/actCancelCelestial.html', {
                     lock  : true
                 }, this, function( result ) {}
                 , function( is_error ) { } );
             }
             return ;
         },
-        
+
         onClickCelestialUpgrade: function( )
         {
             var that = this;
             //console.log (this.selectForge.getSideToForge() + " "  + this.clientStateArgs.old_side);
-            
-            var params = { 
+
+            var params = {
                     lock                    : true,
                     sideToForge             : this.selectForge.getSideToForge(),
                     sideToReplace           : this.clientStateArgs.old_side
             };
-            
-            if( this.checkAction( "actCelestialUpgrade", true ) ) 
+
+            if( this.checkAction( "actCelestialUpgrade", true ) )
             {
-                this.ajaxcall('/diceforge/diceforge/actCelestialUpgrade.html', { 
+                this.ajaxcall('/diceforge/diceforge/actCelestialUpgrade.html', {
                     lock                    : true,
                     sideToForge             : this.selectForge.getSideToForge(),
                     sideToReplace           : this.clientStateArgs.old_side
@@ -4019,16 +4032,16 @@ function (dojo, declare) {
                 , function( is_error ) { } );
             }
             return ;
-                    
+
         },
-        
+
         onClickRessourceChoice: function (event) {
             var button_id = event.target.id;
-            
+
             // if not ok, we search for the parent
             if (button_id.indexOf('resChoice') == -1)
                 button_id = event.target.parentElement.id;
-            
+
             if (button_id.indexOf('resChoice') != -1) {
                 button_info = button_id.split('_');
                 // button_info[0] : ignore
@@ -4041,11 +4054,11 @@ function (dojo, declare) {
                 // 7: Ancient shard
                 // 8 : Loyalty
                 // 9 : Maze
-                    //this.addActionButton( 'resChoice' + z + '_' + possibility.num + '_' + possibility['[G]'] + '_' + possibility['[H]'] + '_' + possibility['[FS]'] + '_' + possibility['[MS]'] + '_' + possibility['[VP]'] + '_' + possibility['[AS]'] + '_' + possibility['[L]'] + '_' + possibility['[M]'], possibility.text, 'onClickRessourceChoice', null, null, 'gray'); 
+                    //this.addActionButton( 'resChoice' + z + '_' + possibility.num + '_' + possibility['[G]'] + '_' + possibility['[H]'] + '_' + possibility['[FS]'] + '_' + possibility['[MS]'] + '_' + possibility['[VP]'] + '_' + possibility['[AS]'] + '_' + possibility['[L]'] + '_' + possibility['[M]'], possibility.text, 'onClickRessourceChoice', null, null, 'gray');
 
                 var side = this.clientStateArgs.side_type;
 
-                this.ajaxcall('/diceforge/diceforge/' + this.clientStateArgs.ajaxAction + '.html', { 
+                this.ajaxcall('/diceforge/diceforge/' + this.clientStateArgs.ajaxAction + '.html', {
                     lock: true,
                     'side'           : side,
                     'side-gold'      : button_info[2],
@@ -4066,18 +4079,18 @@ function (dojo, declare) {
                     // onError
                 } );
             }
-            
-            
+
+
         },
-        
+
         onClickBuyExploitWithAncient: function (event) {
             //console.debug(event);
             var button_id = event.target.id;
-            
+
             // if not ok, we search for the parent
             if (button_id.indexOf('exploitChoice') == -1)
                 button_id = event.target.parentElement.id;
-            
+
             if (button_id.indexOf('exploitChoice') != -1) {
                 button_info = button_id.split('_');
                 // button_info[0] : ignore
@@ -4087,7 +4100,7 @@ function (dojo, declare) {
 
                 let card_id = this.clientStateArgs.actionData.card_id;
 
-                this.ajaxcall('/diceforge/diceforge/actBuyExploit.html', { 
+                this.ajaxcall('/diceforge/diceforge/actBuyExploit.html', {
                     lock: true,
                     'card_id'        : card_id,
                     'fireshard'      : button_info[1],
@@ -4099,33 +4112,33 @@ function (dojo, declare) {
                     // onError
                 } );
             }
-            
-            
+
+
         },
-        
+
         onClickMemoryChoose: function(event) {
             var button_id = event.target.id;
-            
+
             if (button_id.indexOf('memory') == -1)
                 button_id = event.target.parentElement.id;
-            
+
             this.clientStateArgs['choice'] = button_id;
             this.setClientState('memoryIsland', {
                     descriptionmyturn : this.translatableTexts.memoryIsland
                 });
-            
+
         },
-        
+
         onClickMemorySetup: function(event) {
             var button_id = event.target.id;
-            
+
             if (button_id.indexOf('position') == -1)
                 button_id = event.target.parentElement.id;
-            
+
             button_info = button_id.split('-');
             //console.debug(this.clientStateArgs);
             //console.log(button_id);
-            this.ajaxcall('/diceforge/diceforge/actMemoryToken.html', { 
+            this.ajaxcall('/diceforge/diceforge/actMemoryToken.html', {
                     lock: true,
                     token: this.clientStateArgs.memory.key,
                     island: button_info[1],
@@ -4135,25 +4148,25 @@ function (dojo, declare) {
             }, function( is_error ) {
                 // onError
             } );
-            
+
         },
-        
+
         onClickSideChoiceConfirm: function ( data ) {
             //console.log('onClickSideChoiceConfirm' + data);
             if ( !data || data.length == 0 )
                 return;
-    
+
             var sides     = [];
             sides['lock'] = true;
             var i         = 0;
-            
+
             if (this.clientStateArgs.side_choice.side1) {
                 sides['side1'] = this.getCurrentSideUp( data[i].player_id, data[i].dice_num ).type;
                 i++;
             }
             else
                 sides['side1'] = null;
-                
+
             if (this.clientStateArgs.side_choice.side2)
                 sides['side2'] = this.getCurrentSideUp( data[i].player_id, data[i].dice_num ).type;
             else
@@ -4164,7 +4177,7 @@ function (dojo, declare) {
                 sides['side98'] = this.getCurrentSideUp( data[i].player_id, data[i].dice_num ).type;
             else
                 sides['side98'] = null;
-                
+
             if( this.checkAction( "actSideChoice" ) ) {
                 this.ajaxcall('/diceforge/diceforge/actSideChoice.html', sides, this, function( result ) {
                     // onSuccess
@@ -4172,10 +4185,10 @@ function (dojo, declare) {
                 }, function( is_error ) {
                     // onError
                 } );
-            }    
+            }
         },
 
-        onClickEndForge: function( event ) 
+        onClickEndForge: function( event )
         {
             // console.log('onClickEndForge');
             dojo.stopEvent( event );
@@ -4225,7 +4238,7 @@ function (dojo, declare) {
             }
         },
 
-        onClickPlayerAction: function( event, confirm ) 
+        onClickPlayerAction: function( event, confirm )
         {
             // console.log('onClickPlayerAction');
             dojo.stopEvent( event );
@@ -4243,7 +4256,7 @@ function (dojo, declare) {
                     this.confirmationDialog( this.translatableTexts.confirmEndTurn,
                         dojo.hitch( this, function() {
                            this.onClickPlayerAction(event, true);
-                        } 
+                        }
                     ) );
                 }
                 else {
@@ -4254,7 +4267,7 @@ function (dojo, declare) {
             }
         },
 
-        gotoChooseForge: function( params ) 
+        gotoChooseForge: function( params )
         {
             // console.log('gotoChooseForge')
             params = params == undefined ? {} : params;
@@ -4264,7 +4277,7 @@ function (dojo, declare) {
             this.setClientState("chooseForge", params);
         },
 
-        gotoChooseExploit: function( params ) 
+        gotoChooseExploit: function( params )
         {
             // console.log('gotoChooseExploit')
             params = params == undefined ? {} : params;
@@ -4277,17 +4290,17 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         //// Player's action
 
-        onClickBoarPlayer: function (event) 
+        onClickBoarPlayer: function (event)
         {
             var choosenId = event.target.parentNode.id.split('_')[2];
-            
+
             if (choosenId == undefined)
                 choosenId = event.target.id.split('_')[2];;
-            
+
             if (choosenId != undefined && this.checkAction("actExploitBoar")) {
                 this.ajaxcall('/diceforge/diceforge/actExploitBoar.html', { lock: true, "forgePlayerId": choosenId }, this, function( result ) {}, function( is_error ) { } );
             }
-            
+
         },
         onClickReinforcementDoe: function (event)
         {
@@ -4296,12 +4309,12 @@ function (dojo, declare) {
             var card_id = el.id.match(/power-([0-9]+)/)[1];
 
             this.clientStateArgs.actionData = { "card_id" : card_id };
-             
+
             var args = {
                 "title"      : this.translatableTexts.silverHindDialogTitle,
-                "selectMode" : 'flat', 
+                "selectMode" : 'flat',
                 "nbToSelect" : 1,
-                "dices"      : [ 
+                "dices"      : [
                     {
                         "player_id" : this.player_id,
                         "dice"      : 1
@@ -4309,14 +4322,14 @@ function (dojo, declare) {
                     {
                         "player_id" : this.player_id,
                         "dice"      : 2
-                    } 
+                    }
                 ],
                 "action"     : 'onDiceSelectionDoe'
             };
 
             this.initDiceSelection( args );
         },
-        
+
         onClickReinforcementOracle: function (event)
         {
             dojo.stopEvent( event );
@@ -4324,12 +4337,12 @@ function (dojo, declare) {
             var card_id = el.id.match(/power-([0-9]+)/)[1];
 
             this.clientStateArgs.actionData = { "card_id" : card_id };
-             
+
             var args = {
                 "title"      : this.translatableTexts.oracleHindDialogTitle,
-                "selectMode" : 'flat', 
+                "selectMode" : 'flat',
                 "nbToSelect" : 1,
-                "dices"      : [ 
+                "dices"      : [
                     {
                         "player_id" : this.player_id,
                         "dice"      : 1
@@ -4337,19 +4350,19 @@ function (dojo, declare) {
                     {
                         "player_id" : this.player_id,
                         "dice"      : 2
-                    } 
+                    }
                 ],
                 "action"     : 'onDiceSelectionDoe'
             };
 
             this.initDiceSelection( args );
         },
-        
+
         onClickUseScepter: function (event)
         {
             dojo.stopEvent( event );
             var el = event.target;
-            
+
             // Management if click on the number
             if (!el.id.match(/token-scepter-([0-9]+)-([0-9]+)/))
                 return;
@@ -4358,7 +4371,7 @@ function (dojo, declare) {
 
             var solde = dojo.byId('countscepter_' + card_id).innerHTML;
             var am = 0;
-            
+
             if (solde < 4)
                 // do nothing as below threshold
                 return ;
@@ -4366,22 +4379,22 @@ function (dojo, declare) {
                 am = 1;
             else
                 am = 2;
-            
+
             this.clientStateArgs.actionData = { "scepter_id" : card_id, "amount" : am };
             this.setClientState('useScepter', {
                 descriptionmyturn : this.translatableTexts.scepterTokenDescriptionMyTurn
             });
         },
-        
+
         onClickScepterFireshard: function (data) {
             this.onClickScepter("fireshard");
         },
-        
+
         onClickScepterMoonshard: function (data) {
             this.onClickScepter("moonshard");
         },
-        
-        onClickScepter: function (resource) 
+
+        onClickScepter: function (resource)
         {
             if( this.checkAction( "actUseScepter" ) ) {
                 this.ajaxcall('/diceforge/diceforge/actUseScepter.html', {
@@ -4391,10 +4404,10 @@ function (dojo, declare) {
                 }, this, function( result ) {
                 }, function( is_error ) {
                 } );
-            } 
+            }
         },
-        
-        onClickCancelScepter: function (data) 
+
+        onClickCancelScepter: function (data)
         {
             if( this.checkAction( "actCancelScepter" ) ) {
                 this.ajaxcall('/diceforge/diceforge/actCancelAllScepters.html', {
@@ -4405,10 +4418,10 @@ function (dojo, declare) {
             }
         },
 
-        onDiceSelectionDoe: function ( data ) 
+        onDiceSelectionDoe: function ( data )
         {
             if( this.checkAction( "actReinforcement" ) ) {
-                this.ajaxcall('/diceforge/diceforge/actReinforcement.html', { 
+                this.ajaxcall('/diceforge/diceforge/actReinforcement.html', {
                     lock: true,
                     'card_id'  : this.clientStateArgs.actionData.card_id,
                     'dice_num' : data[0].dice_num
@@ -4418,13 +4431,13 @@ function (dojo, declare) {
                 }, function( is_error ) {
                     // onError
                 } );
-            }    
+            }
         },
 
-        onDiceSelectionAncestor: function ( data ) 
+        onDiceSelectionAncestor: function ( data )
         {
             if( this.checkAction( "actAncestorSelect" ) ) {
-                this.ajaxcall('/diceforge/diceforge/actAncestorSelect.html', { 
+                this.ajaxcall('/diceforge/diceforge/actAncestorSelect.html', {
                     lock: true,
                     'dice_num' : data[0].dice_num
                 }, this, function( result ) {
@@ -4433,25 +4446,25 @@ function (dojo, declare) {
                 }, function( is_error ) {
                     // onError
                 } );
-            }    
+            }
         },
-        
-        onDiceSelection4Throws: function ( data ) 
+
+        onDiceSelection4Throws: function ( data )
         {
             if( this.checkAction( "actExploitEnigma" ) ) {
-                this.ajaxcall('/diceforge/diceforge/actExploitEnigma.html', { 
+                this.ajaxcall('/diceforge/diceforge/actExploitEnigma.html', {
                     lock: true,
-                    'die_number' : parseInt(data[0].dice_num) 
+                    'die_number' : parseInt(data[0].dice_num)
                 }, this, function( result ) {
                     // onSuccess
                     this.endDiceSelection();
                 }, function( is_error ) {
                     // onError
                 } );
-            }    
+            }
         },
         //TODO: rendre générique :)
-        onClickReinforcementAncient: function (event) 
+        onClickReinforcementAncient: function (event)
         {
             // console.log('onClickReinforcementAncient');
             dojo.stopEvent( event );
@@ -4472,19 +4485,19 @@ function (dojo, declare) {
                     // var state = that.getKeys( that.statesInfo );
                     // that.setClientState( state[0], that.statesInfo[ state[0] ] );
                 } );
-            }    
+            }
         },
-        onClickReinforcementLight: function (event) 
+        onClickReinforcementLight: function (event)
         {
             // console.log('onClickReinforcementAncient');
             dojo.stopEvent( event );
             var el      = event.target;
             var card_id = el.id.match(/power-([0-9]+)/)[1];
-            
+
             this.clientStateArgs.side_choice = {'side1': true, 'side2': false};
             this.clientStateArgs.reinforcement = card_id;
             var dices    = [];
-            
+
             // GET ALL DICES/SIDES BUT MIRRORS
             for (var player_id in this.gamedatas.players) {
                 for (var i = 1 ; i <= 2 ; i++) {
@@ -4498,10 +4511,10 @@ function (dojo, declare) {
 
                 }
             }
-            
+
             var args = {
                 "title"      : _("Select a side"),
-                "selectMode" : 'sides', 
+                "selectMode" : 'sides',
                 "nbToSelect" : 1,
                 "dices"      : dices,
                 "canCancel"  : 0,
@@ -4525,21 +4538,21 @@ function (dojo, declare) {
             //        // var state = that.getKeys( that.statesInfo );
             //        // that.setClientState( state[0], that.statesInfo[ state[0] ] );
             //    } );
-            //}    
+            //}
         },
-        
+
         onClickSelectLight: function(data) {
             if ( !data || data.length == 0 )
                 return;
-    
+
             var sides     = [];
             sides['lock'] = true;
-            
+
             side = this.getCurrentSideUp( data[0].player_id, data[0].dice_num ).id;
 
             if( this.checkAction( "actReinforcement" ) ) {
                 var that = this;
-            
+
                 this.ajaxcall('/diceforge/diceforge/actReinforcement.html', {
                     lock: true,
                     'card_id': this.clientStateArgs.reinforcement,
@@ -4553,15 +4566,15 @@ function (dojo, declare) {
                     // var state = that.getKeys( that.statesInfo );
                     // that.setClientState( state[0], that.statesInfo[ state[0] ] );
                 } );
-            }  
+            }
         },
-        
-        onClickReinforcementMerchant: function (event) 
+
+        onClickReinforcementMerchant: function (event)
         {
             dojo.stopEvent( event );
             var el      = event.target;
             var card_id = el.id.match(/power-([0-9]+)/)[1];
-            
+
             this.clientStateArgs.card_id = card_id;
             this.clientStateArgs.merchantNbUpgrade = dojo.query("#power-" + card_id)[0].innerHTML;
             if (this.clientStateArgs.merchantNbUpgrade == "")
@@ -4569,16 +4582,16 @@ function (dojo, declare) {
             this.setClientState("merchantFirstStep", {
                     descriptionmyturn : this.translatableTexts.merchantFirstStep
             });
-            return ;  
+            return ;
         },
-        
+
         onClickReinforcementTree: function (event) {
             // console.log('onClickReinforcementAncient');
             dojo.stopEvent( event );
             var el      = event.target;
             var choice = dojo.attr(el, 'data-choice');
             var card_id = el.id.match(/power-([0-9]+)/)[1];
-            
+
             if (choice == 'false') {
                 // trigger the classical action
                 this.actReinforcementTree(card_id, null);
@@ -4587,22 +4600,22 @@ function (dojo, declare) {
                  this.addActionButton( card_id + '_gold', this.replaceTextWithIcons('3 [G] 1 [VP]'), 'onClickConfirmTree', null, null, 'gray');
                  this.addActionButton( card_id + '_vp', this.replaceTextWithIcons('2 [VP]'), 'onClickConfirmTree', null, null, 'gray');
             }
-    
+
         },
-        
+
         onClickConfirmTree: function (event) {
             dojo.stopEvent( event );
             var el      = event.target;
-            
+
             button_info = el.id.split('_');
             this.actReinforcementTree(button_info[0], button_info[1]);
-            
+
         },
-        
+
         actReinforcementTree: function (card_id, choice) {
             if( this.checkAction( "actReinforcement" ) ) {
                 var that = this;
-        
+
                 this.ajaxcall('/diceforge/diceforge/actReinforcement.html', {
                     lock: true,
                     'card_id': card_id,
@@ -4615,18 +4628,18 @@ function (dojo, declare) {
                     // var state = that.getKeys( that.statesInfo );
                     // that.setClientState( state[0], that.statesInfo[ state[0] ] );
                 } );
-            } 
+            }
         },
-        
+
         onClickUseCompanion: function (event) {
             dojo.stopEvent( event );
             this.confirmationDialog( this.translatableTexts.convertCompanion,
                     dojo.hitch( this, function() {
                        this.onClickConfirmCompanion(event);
-                    } 
+                    }
                 ) );
         },
-        
+
         onClickConfirmCompanion: function (event) {
             var el      = event.target;
             var card_id = el.id.match(/power-([0-9]+)/)[1];
@@ -4639,10 +4652,10 @@ function (dojo, declare) {
                     // onSuccess
                 }, function( is_error ) {
                     // onError
-                } );    
+                } );
             }
         },
-        
+
         onClickReinforcementCompanion: function (event) {
             dojo.stopEvent( event );
             var el      = event.target;
@@ -4662,7 +4675,7 @@ function (dojo, declare) {
                     // var state = that.getKeys( that.statesInfo );
                     // that.setClientState( state[0], that.statesInfo[ state[0] ] );
                 } );
-            }    
+            }
         },
         onClickReinforcementNymphe: function (event) {
             // console.log('onClickReinforcementNymphe');
@@ -4685,30 +4698,30 @@ function (dojo, declare) {
                     // var state = that.getKeys( that.statesInfo );
                     // that.setClientState( state[0], that.statesInfo[ state[0] ] );
                 } );
-            }    
+            }
         },
         onClickReinforcementOwl: function (event) {
             // console.log('onClickReinforcementOwl');
             var el      = event.target;
             var card_id = el.id.match(/power-([0-9]+)/)[1];
-            
+
             this.clientStateArgs.card_id = card_id;
             this.setClientState("owlChoose", {
                 descriptionmyturn : this.translatableTexts.owlDescriptionMyTurn
             });
         },
-        
+
         onClickReinforcementGuardian: function (event) {
             // console.log('onClickReinforcementOwl');
             var el      = event.target;
             var card_id = el.id.match(/power-([0-9]+)/)[1];
-            
+
             this.clientStateArgs.card_id = card_id;
             this.setClientState("guardianChoose", {
                 descriptionmyturn : this.translatableTexts.owlDescriptionMyTurn
             });
         },
-        
+
         onClickOwlMoonshard: function (event) {
             this.onRessourceSelectionOwl('moonshard');
         },
@@ -4721,16 +4734,16 @@ function (dojo, declare) {
         onClickOwlHammer: function (event) {
             this.onRessourceSelectionOwl('hammer');
         },
-        
+
         onClickGuardianAncient: function (event) {
             this.onRessourceSelectionOwl('ancient');
         },
-        
+
         onClickGuardianLoyalty: function (event) {
             this.onRessourceSelectionOwl('loyalty');
         },
-        
-        onRessourceSelectionOwl: function (ressource) 
+
+        onRessourceSelectionOwl: function (ressource)
         {
             // console.log('onRessourceSelectionOwl');
             if( this.checkAction( "actReinforcement" ) ) {
@@ -4742,38 +4755,38 @@ function (dojo, declare) {
                 }, function( is_error ) {
                 } );
             }
-        }, 
+        },
         onClickConfirmActionReroll1: function (event) {
-            this.onClickConfirmAction('reroll', 1);  
+            this.onClickConfirmAction('reroll', 1);
         },
         onClickConfirmActionReroll2: function (event) {
-            this.onClickConfirmAction('reroll', 2); 
+            this.onClickConfirmAction('reroll', 2);
         },
         onClickConfirmActionRerollCelestial: function (event) {
-            this.onClickConfirmAction('rerollCelestial', 0); 
+            this.onClickConfirmAction('rerollCelestial', 0);
         },
         onClickConfirmActionForgeShip: function (event) {
-           this.onClickConfirmAction('forge', 0); 
+           this.onClickConfirmAction('forge', 0);
         },
         onClickConfirmActionGetRessource: function (event) {
-           this.onClickConfirmAction('ressource', 0); 
+           this.onClickConfirmAction('ressource', 0);
         },
         onClickConfirmActionGetRessource1: function (event) {
-           this.onClickConfirmAction('ressource', 1); 
+           this.onClickConfirmAction('ressource', 1);
         },
         onClickConfirmActionGetRessource2: function (event) {
-           this.onClickConfirmAction('ressource', 2); 
+           this.onClickConfirmAction('ressource', 2);
         },
         onClickConfirmActionGetCelestial: function (event) {
-            this.onClickConfirmAction('celestial', 0); 
+            this.onClickConfirmAction('celestial', 0);
         },
         onClickConfirmActionGetMisfortune1: function (event) {
-            this.onClickConfirmMisfortune('ressource', 1); 
+            this.onClickConfirmMisfortune('ressource', 1);
         },
         onClickConfirmActionGetMisfortune2: function (event) {
-            this.onClickConfirmMisfortune('ressource', 2); 
+            this.onClickConfirmMisfortune('ressource', 2);
         },
-        
+
         onClickConfirmMisfortune: function (action, die)
         {
             // console.log('onClickConfirmAction');
@@ -4788,7 +4801,7 @@ function (dojo, declare) {
                 } );
             }
         },
-        
+
         onClickConfirmAction: function (action, die)
         {
             // console.log('onClickConfirmAction');
@@ -4803,8 +4816,8 @@ function (dojo, declare) {
                 } );
             }
         },
-        
-        onClickReinforcementPrePass: function (event) 
+
+        onClickReinforcementPrePass: function (event)
         {
             // console.log('onClickReinforcementPrePass');
             // if no reinforcement used while many
@@ -4812,14 +4825,14 @@ function (dojo, declare) {
                 this.confirmationDialog( this.translatableTexts.passReinforcementConfirmation,
                     dojo.hitch( this, function() {
                        this.onClickReinforcementPass();
-                    } 
+                    }
                 ) );
             } else {
                 this.onClickReinforcementPass();
             }
         },
 
-        onClickReinforcementPass: function (event) 
+        onClickReinforcementPass: function (event)
         {
             // console.log('onClickReinforcementPass');
             if( this.checkAction( "actReinforcementPass" ) ) {
@@ -4832,30 +4845,30 @@ function (dojo, declare) {
                 } );
             }
         },
-        
-        onClickSecondActionPass: function (event) 
+
+        onClickSecondActionPass: function (event)
         {
             this.onClickSecondAction(false, event);
         },
-        onClickSecondActionPlay: function (event) 
+        onClickSecondActionPlay: function (event)
         {
             this.onClickSecondAction(true, event);
         },
-        onClickSecondAction: function (is_play, event) 
+        onClickSecondAction: function (is_play, event)
         {
             var button_id = event.target.id;
             console.log(button_id);
             // if not ok, we search for the parent
             if (button_id.indexOf('secondAction') == -1)
                 button_id = event.target.parentElement.id;
-            
+
             if (button_id.indexOf('secondAction') != -1) {
                 button_info = button_id.split('_');
                 // button_info[0] : ignore
                 // button_info[1] : fireshard
                 // button_info[2] : moonshard
                 // button_info[3] : ancientshard
-            
+
                 if( this.checkAction( "actSecondAction" ) ) {
                     this.ajaxcall('/diceforge/diceforge/actSecondAction.html', {
                         lock:true,
@@ -4864,17 +4877,17 @@ function (dojo, declare) {
                         'ancientshard' : button_info[3]
                     },this, function( result ) {}, function( is_error ) { } );
                 }
-                
+
             }
-            
+
         },
-        
-        onClickForgeShipPass: function (event) 
+
+        onClickForgeShipPass: function (event)
         {
             dojo.stopEvent(event);
             var num = event.target.id.match(/forge_ship_pass_([0-9]+)/)[1];
 
-            if( this.checkAction( "actForgeShipPass" ) ) 
+            if( this.checkAction( "actForgeShipPass" ) )
             {
                 this.ajaxcall('/diceforge/diceforge/actForgeShipPass.html', {
                     lock:true,
@@ -4882,13 +4895,13 @@ function (dojo, declare) {
                 },this, function( result ) {}, function( is_error ) { } );
             }
         },
-        
-        onClickForgeNymphPass: function (event) 
+
+        onClickForgeNymphPass: function (event)
         {
             dojo.stopEvent(event);
             //var num = event.target.id.match(/forge_ship_pass_([0-9]+)/)[1];
 
-            if( this.checkAction( "actForgeNymphPass" ) ) 
+            if( this.checkAction( "actForgeNymphPass" ) )
             {
                 this.ajaxcall('/diceforge/diceforge/actForgeNymphPass.html', {
                     lock:true
@@ -4896,7 +4909,7 @@ function (dojo, declare) {
                 },this, function( result ) {}, function( is_error ) { } );
             }
         },
-        
+
         onClickBuyExploitCheck: function (card_id, slot) {
             //var that = this;
             //var ancientdiv = dojo.byId('ancientshardcount_p' + this.player_id);
@@ -4914,10 +4927,10 @@ function (dojo, declare) {
             }
             else
                 this.onClickBuyExploit(card_id, slot);
- 
+
             return ;
         },
-        
+
         getAvailableAncientShard: function () {
             let ancientdiv = dojo.byId('ancientshardcount_p' + this.player_id);
             if (ancientdiv != null && ancientdiv.innerHTML != 0)
@@ -4925,8 +4938,8 @@ function (dojo, declare) {
             else
                 return 0;
         },
-        
-        onClickBuyExploit: function (card_id, slot) 
+
+        onClickBuyExploit: function (card_id, slot)
         {
             var that = this;
             console.log("too");
@@ -4937,36 +4950,36 @@ function (dojo, declare) {
                         'fireshard'      : 0,
                         'moonshard'      : 0,
                         'ancientshard'   : 0
-                    },this, 
+                    },this,
                     function( result ) {
                         // on success
-                    }, 
+                    },
                     function( is_error ) {
                         // on error
                         that.exploits[ slot ].unselectItem( card_id );
                     }
                 );
             }
-            
+
             if (this.clientStateArgs.free) {
                 this.clientStateArgs.free = false;
             }
         },
 
-        onChangeDiceSelection: function( event ) 
+        onChangeDiceSelection: function( event )
         {
             var elTarget     = dojo.query( event.target ).closest('.clickable')[0];
             var targetInfo   = elTarget.id.match(/dice-num-([0-9]+)-([0-9]+)/);
             var elsSelected  = dojo.query("#dice-selector .selected");
             var spanSelected = this.getSpanQuantityDiceSelection();
             var nbSelected   = elsSelected.length;
-            
+
             if ( dojo.hasClass( elTarget, 'disabled' ) )
                 return;
 //console.debug(this.diceSelectionArgs);
                 //console.log("nbsElect " + nbSelected + " spanSel" + spanSelected + " targentIno " + targetInfo);
-                
-            // if self dice selection is limited: 
+
+            // if self dice selection is limited:
             // if not selected yet and target is self, then disable the other dice
             if ( this.diceSelectionArgs.limitSelfSelect == true) {
                 // if not self dice selected yet, make other self dice not selectable
@@ -4988,16 +5001,16 @@ function (dojo, declare) {
                 var otherSelfDiceNum = targetInfo[2] == 1 ? 2 : 1;
                 var elOtherDice      = dojo.query("#dice-selector #dice-num-" + this.player_id + "-" + otherSelfDiceNum )[0];
                 if ( selfFound && targetInfo[1] == selfFound[1] && targetInfo[2] == selfFound[2] ) {
-    
+
                     // check if mirror and if it should stay disabled or not
                     if ( dojo.hasClass( elOtherDice, 'mirror') && !this.diceSelectionArgs.mirrorSelectable ) {
                         // nothing
-                    } 
+                    }
                     else
                         dojo.removeClass( elOtherDice , 'disabled' );
                 }
                 // else if target dice is self one, disable other dice
-                else if ( targetInfo[1] == this.player_id ) 
+                else if ( targetInfo[1] == this.player_id )
                     dojo.addClass( elOtherDice, 'disabled' );
             }
 
@@ -5007,21 +5020,21 @@ function (dojo, declare) {
                 dojo.addClass( elTarget, 'selected' );
             }
             else {
-                // if nb = max 
+                // if nb = max
                 if ( this.diceSelectionArgs.nbToSelect == elsSelected.length || this.diceSelectionArgs.nbToSelect == spanSelected ) {
                     // if max and target selected and sameSelectable : just decrease the num
-                    if ( dojo.hasClass( elTarget, 'selected' ) && this.diceSelectionArgs.sameSelectable ) 
+                    if ( dojo.hasClass( elTarget, 'selected' ) && this.diceSelectionArgs.sameSelectable )
                         this.decreaseDiceSelection( elTarget );
                     // if max and target selected and NOT sameSelectable : then unselect
-                    else if ( dojo.hasClass( elTarget, 'selected' ) ) 
+                    else if ( dojo.hasClass( elTarget, 'selected' ) )
                         dojo.removeClass( elTarget, 'selected' );
-                } 
+                }
                 // if nb not max
                 else {
-                    if ( this.diceSelectionArgs.sameSelectable ) 
+                    if ( this.diceSelectionArgs.sameSelectable )
                         this.increaseDiceSelection( elTarget );
-                    else 
-                        if ( dojo.hasClass( elTarget, 'selected' ) ) 
+                    else
+                        if ( dojo.hasClass( elTarget, 'selected' ) )
                             dojo.removeClass( elTarget, 'selected' );
                         else
                             dojo.addClass( elTarget, 'selected' );
@@ -5033,7 +5046,7 @@ function (dojo, declare) {
                 this[ this.diceSelectionArgs.onChange ]();
         },
 
-        increaseDiceSelection: function(element) 
+        increaseDiceSelection: function(element)
         {
             var elNum   = dojo.query(element).query(".num")[0];
             var textNum = elNum.innerText || elNum.textContent;
@@ -5044,7 +5057,7 @@ function (dojo, declare) {
             dojo.addClass( element, 'selected' );
         },
 
-        decreaseDiceSelection: function(element) 
+        decreaseDiceSelection: function(element)
         {
             // if number = 0 remove .selected
             var elNum   = dojo.query(element).query(".num")[0];
@@ -5055,7 +5068,7 @@ function (dojo, declare) {
 
             textNum = parseInt(textNum) - 1;
 
-            if ( textNum == 0 ) 
+            if ( textNum == 0 )
             {
                 textNum = "";
                 //element.removeClass( 'selected' );
@@ -5065,16 +5078,16 @@ function (dojo, declare) {
             elNum.innerHTML = textNum;
         },
 
-        onConfirmDiceSelection: function( event ) 
+        onConfirmDiceSelection: function( event )
         {
             var nbSelected = 0;
             nbSelected = this.diceSelectionArgs.sameSelectable ? this.getSpanQuantityDiceSelection() : dojo.query("#dice-selector .selected").length;
 //console.log("same " + this.diceSelectionArgs.sameSelectable + "span quant " + this.getSpanQuantityDiceSelection() + " else lenght " + dojo.query("#dice-selector .selected").length);
-            if ( this.diceSelectionArgs.nbToSelect != nbSelected ) 
+            if ( this.diceSelectionArgs.nbToSelect != nbSelected )
                 return;
 
             var result = [];
-            if ( this.diceSelectionArgs.sameSelectable ) 
+            if ( this.diceSelectionArgs.sameSelectable )
             {
                 dojo.query("#dice-selector .selected .num").forEach( function(element) {
                     var qty = element.innerText || element.textContent;
@@ -5089,7 +5102,7 @@ function (dojo, declare) {
                                 'player_id' : diceInfo[1],
                                 'dice_num'  : diceInfo[2],
                             } );
-                        } 
+                        }
                     }
                 });
             }
@@ -5104,11 +5117,11 @@ function (dojo, declare) {
                     } )
                 });
             }
-            
+
             // callback pre Action
             if ( typeof this.diceSelectionArgs.onConfirm === "function" )
                 this[ this.diceSelectionArgs.onConfirm ]( result );
-                
+
             if (!dojo.hasClass('btn-show-chooser', 'hide')) {
                 dojo.addClass('btn-show-chooser', 'hide');
             }
@@ -5116,7 +5129,7 @@ function (dojo, declare) {
             this[ this.diceSelectionArgs.action ]( result );
         },
 
-        getSpanQuantityDiceSelection: function() 
+        getSpanQuantityDiceSelection: function()
         {
             var qty = 0;
             dojo.query("#dice-selector .selected .num").forEach( function(element) {
@@ -5127,7 +5140,7 @@ function (dojo, declare) {
             return qty;
         },
 
-        onChangeMazeOpacity: function(event) 
+        onChangeMazeOpacity: function(event)
         {
             dojo.stopEvent(event);
 
@@ -5140,7 +5153,7 @@ function (dojo, declare) {
             $mazeBoard.classList.add('opacity-' + (mazeOpacityValue * 10));
         },
 
-        onClickMazePulse: function(event) 
+        onClickMazePulse: function(event)
         {
             dojo.stopEvent(event);
 
@@ -5150,14 +5163,14 @@ function (dojo, declare) {
 
             document.cookie = 'dfMazePulse=' + mazePulseValue;
         },
-        
+
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
 
         setupNotifications: function()
         {
             // console.log( 'notifications subscriptions setup' );
-            
+
             dojo.subscribe("notifBlessing", this, "notifBlessing");
             dojo.subscribe("notifBeginTurn", this, "notifBeginTurn");
             dojo.subscribe("notifLastTurn", this, "notifLastTurn");
@@ -5188,7 +5201,7 @@ function (dojo, declare) {
             this.notifqueue.setSynchronous("notifEndScoringTitan", 1000);
             dojo.subscribe("notifUseCerberusToken", this, "notifUseCerberusToken");
             //dojo.subscribe("notifResetScepter", this, "notifResetScepter");
-            
+
             dojo.subscribe("notifUseScepter", this, "notifUseScepter");
             dojo.subscribe("notifUseTritonToken", this, "notifUseTritonToken");
             dojo.subscribe("notifDraft", this, "notifDraft");
@@ -5210,8 +5223,8 @@ function (dojo, declare) {
             dojo.subscribe("notifMemorySetup", this, "notifMemorySetup");
             dojo.subscribe("notifRemoveMemoryToken", this, "notifRemoveMemoryToken");
 
-        },  
-        
+        },
+
         notifTwinUpdate: function(notif)
         {
             dojo.query('#token-' + notif.args.player_id + '-' + notif.args.card_id).addClass('unusable');
@@ -5237,7 +5250,7 @@ function (dojo, declare) {
                     $scepter.classList.remove('token-scepter-0', 'token-scepter-1', 'token-scepter-2', 'token-scepter-3', 'token-scepter-4', 'token-scepter-5', 'token-scepter-6');
                     $scepter.classList.add('token-scepter-' + value);
 
-                    if (document.querySelector('.current-player-play-area #' + arg) != null 
+                    if (document.querySelector('.current-player-play-area #' + arg) != null
                         && this.isCurrentPlayerActive()
                     ) {
                         if (value >= 4) {
@@ -5257,7 +5270,7 @@ function (dojo, declare) {
             var dice1     = notif.args.dice1;
             var dice2     = notif.args.dice2;
             var player_id = notif.args.player_id;
-            
+
             if (notif.args.roll) {
                 if (dice1)
                     this.rollDice( player_id, 1, dice1 );
@@ -5266,12 +5279,12 @@ function (dojo, declare) {
             }
             // delay then ressource move
         },
-        
+
         notifCelestialRoll: function (notif)
         {
             this.rollCelestialDice(notif.args.sideCelestial);
         },
-        
+
         notifUseCompanion: function (notif)
         {
             this.notifCompanion({args : {card_id : 'power-' + notif.args.card, val : 9999}});
@@ -5317,7 +5330,7 @@ function (dojo, declare) {
             } ).play();
         },
 
-        refreshDice: function ( player_id, dice_num ) 
+        refreshDice: function ( player_id, dice_num )
         {
             var self = this;
 
@@ -5331,7 +5344,7 @@ function (dojo, declare) {
             var dice = [];
 
             for (var index in $elSides) {
-                if ( !this.isNumber(index) ) 
+                if ( !this.isNumber(index) )
                     break;
 
                 var $elSide  = $elSides[ index ];
@@ -5345,7 +5358,7 @@ function (dojo, declare) {
 
                 var sideId = $elSide.id.match(/side_([0-9]+)/)[1];
                 var type = dice_num == 1 ? 'fire' : 'moon';
-                dice[ index ] = { 
+                dice[ index ] = {
                     'id'        : sideId,
                     'class'     : elSideClass,
                     'type'      : Array.from(this.sideClass).indexOf(elSideClass),
@@ -5365,7 +5378,7 @@ function (dojo, declare) {
             dojo.place(this.format_block('jstpl_dice', dice), el);
         },
 
-        notifDraft: function(notif) 
+        notifDraft: function(notif)
         {
             var slot = notif.args.slot;
 
@@ -5384,7 +5397,7 @@ function (dojo, declare) {
 
             if (notif.args.exploitName == 'celestial')
                 dojo.removeClass("celestial_dice", "hide");
-            
+
             // update card number
             if (this.gamedatas.exploits.hasOwnProperty( slot )) {
                 var nbExploitsLeft = Object.keys( this.gamedatas.exploits[ slot ] ).length;
@@ -5444,14 +5457,14 @@ function (dojo, declare) {
             // do forge (slide sides)
             this.doForge( notif.args.player_id, notif.args.old_side, notif.args.side, notif.args.side_type_name );
         },
-        
+
         notifMemorySetup: function(notif) {
             var self             = this;
             var token_split = notif.args.token.split('_');
             var side = "";
             let ressource = "";
             //console.debug(notif.args);
-            
+
             if (notif.args.side == '1') {
                 side = 'sun';
                 ressource = '2 [L] 1 [FS]';
@@ -5460,7 +5473,7 @@ function (dojo, declare) {
                 side = 'moon';
                 ressource = '2 [AS] 1 [MS]';
             }
-            
+
             dojo.place(
                     this.format_block('jstpl_memory_id', {
                         'id'   :  notif.args.token,
@@ -5470,7 +5483,7 @@ function (dojo, declare) {
 
                 this.slideToPlus( notif.args.token, 'memory-' + notif.args.island, 0, function() {
                 } ).play();
-                
+
             token_owner = '<span style="font-weight:bold;color:#' + this.gamedatas.players[notif.args.player_id]['color'] + '">' + this.gamedatas.players[notif.args.player_id]['name'] + '</span>';
 
             this.addTooltipHtml(notif.args.token, this.format_block('jstpl_tooltip_title', {
@@ -5487,7 +5500,7 @@ function (dojo, declare) {
             var self             = this;
             var dest             = notif.args.pile;
             var player_id        = notif.args.player_id
-            
+
             this.removeTooltip('exploit-' + notif.args.card_pos + '_item_' + notif.args.card_id);
 
             if (dest.indexOf('table') == -1) {
@@ -5535,13 +5548,13 @@ function (dojo, declare) {
             }
             else if ( this.classEffect[ notif.args.card_type ] != undefined ) {
                 var elId = 'token-' + player_id + '-' + notif.args.card_id;
-                dojo.place( 
+                dojo.place(
                     this.format_block('jstpl_ressource_id', {
                         'id'   : elId,
                         'size' : 'small',
                         'type' : this.classEffect[ notif.args.card_type ]
-                    }), 
-                    'action_p' + player_id, 'before' 
+                    }),
+                    'action_p' + player_id, 'before'
                 );
 
                 this.addPowerToolTip( elId, notif.args.card_type );
@@ -5564,17 +5577,17 @@ function (dojo, declare) {
                 position = 'position-' + notif.args.island;
             this.slideToObject('player_' + this.colors[notif.args.player_color], position).play();
         },
-        
+
         notifMazeMove: function (notif)
         {
             this.slideToPlus(this.colors[notif.args.player_color] + '-golem', 'maze-tile-' + notif.args.position).play();
         },
-        
+
         notifTitanMove: function (notif)
         {
             this.slideToPlus(this.colors[notif.args.player_color] + '-player', 'titan-tile-' + notif.args.position).play();
         },
-        
+
         notifMazeTreasure: function (notif)
         {
             //console.log('notifMazeTreasure', notif);
@@ -5592,7 +5605,7 @@ function (dojo, declare) {
                     return;
                 }
             }
-           
+
 
             dojo.place( dojo.place( this.format_block('jstpl_power', {
                 'id'   : notif.args.card_id,
@@ -5600,7 +5613,7 @@ function (dojo, declare) {
             }), 'powers_p' + notif.args.player_id ) ,'powers_p' + notif.args.player_id);
 
             this.addPowerToolTip( 'power-' + notif.args.card_id, notif.args.power );
-            
+
             if (notif.args.power == 'merchant') {
                 $merchant = document.querySelector("#powers_p" + notif.args.player_id + " .power-merchant");
                 $merchant.innerHTML = 1;
@@ -5641,7 +5654,7 @@ function (dojo, declare) {
             var player_id = notif.args.player_id;
 
             dojo.removeClass('hammer_p' + player_id, 'ressources-hammer' + notif.args.hammer_phase);
-            
+
             if (notif.args.hammer_phase == 1){
                 dojo.addClass('hammer_p' + player_id, 'ressources-hammer2');
             } else {
@@ -5651,8 +5664,8 @@ function (dojo, declare) {
 
             $elHammerLeft = dojo.query('#hammersleft_p' + player_id)[0];
             $elHammerLeft.innerHTML = this.gamedatas.players[player_id].remainingHammer;
-            
-            if (this.gamedatas.players[player_id].remainingHammer <= 1) 
+
+            if (this.gamedatas.players[player_id].remainingHammer <= 1)
                 dojo.addClass('hammersleft_p' + player_id, 'hide');
         },
 
@@ -5667,7 +5680,7 @@ function (dojo, declare) {
             var el = dojo.query('.token-cerberus', 'tokens_p' + notif.args.player_id)[0];
             dojo.destroy(el);
         },
-        
+
         notifUseScepter: function(notif)
         {
             //console.debug(notif);
@@ -5681,7 +5694,7 @@ function (dojo, declare) {
             if (!el) {
                 return ;
             }
-            
+
             if (amount != 0){
                 dojo.removeClass(el, 'hide');
                 el.innerHTML = '(+' + amount + ')';
@@ -5705,12 +5718,12 @@ function (dojo, declare) {
             this.exploits[ nom_container ].addToStockWithId( notif.args.card_type, notif.args.card_id, notif.args.pile + "_item_" + notif.args.card_id );
             this.exploits[ notif.args.pile ].removeFromStockById( notif.args.card_id );
         },
-        
+
         notifEndScoringTitan: function (notif)
         {
             this.scoreCtrl[ notif.args.player_id ].incValue( notif.args.vp );
         },
-        
+
         notifCompanion: function (notif)
         {
             if (notif.args.val == 9999)
@@ -5723,7 +5736,7 @@ function (dojo, declare) {
 
         hideDraftBoard: function()
         {
-            if ( dojo.query("#draft-container.hide").length != 0 ) 
+            if ( dojo.query("#draft-container.hide").length != 0 )
                 return;
             dojo.query("#draft-container").addClass('hide');
             dojo.query(".container-play-area").removeClass('hide');
@@ -5761,7 +5774,7 @@ function (dojo, declare) {
         {
             var elDice = document.getElementById("celestial_dice").parentElement;
             roll = typeof roll !== 'undefined' ? roll : true;
-            
+
             if (side != undefined)
             {
                 var elSide      = ( elDice.getElementsByClassName( this.sideClass[ side ] ).length ) ? elDice.getElementsByClassName( this.sideClass[ side ] )[0] : false;
@@ -5773,9 +5786,9 @@ function (dojo, declare) {
             {
                 var sideUpClass = "sideup" + ( Math.floor(Math.random() * 6 ) + 1 );
             }
-            
+
             this.prepareDice(elDice);
-            
+
             if (roll)
                 elDice.classList.add("roll");
             elDice.classList.add( sideUpClass );
@@ -5881,8 +5894,8 @@ function (dojo, declare) {
          */
         search: function (array, key, prop){
             // Optional, but fallback to key['name'] if not selected
-            prop = (typeof prop === 'undefined') ? 'name' : prop;    
-        
+            prop = (typeof prop === 'undefined') ? 'name' : prop;
+
             for (var i=0; i < array.length; i++) {
                 if (array[i][prop] === key) {
                     return array[i];
@@ -5895,6 +5908,5 @@ function (dojo, declare) {
                 return obj[key];
             });
         }
-   });             
+   });
 });
-

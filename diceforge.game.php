@@ -88,6 +88,8 @@ class diceforge extends Table
                 "rebellion"              => 102,
                 "tieBreaker"             => 103,
                 "remove6G"               => 104,
+                'cornucopia'             => 105,
+                'diceTower'              => 106,
         ) );
 
         // Card init
@@ -128,6 +130,8 @@ class diceforge extends Table
         $deckOption = $this->getGameStateValue( "deckOption");
         $promoCards = $this->getGameStateValue( "promoCards");
         $rebellion = $this->getGameStateValue( "rebellion");
+        $cornucopia = $this->getGameStateValue( "cornucopia");
+        $diceTower =  $this->getGameStateValue( "diceTower");
 
         // Create players
         // Note: if you added some extra field on "player" table in the database (dbmodel.sql), you can initialize it there.
@@ -192,6 +196,8 @@ class diceforge extends Table
 
         }
 
+        $tokensToInit[] = array ('key' => 'wheel_1', 'nbr' => 1, 'state' => 0);
+        $tokensToInit[] = array ('key' => 'wheel_2', 'nbr' => 1, 'state' => 0);
 
         $sql .= implode( $values, ',' );
         self::DbQuery( $sql );
@@ -249,7 +255,7 @@ class diceforge extends Table
         // not draft
         if ($deckOption != 3) {
             foreach ($available_cards as $island => $cards) {
-                $hydraPromo = ['hydra', 'harpy', 'chimera', 'monsterMother'];
+                $hydraPromo = ['harpy', 'chimera', 'monsterMother', 'shadowgoddess'];
 
                 if (in_array($island, $slot_taken))
                     continue ;
@@ -285,6 +291,13 @@ class diceforge extends Table
                 if ($cards[$toPick]['type'] != 'hydraPromo')
                     $this->exploits->createCards($c, $island);
 
+            }
+
+            if ($cornucopia == 1) {
+                $this->exploits->createCards([['type' => 'cornucopia', 'type_arg' => 0, 'nbr' => 1]], 2);
+            }
+            if ($diceTower == 1) {
+                $this->exploits->createCards([['type' => 'diceTower', 'type_arg' => 0, 'nbr' => 1]], 6);
             }
         }
         // draft
@@ -5737,7 +5750,7 @@ class diceforge extends Table
         $player_id = self::getActivePlayerId();
         $nb_players = $this->getGameStateValue( "nbPlayers");
         $boars = ['redBoar', 'yellowBoar', 'blueBoar', 'greenBoar'];
-        $hydraPromo = ['hydra', 'harpy', 'chimera', 'monsterMother'];
+        $hydraPromo = ['harpy', 'chimera', 'monsterMother', 'shadowgoddess'];
 
         //throw new BgaUserException($this->exploit_slot[array_search('M3', $this->exploit_slot)]);
 
@@ -5958,6 +5971,24 @@ class diceforge extends Table
                     $oustAll = true;
                     $ousted = $this->getGameStateValue('oustedPlayerId');
                     break ;
+                case 'fortuneWheel':
+                    if ($this->tokens->getTokenLocation('wheel_1') != 'none') {
+                        break ;
+                    }
+
+                    // We trigger this code only when no sides have been choosen
+                    $this->tokens->moveToken('wheel_1', $side1);
+                    $this->tokens->moveToken('wheel_2', $side2);
+                    self::notifyAllPlayers("notifMessage", clienttranslate('${player_name} predicts that the sides ${sides_rolled} will roll'),
+                            ['player_name' => $notifPlayerArgs['player_name'],
+                            'sides_rolled' => $side1 . ',' . $side2,]
+                    );
+                    $this->dbSetSideChoice($player_id, 1, "0");
+                    $this->dbSetSideChoice($player_id, 2, "0");
+                    $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+                    $this->gamestate->nextState('nextState');
+                    return ;
+                    break;
             }
         }
 
@@ -11710,13 +11741,25 @@ class diceforge extends Table
                         //$this->tokens->setTokenState('mazestock_' . $player_id, -2);
                         // $this->dbSetChoice($player_id, self::RC_MAZE);
                         break;
+                    case 'fortuneWheel':
+                        if ($this->tokens->getTokenLocation('wheel_1') == 'none') {
+                            $this->dbSetSideChoice($player_id, 1, -1);
+                            $this->dbSetSideChoice($player_id, 2, -1);
+                            $this->dbSetChoice($player_id, self::RC_SIDE_CHOICE);
+                            $ressourceChoice = true;
+                        } else {
+                            // trigger blessing
+                            $this->resetTwins();
+                            $ressourceChoice = $this->blessing($player_id, true, true, 1, true);
+                        }
+                        // check face at the end of the actions
+                        break;
                 }
             }
 
             // to manage the various cards with multiple throws
             $remainingThrows--;
             $this->setGameStateValue( "exploitRemainingThrows", $remainingThrows);
-//$this->debugVTO(2305535);
             self::notifyAllPlayers("updateCounters", "", $this->getPlayersRessources());
         }
 
@@ -11778,6 +11821,7 @@ class diceforge extends Table
                 }
                 $this->titanMove($player_id);
             }
+
         }
 
         if (($remainingThrows <= 0 && !$this->isRessourceChoice() && !$this->hasMazeStock($player_id) && !$forge && !$this->hasUnresolvedSides($player_id))) {
@@ -11791,6 +11835,11 @@ class diceforge extends Table
 
             // disable all users
             self::DbQuery('UPDATE player SET player_is_multiactive = 0');
+            if ($card_info['action'] == 'fortuneWheel') {
+                // check choice of sides
+                throw new \feException("fortune wheel check");
+            }
+            // throw new \feException("wheel test" . $card_id);
         }
 
         // #35073 : add check of misfortune

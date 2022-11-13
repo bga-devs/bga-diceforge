@@ -358,6 +358,34 @@ $game_options = [
       ],
     ],
   ],
+  105 => [
+    'name' => totranslate('Promo: Cornucopia'),
+    'values' => [
+      0 => ['name' => totranslate('No')],
+      1 => ['name' => totranslate('Yes'), 'nobeginner' => true, 'tmdisplay' => totranslate('with Cornucopia card')],
+    ],
+    'displaycondition' => [
+      [
+        'type' => 'otheroption',
+        'id' => 100,
+        'value' => [2, 3],
+      ],
+    ],
+  ],
+  106 => [
+    'name' => totranslate('Promo: Dice Tower'),
+    'values' => [
+      0 => ['name' => totranslate('No')],
+      1 => ['name' => totranslate('Yes'), 'nobeginner' => true, 'tmdisplay' => totranslate('with Dice Tower card')],
+    ],
+    'displaycondition' => [
+      [
+        'type' => 'otheroption',
+        'id' => 100,
+        'value' => [2, 3],
+      ],
+    ],
+  ],
   104 => [
       'name' => totranslate('Remove 6 gold die face'),
       'values' => [
