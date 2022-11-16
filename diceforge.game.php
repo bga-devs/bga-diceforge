@@ -11752,7 +11752,7 @@ class diceforge extends Table
                             $this->resetTwins();
                             $ressourceChoice = $this->blessing($player_id, true, true, 1, true);
                         }
-                        // check face at the end of the actions
+                        // Check of the sides done in the end
                         break;
                 }
             }
@@ -11837,9 +11837,25 @@ class diceforge extends Table
             self::DbQuery('UPDATE player SET player_is_multiactive = 0');
             if ($card_info['action'] == 'fortuneWheel') {
                 // check choice of sides
-                throw new \feException("fortune wheel check");
+                // if one of the side match => 8 VP, if 2 => 20 VP
+                // in progress
+                $previsions = [$this->tokens->getTokenLocation('wheel_1'), $this->tokens->getTokenLocation('wheel_2')];
+                $rolled =[current($this->sides->getCardsInLocation('dice1-p'.$player_id, 0))['type'], current($this->sides->getCardsInLocation('dice2-p'.$player_id, 0))['type']];
+
+                if (($previsions[0] == $rolled[0] && $previsions[1] == $rolled[1]) || ($previsions[1] == $rolled[0] && $previsions[0] == $rolled[1])) {
+                    $vp = 20;
+                } elseif ($previsions[0] == $rolled[0] || $previsions[0] == $rolled[1] || $previsions[1] == $rolled[0] || $previsions[1] == $rolled[1]) {
+                    $vp = 8;
+                } else {
+                    $vp = 0;
+                }
+  
+                $this->increaseVP($player_id, $vp);
+                $this->incStat($vp, 'nb_vp_exploit', $player_id);
+                self::notifyAllPlayers("notifBlessing", clienttranslate('${player_name} gets ${ressources} from the Wheel of Fortune'), array(
+                            'player_name'   => $this->getActivePlayerName(),
+                            'ressources'    => $vp . ' [VP]') );
             }
-            // throw new \feException("wheel test" . $card_id);
         }
 
         // #35073 : add check of misfortune
