@@ -501,6 +501,7 @@ function (dojo, declare) {
                 //'greenMemory'      : 'effect-green-memory',
                 //'redMemory'        : 'effect-red-memory',
                 'twins'            : 'effect-twins',
+                'pegasus'          : 'effect-pegasus',
             }
 
             this.poolCost = {
@@ -668,6 +669,7 @@ function (dojo, declare) {
                 'helpActionMessage'             : _('Click on an action button first (top of the screen)'),
                 'mirrorDialogTitle'             : _("Choose ${nb} side(s) to replace the mirror(s)"),
                 'silverHindDialogTitle'         : _('Select a die (Silver Hind)'),
+                'pegasusDialogTitle'           : _('Select a die to gain a minor blessing'),
                 'oracleHindDialogTitle'         : _('Select a die (Oracle)'),
                 'draftNoCardSelectedError'      : _("You must select a card first"),
                 'draftTooManyCardSelectedError' : _("Only one card can be selected"),
@@ -1865,6 +1867,32 @@ function (dojo, declare) {
                         return dojo.connect(el, "onclick", self, 'onClickMemorySetup' );
                     });
                     break ;
+                case 'pegasusIsland':
+                    console.log("TODO pegasus island");
+                    break;
+                case 'pegasusMinor':
+                    if ( !this.isCurrentPlayerActive() || args.args.canDo == false) {
+                        return ;
+                    }
+                    var args = {
+                        "title"      : this.translatableTexts.pegasusDialogTitle,
+                        "selectMode" : 'flat',
+                        "nbToSelect" : 1,
+                        "dices"      : [
+                            {
+                                "player_id" : this.player_id,
+                                "dice"      : 1
+                            },
+                            {
+                                "player_id" : this.player_id,
+                                "dice"      : 2
+                            }
+                        ],
+                        "action"     : 'onDiceSelectionPegasus'
+                    };
+                    // TODO: add the button to see the prompt
+                    this.initDiceSelection( args );
+                    break ;
             }
         },
 
@@ -2184,7 +2212,6 @@ function (dojo, declare) {
                                 this.addActionButton('forge_ship_pass_11' , this.translatableTexts.pass, 'onClickForgeNymphPass', null, null, 'red');
                                 break ;
                             case 'memoryTokens':
-                                console.debug(args.memory);
                                 this.clientStateArgs['memory'] = Object.values(args.memory)[0];
                                 this.addActionButton('memorySun', this.replaceTextWithIcons('2 [L] 1 [FS]'), 'onClickMemoryChoose', null, null, 'gray');
                                 this.addActionButton('memoryMoon', this.replaceTextWithIcons('2 [AS] 1 [MS]'), 'onClickMemoryChoose', null, null, 'gray');
@@ -4434,6 +4461,21 @@ function (dojo, declare) {
             }
         },
 
+        onDiceSelectionPegasus: function ( data )
+        {
+            if( this.checkAction( "actPegasusMinor" ) ) {
+                this.ajaxcall('/diceforge/diceforge/actPegasusMinor.html', {
+                    lock: true,
+                    'dice_num' : data[0].dice_num
+                }, this, function( result ) {
+                    // onSuccess
+                    this.endDiceSelection();
+                }, function( is_error ) {
+                    // onError
+                } );
+            }
+        },
+
         onDiceSelectionAncestor: function ( data )
         {
             if( this.checkAction( "actAncestorSelect" ) ) {
@@ -5570,6 +5612,7 @@ function (dojo, declare) {
         },
 
         notifMovePawn: function (notif) {
+            console.debug('notification: move pawn', notif);
             // move player pawn in position
             if (notif.args.island == 'init')
                 position = 'position-init-' + this.colors[notif.args.player_color];

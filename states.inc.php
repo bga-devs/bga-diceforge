@@ -7,7 +7,7 @@
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
- * 
+ *
  * states.inc.php
  *
  * diceforge game states description
@@ -76,10 +76,13 @@ if ( !defined('STATE_BEGIN_TURN') )
   define("STATE_DRAFT", 24);
   define("STATE_DRAFT_PLAYER", 25);
   define("STATE_MISFORTUNE", 26);
+  define("STATE_PEGASUS_CHANGE_USER", 27);
+  define("STATE_PEGASUS_CHOOSE_ISLAND", 28);
+  define("STATE_PEGASUS_CHOOSE_MINOR",29);
   define("STATE_END_GAME", 99);
 }
 
- 
+
 $machinestates = array(
 
     // The initial state. Please do not modify.
@@ -90,7 +93,7 @@ $machinestates = array(
         "action"      => "stGameSetup",
         "transitions" => array( "" => STATE_BEGIN_TURN )
     ),
-    
+
     // Note: ID=2 => your first state
 
     /*
@@ -106,7 +109,7 @@ $machinestates = array(
         "action"                => "stBeginTurn",
         "transitions"           => array( "beginPlayerTurn" => STATE_BEGIN_PLAYER_TURN, 'gameEnd' => STATE_END_GAME, 'draft' =>  STATE_DRAFT)
     ),
-    
+
     STATE_DRAFT => array(
         "name"                  => "draftGame",
         "description"           => "",
@@ -114,7 +117,7 @@ $machinestates = array(
         "action"                => "stDraftGame",
         "transitions"           => array( "beginTurn" => STATE_BEGIN_TURN, 'draft' =>  STATE_DRAFT_PLAYER)
     ),
-    
+
     /*
      * Beginning of a turn : stats, turn setup will be done here
      *
@@ -133,7 +136,7 @@ $machinestates = array(
     ),
 
     /*
-     * Beginning of a PLAYER turn : every automated tasks before a player takes his first action 
+     * Beginning of a PLAYER turn : every automated tasks before a player takes his first action
      *
      * - Notif who's turn ?
      *
@@ -146,7 +149,7 @@ $machinestates = array(
         "action"                => "stBeginPlayerTurn",
         "possibleactions"       => array('actRollDice'),
         "transitions"           => array( "blessing" => STATE_BLESSING ),
-        "updateGameProgression" => true, 
+        "updateGameProgression" => true,
     ),
 
     /*
@@ -165,7 +168,7 @@ $machinestates = array(
         "action"            => "stBlessing",
         "transitions"       => array( "reinforcement" => STATE_REINFORCEMENT, "blessing" => STATE_BLESSING, "ressourceChoice" => STATE_RESSOURCE_CHOICE, "forgeShip" => STATE_FORGE_SHIP, 'nextState' => STATE_BLESSING, 'misfortune' => STATE_MISFORTUNE)
     ),
-    
+
     /*
      * Choice of ressources based on input from the players
      *
@@ -185,7 +188,7 @@ $machinestates = array(
         //"transitions"       => array( "reinforcement" => STATE_REINFORCEMENT, "blessing" => STATE_BLESSING )
 		"transitions"       => array( "blessing" => STATE_BLESSING, 'choice' => STATE_RESSOURCE_CHOICE, 'nextState' => STATE_BLESSING, 'misfortune' => STATE_MISFORTUNE )
     ),
-    
+
     /*
      * If users have thrown a Ship side
      *
@@ -202,7 +205,7 @@ $machinestates = array(
         "possibleactions"   => array('actBuyForge', 'actForgeShipPass', 'actUseTritonToken', 'actAutoHammer', 'actCelestialUpgrade', 'actCancelCelestial','actPuzzleCelestial'),
         "transitions"       => array( "blessing" => STATE_BLESSING, 'forgeShip' => STATE_FORGE_SHIP, 'nextState' => STATE_BLESSING )
     ),
-    
+
     /*
      * Active player may use his reinforcements cards
      * Args : will get the remaining reinforcement that can be triggered
@@ -236,7 +239,37 @@ $machinestates = array(
         "possibleactions"   => array('actMisfortuneChoice', 'actActionMisfortune', 'actAutoHammer'),
         "transitions"       => array( "nextState" => STATE_MISFORTUNE, 'choice' => STATE_MISFORTUNE, "blessing" => STATE_BLESSING, "reinforcement" => STATE_REINFORCEMENT, 'exploitEffect' => STATE_EXPLOIT_EFFECT, 'exploitRessource' => STATE_EXPLOIT_RESSOURCE, 'ousting' => STATE_PLAYER_OUSTING )
     ),
-    
+
+    STATE_PEGASUS_CHANGE_USER => array(
+        "name"              => "pegasusChange",
+        "description"       => '',
+        "descriptionmyturn" => '',
+        "type"              => "game",
+        "action"            => "stPegasusChange",
+        "transitions"       => array( "nextState" => STATE_PEGASUS_CHOOSE_ISLAND)
+    ),
+
+    STATE_PEGASUS_CHOOSE_ISLAND => array(
+        "name"              => "pegasusIsland",
+        "description"       => clienttranslate('Pegasus effect: Player is choosing a new island to locate to'),
+        "descriptionmyturn" => clienttranslate('Pegasus effect: ${you} choose an island to relocate to'),
+        "type"              => "multipleactiveplayer",
+        "args"              => "argsPegasusIsland",
+        "possibleactions"   => array('actPegasusIsland', 'actAutoHammer'),
+        "transitions"       => array('ousting' => STATE_PLAYER_OUSTING )
+    ),
+
+    STATE_PEGASUS_CHOOSE_MINOR => array(
+        "name"              => "pegasusMinor",
+        "description"       => clienttranslate('Pegasus effect: Player is choosing a die to get minor blessing'),
+        "descriptionmyturn" => clienttranslate('Pegasus effect: ${you} choose a die to get minor blessing'),
+        "type"              => "multipleactiveplayer",
+        'action'            => 'stPegasusMinor',
+        'args'              => 'argsPegasusMinor',
+        "possibleactions"   => array('actPegasusMinor', 'actAutoHammer'),
+        "transitions"       => array('ousting' => STATE_PLAYER_OUSTING, "nextState" => STATE_PEGASUS_CHOOSE_MINOR,  'choice' => STATE_OUSTED_PLAYER_CHOICE, 'misfortune' => STATE_MISFORTUNE)
+    ),
+
     /*
      * Active player use his doe and needs to choose a ressource
      *
@@ -250,7 +283,7 @@ $machinestates = array(
         "possibleactions"   => array('actDoeTakeRessource', 'actActionChoice', 'actSideChoice', 'actUseCerberusToken', 'actUseTritonToken', 'actAutoHammer', 'actChooseMazePath', 'actChooseTreasure', 'actMazePowerConfirm', 'actPuzzleCelestial', 'actPuzzleMaze'),
         "transitions"       => array( "nextState" => STATE_REINFORCEMENT, 'choice' => STATE_DOE_RESSOURCE_CHOICE, "forgeShip" => STATE_DOE_FORGE_SHIP, 'misfortune' => STATE_MISFORTUNE )
     ),
-    
+
 	/*
      * If users have thrown a Ship side
      *
@@ -267,7 +300,7 @@ $machinestates = array(
         "possibleactions"   => array('actBuyForge', 'actForgeShipPass', 'actUseTritonToken', 'actAutoHammer', 'actCelestialUpgrade', 'actCancelCelestial'),
         "transitions"       => array( "nextState" => STATE_REINFORCEMENT, 'forgeShip' => STATE_FORGE_SHIP, 'choice' => STATE_DOE_RESSOURCE_CHOICE)
     ),
-	
+
     /*
      * Active player must choose an action (or pass)
      *
@@ -283,16 +316,17 @@ $machinestates = array(
         "possibleactions"   => array('actBuyForge', 'actEndForge', 'actBuyExploit', 'actEndPlayerTurn', 'actUseTritonToken', 'actAutoHammer', 'actUseCompanion', 'actUseScepter', 'actCancelScepter'),
         //"transitions"       => array( "forgeDice" => STATE_FORGE_DICE, "playerOusting" => STATE_PLAYER_OUSTING, "exploitEffect" => STATE_EXPLOIT_EFFECT, "endPlayerTurn" => STATE_END_PLAYER_TURN )
         "transitions"       => array( "playerAction" => STATE_PLAYER_ACTION, "playerOusting" => STATE_PLAYER_OUSTING,
+                                      "pegasusOusting" => STATE_PEGASUS_CHANGE_USER,
                                      "exploitEffect" => STATE_EXPLOIT_EFFECT, "endPlayerTurn" => STATE_END_PLAYER_TURN,
                                      "playerSecondAction" => STATE_SECOND_ACTION, "current" => STATE_PLAYER_ACTION)
     ),
-    
+
     /*
      * Forging of the dice
      * - send sides to forge / location
      * - display of the sides and the one to select
      * - Check if the player can make a new action (2FS necessary)
-     * 
+     *
     **/
     //STATE_FORGE_DICE => array(
     //    "name"              => "forgeDice",
@@ -300,7 +334,7 @@ $machinestates = array(
     //    "descriptionmyturn" => clienttranslate('${you} must forge your dice'),
     //    "type"              => "activeplayer",
     //    "args"              => "argsForgeDice",
-    //    "possibleactions"   => array("actForgeDice", 'actUseTritonToken'), 
+    //    "possibleactions"   => array("actForgeDice", 'actUseTritonToken'),
     //    "transitions"       => array( "playerSecondAction" => STATE_SECOND_ACTION, "endPlayerTurn" =>  STATE_END_PLAYER_TURN)
     //),
 
@@ -308,7 +342,7 @@ $machinestates = array(
      *  Does the player wants to use his second action
      * - 3 buttons: forge, exploit, pass
      * - if different of pass, decrease of FS
-     * 
+     *
     **/
     STATE_SECOND_ACTION => array(
         "name"              => "secondAction",
@@ -316,7 +350,7 @@ $machinestates = array(
         "descriptionmyturn" => clienttranslate('Do ${you} wish to take another action?'),
         "args"              => "argsSecondAction",
         "type"              => "activeplayer",
-        "possibleactions"   => array("actSecondAction", 'actUseTritonToken', 'actAutoHammer', 'actUseCompanion', 'actUseScepter', 'actCancelScepter'), 
+        "possibleactions"   => array("actSecondAction", 'actUseTritonToken', 'actAutoHammer', 'actUseCompanion', 'actUseScepter', 'actCancelScepter'),
         "transitions"       => array( "playerAction" => STATE_PLAYER_ACTION, "endPlayerTurn" => STATE_END_PLAYER_TURN, "current" =>  STATE_SECOND_ACTION)
     ),
 
@@ -332,9 +366,9 @@ $machinestates = array(
         "descriptionmyturn" => "",
         "type"              => "game",
         "action"            => "stOusting",
-        "transitions"       => array( "exploitEffect" => STATE_EXPLOIT_EFFECT, "choice" => STATE_OUSTED_PLAYER_CHOICE, "forgeShip" => STATE_OUSTED_FORGE_SHIP, "nextState" => STATE_PLAYER_OUSTING, 'misfortune' => STATE_MISFORTUNE)
+        "transitions"       => array( "exploitEffect" => STATE_EXPLOIT_EFFECT, "choice" => STATE_OUSTED_PLAYER_CHOICE, "forgeShip" => STATE_OUSTED_FORGE_SHIP, "nextState" => STATE_PLAYER_OUSTING, 'misfortune' => STATE_MISFORTUNE, 'pegasus' => STATE_PEGASUS_CHOOSE_MINOR)
     ),
-    
+
     /*
      *  Choice of ressource
      *  Change of active player
@@ -350,9 +384,9 @@ $machinestates = array(
         "args"              => "argsRessourceChoice",
         //"action"            => "stRessourceChoiceAdvanced",
         "possibleactions"   => array("actOustedRessources", 'actSideChoice', 'actActionChoice', 'actUseCerberusToken', 'actUseTritonToken', 'actAutoHammer', 'actChooseMazePath', 'actChooseTreasure', 'actMazePowerConfirm', 'actPuzzleCelestial', 'actPuzzleMaze'),
-        "transitions"       => array( "nextState" => STATE_PLAYER_OUSTING, 'choice' => STATE_OUSTED_PLAYER_CHOICE, "forgeShip" => STATE_OUSTED_FORGE_SHIP, 'misfortune' => STATE_MISFORTUNE )
+        "transitions"       => array( "nextState" => STATE_PLAYER_OUSTING, 'choice' => STATE_OUSTED_PLAYER_CHOICE, "forgeShip" => STATE_OUSTED_FORGE_SHIP, 'misfortune' => STATE_MISFORTUNE, 'pegasus' => STATE_PEGASUS_CHOOSE_MINOR )
     ),
-	
+
 	/*
      * If users have thrown a Ship side
      *
@@ -369,7 +403,7 @@ $machinestates = array(
         "possibleactions"   => array('actBuyForge', 'actForgeShipPass', 'actCelestialUpgrade', 'actCancelCelestial','actPuzzleCelestial'),
         "transitions"       => array( "nextState" => STATE_PLAYER_OUSTING, 'choice' => STATE_OUSTED_PLAYER_CHOICE, "forgeShip" => STATE_OUSTED_FORGE_SHIP )
     ),
-	
+
     /*
      * Application of the effects of the exploit
      *
@@ -384,7 +418,7 @@ $machinestates = array(
         "type"              => "activeplayer",
         "args"              => "argExploitEffect",
         "action"            => "stEffectExploit",
-        "possibleactions"   => array("actBuyForge", "actExploitEnigma", "actExploitBoar", 'actUseTritonToken', 'actAutoHammer', 'actBuyExploit', 'actCelestialUpgrade', 'actForgeNymphPass', 'actAncestorSelect', 'actMemoryToken'), 
+        "possibleactions"   => array("actBuyForge", "actExploitEnigma", "actExploitBoar", 'actUseTritonToken', 'actAutoHammer', 'actBuyExploit', 'actCelestialUpgrade', 'actForgeNymphPass', 'actAncestorSelect', 'actMemoryToken'),
         "transitions"       => array( "playerSecondAction" => STATE_SECOND_ACTION, "endPlayerTurn" =>  STATE_END_PLAYER_TURN, "choice" => STATE_EXPLOIT_RESSOURCE,
                                       "exploitEffect" =>STATE_EXPLOIT_EFFECT, "forgeShip" => STATE_EXPLOIT_FORGE_SHIP, "forgeBoar" => STATE_EXPLOIT_FORGE_BOAR, "nextState" => STATE_EXPLOIT_EFFECT, 'misfortune' => STATE_MISFORTUNE)
     ),
@@ -396,10 +430,10 @@ $machinestates = array(
         "type"              => "multipleactiveplayer",
         //"action"            => "stExploitRessource",
         "args"              =>  "argExploitRessource",
-        "possibleactions"   => array("actExploitRessource", 'actSideChoice', 'actActionChoice', 'actUseCerberusToken', 'actUseTritonToken', 'actAutoHammer', 'actChooseMazePath', 'actChooseTreasure', 'actMazePowerConfirm', 'actPuzzleCelestial', 'actPuzzleMaze', 'actRessourceChoice'), 
+        "possibleactions"   => array("actExploitRessource", 'actSideChoice', 'actActionChoice', 'actUseCerberusToken', 'actUseTritonToken', 'actAutoHammer', 'actChooseMazePath', 'actChooseTreasure', 'actMazePowerConfirm', 'actPuzzleCelestial', 'actPuzzleMaze', 'actRessourceChoice'),
         "transitions"       => array( "nextState" => STATE_EXPLOIT_EFFECT, 'choice' => STATE_EXPLOIT_RESSOURCE, "forgeShip" => STATE_EXPLOIT_FORGE_SHIP, 'misfortune' => STATE_MISFORTUNE)
     ),
-  
+
 	/*
      * If users have thrown a Ship side
      *
@@ -416,7 +450,7 @@ $machinestates = array(
         "possibleactions"   => array('actBuyForge', 'actForgeShipPass', 'actUseTritonToken', 'actAutoHammer', 'actCelestialUpgrade', 'actCancelCelestial','actPuzzleCelestial'),
         "transitions"       => array( "nextState" => STATE_EXPLOIT_EFFECT, 'choice' => STATE_EXPLOIT_RESSOURCE, "forgeShip" => STATE_EXPLOIT_FORGE_SHIP/*, "exploitEffect" => STATE_EXPLOIT_EFFECT*/)
     ),
-    
+
     /*
      * If users have thrown a Ship side
      *
@@ -433,7 +467,7 @@ $machinestates = array(
         "possibleactions"   => array('actBuyForge', 'actAutoHammer'),
         "transitions"       => array( "exploitEffect" => STATE_EXPLOIT_EFFECT)
     ),
-	
+
     /*
      * Stuff at the end of active player turn
      *
@@ -455,16 +489,16 @@ $machinestates = array(
         "action"                => "stEndScoring",
         "transitions"           => array( "endGame" => STATE_END_GAME),
           //"transitions"       => array( "poule" => 98),
-        "updateGameProgression" => true, 
+        "updateGameProgression" => true,
     ),
-    
+
     //98 => array(
     //    "name"              => "poule",
     //    "description"       => clienttranslate("End of poule"),
     //    "descriptionmyturn" => clienttranslate('Effects are being played'),
     //    "type"              => "activeplayer",
     //    "action"            => "stPoule",
-    //    "possibleactions"   => array("actExploitRessource"), 
+    //    "possibleactions"   => array("actExploitRessource"),
     //    "transitions" => array( "endGame" => STATE_END_GAME),
     //  ),
 
@@ -479,6 +513,3 @@ $machinestates = array(
     ),
 
 );
-
-
-

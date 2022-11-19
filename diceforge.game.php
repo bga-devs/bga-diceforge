@@ -198,6 +198,9 @@ class diceforge extends Table
 
         $tokensToInit[] = array ('key' => 'wheel_1', 'nbr' => 1, 'state' => 0);
         $tokensToInit[] = array ('key' => 'wheel_2', 'nbr' => 1, 'state' => 0);
+        $tokensToInit[] = array ('key' => 'pegasus_remaining', 'nbr' => 1, 'state' => 0);
+        $tokensToInit[] = array ('key' => 'pegasus_player', 'nbr' => 1, 'state' => 0);
+
 
         $sql .= implode( $values, ',' );
         self::DbQuery( $sql );
@@ -1945,7 +1948,11 @@ class diceforge extends Table
                 break;
             case 'playerOusting':
             case 'exploitForgeBoar':
-                $endMultiState = 'exploitEffect';
+                if ($this->tokens->getTokenState('pegasus_remaining') != 0) {
+                    $endMultiState = 'pegasus';
+                } else {
+                    $endMultiState = 'exploitEffect';
+                }
                 break;
         }
 
@@ -3150,6 +3157,10 @@ class diceforge extends Table
     function hasBear( $player_id )
     {
         return $this->countExploitInLocation( "bear", "pile2-". $player_id );
+    }
+
+    function hasPegasus($player_id) {
+        return $this->countExploitInLocation( "pegasus", "pile2-". $player_id );
     }
 
     function resolveTwin ($player_id, $toResolve) {
@@ -8054,6 +8065,7 @@ class diceforge extends Table
         $hasPreviousExploit = false;
         $scepterFire = 0;
         $scepterMoon = 0;
+        $pegasus = false;
         //throw new feException(print_r($ressources));
         if ($this->getPlayersAdditionnalInfo()[$player_id]['forge'] != '')
             throw new BgaVisibleSystemException("You cannot buy an exploit as you have started to forge");
@@ -8131,6 +8143,8 @@ class diceforge extends Table
 
             $ousted_player = $this->isIslandUsed($player_id, $card_info['island']);
 
+            // in progress
+
             // Bear management
             if ($this->hasBear($player_id) != 0 && isset($ousted_player) && $ousted_player != null) {
                 $vp = $this->hasBear($player_id) * 3;
@@ -8149,6 +8163,14 @@ class diceforge extends Table
                             'player_name'   => $this->loadPlayersBasicInfos()[$ousted_player]['player_name'],
                             'ressources'    => $vp . ' [VP]') );
 
+            }
+
+            // pegasus management
+            if (isset($ousted_player) && $ousted_player != null && $this->hasPegasus($ousted_player) ) {
+                $this->tokens->setTokenState('pegasus_remaining', $this->hasPegasus($ousted_player));
+                $this->tokens->setTokenState('pegasus_player', $ousted_player);
+
+                $pegasus = true;
             }
 
             if (isset($ousted_player) && $ousted_player != null) {
@@ -8237,7 +8259,10 @@ class diceforge extends Table
         $this->setGameStateValue( "exploitBought", $card_id );
         $this->setGameStateValue( "exploitRemainingThrows", $card_info['nbStep'] );
 
-        if (isset($ousted_player) && $ousted_player != null)
+        if ($pegasus) {
+            $this->gamestate->nextState('pegasusOusting');
+        }
+        elseif (isset($ousted_player) && $ousted_player != null)
             $this->gamestate->nextState('playerOusting');
         else
             $this->gamestate->nextState('exploitEffect');
@@ -9671,7 +9696,6 @@ class diceforge extends Table
                     $sideNum = 2;
                 }
 
-
                 // We are managing Shield as they are excluded before
                 if ($sideNum == 0) {
                     $choiceExclude = array('-1', '0', 'triple', 'ship');
@@ -10966,8 +10990,114 @@ class diceforge extends Table
             }
             else
                 //$this->gamestate->nextState('exploitEffect');
-                $this->gamestate->nextState('nextState');
+                if ($this->tokens->getTokenState('pegasus_remaining') != 0) {
+                    $this->gamestate->nextState('pegasus');
+                } else {
+                    $this->gamestate->nextState('nextState');
+                }
         }
+    }
+
+    // Switch of user that owns the Pegasus
+    function stPegasusChange() {
+        $player_id = $this->getGameStateValue('oustedPlayerId');
+        $this->setGameStateValue("oracleReinforcement", 0);
+        self::giveExtraTime( [$player_id], 45 );
+        $this->gamestate->setPlayersMultiactive ([$player_id], 'stOusting');
+        $this->gamestate->nextState('nextState');
+    }
+
+    function argsPegasusIsland() {
+        $islands = [1,2,3,4,5,6,7];
+
+        return ['islands' => array_diff($islands, self::getObjectListFromDB("SELECT position FROM player WHERE position != 'begin'", true))];
+    }
+
+    function actPegasusIsland($island) {
+        self::checkAction('actPegasusIsland');
+        $player_id = self::getCurrentPlayerId();
+        $args = $this->argsPegasusIsland();
+
+        if (!in_array($island, $args['islands'])) {
+            throw new \BgaVisibleSystemException('The island is occupied. Should not happen');
+        }
+
+        $this->dbSetPosition ($player_id, $island);
+        $playerInfo = $this->loadPlayersBasicInfos()[$player_id];
+
+        self::notifyAllPlayers("notifMovePawn", clienttranslate('Pegasus: ${player_name} moves to island ${island}'),
+            array(
+                'player_color' => $playerInfo['player_color'],
+                'player_name' => $playerInfo['player_name'],
+                'island'       => $island
+            )
+        );
+        $this->gamestate->nextState('ousting');
+    }
+
+    function stPegasusMinor() {
+        $player_id = self::getCurrentPlayerId();
+        // if players need to choose, go to correct state
+        if ($this->isRessourceChoice()) {
+            $continue = $this->stRessourceChoiceAdvanced(null,false);
+            if ($continue)
+                return ;
+        }
+        elseif ($this->hasMazeStock($player_id)) {
+            // Maze movement
+            if (!$this->mazeManagement($player_id)) {
+                $this->gamestate->nextState('pegasus');
+                return ;
+            }
+        }
+        elseif ($this->misfortuneState() != 0) {
+
+            $toEnable = $this->misfortuneAllocation();
+
+            // allocate if choice ==> token
+
+            self::giveExtraTime( $toEnable, 45 );
+            $this->gamestate->setPlayersMultiactive (array($toEnable), 'blessing');
+            $this->tokens->moveToken('resolveMisfortune', 'none', 0);
+            $this->gamestate->nextState('misfortune');
+            return ;
+        } elseif ($this->tokens->getTokenState('pegasus_remaining') == 0) {
+            $this->tokens->setTokenState('pegasus_player', 0);
+            $this->gamestate->nextState('ousting');
+            return ;
+        } elseif (count($this->gamestate->getActivePlayerList()) == 0) {
+            $this->gamestate->setPlayersMultiactive ([$this->tokens->getTokenState('pegasus_player')], 'nextState');
+            $this->gamestate->nextState('nextState');
+        }
+
+    }
+
+    function argsPegasusMinor() {
+        return ['canDo'=>$this->tokens->getTokenState('pegasus_remaining') != 0];
+    }
+
+    function actPegasusMinor($dice) {
+        self::checkAction( "actPegasusMinor");
+        $player_id         = self::getCurrentPlayerId();
+        $this->resetThrowTokens();
+        $this->resetTwins();
+        $dice1 = false;
+        $dice2 = false;
+
+        $this->tokens->incTokenState('pegasus_remaining', -1);
+
+        if ($dice == 1) {
+            $dice1 = true;
+            $this->setGameStateValue('enigmaDieNumber', 1);
+        }
+        else {
+            $dice2 = true;
+            $this->setGameStateValue('enigmaDieNumber', 2);
+        }
+
+        $choice = $this->blessing($player_id, $dice1, $dice2);
+        self::notifyAllPlayers("updateCounters", "", $this->getPlayersRessources());
+        $this->gamestate->nextState('nextState');
     }
 
     //function stExploitRessource() {
@@ -11849,7 +11979,7 @@ class diceforge extends Table
                 } else {
                     $vp = 0;
                 }
-  
+
                 $this->increaseVP($player_id, $vp);
                 $this->incStat($vp, 'nb_vp_exploit', $player_id);
                 self::notifyAllPlayers("notifBlessing", clienttranslate('${player_name} gets ${ressources} from the Wheel of Fortune'), array(
