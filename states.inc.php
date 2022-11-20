@@ -256,7 +256,7 @@ $machinestates = array(
         "type"              => "multipleactiveplayer",
         "args"              => "argsPegasusIsland",
         "possibleactions"   => array('actPegasusIsland', 'actAutoHammer'),
-        "transitions"       => array('ousting' => STATE_PLAYER_OUSTING )
+        "transitions"       => array('ousting' => STATE_PLAYER_OUSTING, 'minor' =>  STATE_PEGASUS_CHOOSE_MINOR)
     ),
 
     STATE_PEGASUS_CHOOSE_MINOR => array(
@@ -267,7 +267,7 @@ $machinestates = array(
         'action'            => 'stPegasusMinor',
         'args'              => 'argsPegasusMinor',
         "possibleactions"   => array('actPegasusMinor', 'actAutoHammer'),
-        "transitions"       => array('ousting' => STATE_PLAYER_OUSTING, "nextState" => STATE_PEGASUS_CHOOSE_MINOR,  'choice' => STATE_OUSTED_PLAYER_CHOICE, 'misfortune' => STATE_MISFORTUNE)
+        "transitions"       => array('ousting' => STATE_PLAYER_OUSTING, "nextState" => STATE_PEGASUS_CHOOSE_MINOR,  'choice' => STATE_OUSTED_PLAYER_CHOICE, 'misfortune' => STATE_MISFORTUNE, 'leftHand' => STATE_EXPLOIT_EFFECT)
     ),
 
     /*
@@ -420,7 +420,7 @@ $machinestates = array(
         "action"            => "stEffectExploit",
         "possibleactions"   => array("actBuyForge", "actExploitEnigma", "actExploitBoar", 'actUseTritonToken', 'actAutoHammer', 'actBuyExploit', 'actCelestialUpgrade', 'actForgeNymphPass', 'actAncestorSelect', 'actMemoryToken'),
         "transitions"       => array( "playerSecondAction" => STATE_SECOND_ACTION, "endPlayerTurn" =>  STATE_END_PLAYER_TURN, "choice" => STATE_EXPLOIT_RESSOURCE,
-                                      "exploitEffect" =>STATE_EXPLOIT_EFFECT, "forgeShip" => STATE_EXPLOIT_FORGE_SHIP, "forgeBoar" => STATE_EXPLOIT_FORGE_BOAR, "nextState" => STATE_EXPLOIT_EFFECT, 'misfortune' => STATE_MISFORTUNE)
+                                      "exploitEffect" =>STATE_EXPLOIT_EFFECT, "forgeShip" => STATE_EXPLOIT_FORGE_SHIP, "forgeBoar" => STATE_EXPLOIT_FORGE_BOAR, "nextState" => STATE_EXPLOIT_EFFECT, 'misfortune' => STATE_MISFORTUNE, 'pegasus' => STATE_PEGASUS_CHANGE_USER)
     ),
 
     STATE_EXPLOIT_RESSOURCE => array(

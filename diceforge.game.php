@@ -8858,6 +8858,15 @@ class diceforge extends Table
         $this->incStat(1, 'nb_ressource_choice', $player_id);
 
         if ($disable) {
+            $card_id = $this->getGameStateValue( "exploitBought");
+
+            if ($card_id != -1) {
+                $card = $this->exploits->getCard($card_id);
+                if ($card['type'] == 'leftHand') {
+                     $this->gamestate->nextState('pegasus');
+                    return ;
+                }
+            }
             $this->gamestate->setPlayerNonMultiactive($player_id, 'nextState');
         }
         else
@@ -11032,6 +11041,15 @@ class diceforge extends Table
                 'island'       => $island
             )
         );
+        $card_id = $this->getGameStateValue( "exploitBought");
+
+        if ($card_id != -1) {
+            $card = $this->exploits->getCard($card_id);
+            if ($card['type'] == 'leftHand') {
+                $this->gamestate->nextState('minor');
+                return ;
+            }
+        }
         $this->gamestate->nextState('ousting');
     }
 
@@ -11063,6 +11081,14 @@ class diceforge extends Table
             return ;
         } elseif ($this->tokens->getTokenState('pegasus_remaining') == 0) {
             $this->tokens->setTokenState('pegasus_player', 0);
+            $card_id = $this->getGameStateValue( "exploitBought");
+            if ($card_id != -1) {
+                $card = $this->exploits->getCard($card_id);
+                if ($card['type'] == 'leftHand') {
+                    $this->gamestate->nextState('leftHand');
+                    return ;
+                }
+            }
             $this->gamestate->nextState('ousting');
             return ;
         } elseif (count($this->gamestate->getActivePlayerList()) == 0) {
@@ -11122,8 +11148,9 @@ class diceforge extends Table
         $notifPlayerArgs = array();
         $newTurn = false;
         $goAgain = false;
+        $pegasus = false;
         $this->setGameStateValue("oracleReinforcement", 0);
-
+        // throw new \feException(print_r(debug_print_backtrace()));
 
         $card_id = $this->getGameStateValue( "exploitBought");
         $remainingThrows = $this->getGameStateValue( "exploitRemainingThrows");
@@ -11210,6 +11237,9 @@ class diceforge extends Table
             $this->gamestate->setPlayersMultiactive (array($toEnable), 'nextState');
             $this->tokens->moveToken('resolveMisfortune', 'none', 0);
             $this->gamestate->nextState('misfortune');
+            return ;
+        } elseif ($this->tokens->getTokenState('pegasus_remaining') != 0) {
+            $this->gamestate->nextState('pegasus');
             return ;
         }
         elseif ($card_id != -1 && $remainingThrows > 0 && !$celestialRunning) {
@@ -11786,6 +11816,13 @@ class diceforge extends Table
                                                 'ressources'    => $vp . ' [VP]') );
                                 }
 
+                                // pegasus management
+                                if ($this->hasPegasus($all_player_id) && $all_player_id != $player_id) {
+                                    $this->tokens->setTokenState('pegasus_remaining', $this->hasPegasus($all_player_id));
+                                    $this->tokens->setTokenState('pegasus_player', $all_player_id);
+                                    $pegasus = true;
+                                }
+
                                 // move ousted player
                                 $this->dbSetPosition ($all_player_id, 'begin');
 
@@ -11804,13 +11841,7 @@ class diceforge extends Table
                                 $notifPlayerArgs['roll'] = true;
 
                                 self::notifyAllPlayers("notifBlessing", "", $notifPlayerArgs);
-                                // TODO: bonus
                                 $ressourceChoice = $this->blessing($player_id, true, true, 1, true, false);
-
-                                //$this->dbSetSideChoice($player_id, 1, -1);
-                                //$this->dbSetSideChoice($player_id, 2, -1);
-                                //$this->dbSetChoice($player_id, self::RC_SIDE_CHOICE);
-                                //$ressourceChoice = true;
                             }
                         }
 
@@ -11963,6 +11994,9 @@ class diceforge extends Table
             $this->setGameStateValue('celestialRunning', 0);
             $this->resetThrowTokens();
 
+            // throw new \feException("end of effect exploit");
+            // throw new \feException(print_r(debug_print_backtrace()));
+
             // disable all users
             self::DbQuery('UPDATE player SET player_is_multiactive = 0');
             if ($card_info['action'] == 'fortuneWheel') {
@@ -11996,6 +12030,9 @@ class diceforge extends Table
             return ;
         elseif ($newTurn)
             $this->gamestate->nextState('endPlayerTurn');
+        elseif ($pegasus) {
+            $this->gamestate->nextState('pegasus');
+        }
         elseif ($remainingThrows <= 0 && $this->canTakeSecondAction($player_id))
             $this->gamestate->nextState("playerSecondAction");
         elseif ($remainingThrows <= 0)
