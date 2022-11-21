@@ -11019,7 +11019,7 @@ class diceforge extends Table
     function argsPegasusIsland() {
         $islands = [1,2,3,4,5,6,7];
 
-        return ['islands' => array_diff($islands, self::getObjectListFromDB("SELECT position FROM player WHERE position != 'begin'", true))];
+        return ['islands' => array_values(array_diff($islands, self::getObjectListFromDB("SELECT position FROM player WHERE position != 'begin'", true)))];
     }
 
     function actPegasusIsland($island) {

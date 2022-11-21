@@ -1868,7 +1868,17 @@ function (dojo, declare) {
                     });
                     break ;
                 case 'pegasusIsland':
-                    console.log("TODO pegasus island");
+
+                    if ( !this.isCurrentPlayerActive()) {
+                        return ;
+                    }
+                    var self = this;
+                    self.connexions['islands'] = [];
+                    args.args.islands.forEach((island) => {
+                        el = $(`position-` + island);
+                        el.classList.add('clickable');
+                        self.connexions['islands'].push(dojo.connect(el, 'onclick', self, 'onClickPegasusIsland'));
+                    });
                     break;
                 case 'pegasusMinor':
                     if ( !this.isCurrentPlayerActive() || args.args.canDo == false) {
@@ -1977,6 +1987,7 @@ function (dojo, declare) {
                     this.selectForge.deactivatePoolSides();
                     break ;
                  case 'memoryIsland':
+                 case 'pegasusIsland':
                     dojo.query(".position").removeClass("clickable");
                      if ( this.connexions.hasOwnProperty("islands") ) {
                         dojo.forEach(this.connexions["islands"], function(el) {
@@ -4170,6 +4181,25 @@ function (dojo, declare) {
                     token: this.clientStateArgs.memory.key,
                     island: button_info[1],
                     choice: this.clientStateArgs.choice
+            }, this, function( result ) {
+                // onSuccess
+            }, function( is_error ) {
+                // onError
+            } );
+
+        },
+
+        onClickPegasusIsland: function(event) {
+            var button_id = event.target.id;
+
+            if (button_id.indexOf('position') == -1)
+                button_id = event.target.parentElement.id;
+
+            button_info = button_id.split('-');
+
+            this.ajaxcall('/diceforge/diceforge/actPegasusIsland.html', {
+                    lock: true,
+                    island: button_info[1],
             }, this, function( result ) {
                 // onSuccess
             }, function( is_error ) {
