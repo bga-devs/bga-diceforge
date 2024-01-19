@@ -5596,15 +5596,17 @@ class diceforge extends Table
                 $this->setChoice($player_id, self::RC_RESSOURCE);
             return $notifPlayerArgs;
         }
-
-        $result_sides = array (1 => $this->sides->getCard($player_info['throw_1']), 2 => $this->sides->getCard($player_info['throw_2']));
+	if ($exploit && $this->processedExploit() == 'oustAll')
+		$result_sides = array (1 => $notifPlayersArg['dice1'], 2 => $notifPlayersArg['dice2']);
+    	else
+		$result_sides = array (1 => $this->sides->getCard($player_info['throw_1']), 2 => $this->sides->getCard($player_info['throw_2']));
 
         // mirror + twins management
         if ($this->tokens->getTokenState("mirror1_$player_id") != 0)
-            $result_sides[1] = $this->sides->getCard($this->tokens->getTokenState("mirror1_$player_id"));
+            $result_sides[1] = $this->sides->getCard($this->tokens->getTokenState("mirror1_$player_id"))['type'];
 
         if ($this->tokens->getTokenState("mirror2_$player_id") != 0)
-            $result_sides[2] = $this->sides->getCard($this->tokens->getTokenState("mirror2_$player_id"));
+            $result_sides[2] = $this->sides->getCard($this->tokens->getTokenState("mirror2_$player_id"))['type'];
 
         /******************** Guardian's shield management *******************/
         // if god blessing and guardian's shield, shield has not been affected and no choice is necessary
@@ -5612,14 +5614,14 @@ class diceforge extends Table
             $thrownSide = null;
 
             foreach ($result_sides as $side_num => $side) {
-                $side_definition = $this->dice_sides[$result_sides[$side_num]['type']];
+                $side_definition = $this->dice_sides[$side];
                 if ($side_definition['type'] == 'simple') {
                     $thrownSide = $side_definition;
                 }
             }
 
             foreach ($result_sides as $side_num => $side) {
-                $side_definition = $this->dice_sides[$result_sides[$side_num]['type']];
+                $side_definition = $this->dice_sides[$side];
                 if ($side_definition['type'] != 'dependent') {
                     continue ;
                 }
@@ -5667,7 +5669,7 @@ class diceforge extends Table
                 }
                 // else we affect the "standard" ressource
                 elseif (!$choice) {
-                    $notifPlayerArgs = $this->affectRessource($player_id, $notifPlayerArgs, $side_num, $side['type'], $triple, $multiple, $ship, true, $exploit);
+                    $notifPlayerArgs = $this->affectRessource($player_id, $notifPlayerArgs, $side_num, $side, $triple, $multiple, $ship, true, $exploit);
                 }
                 //if (!$notifPlayerArgs['choice'])
                 //  $this->dbSetSideChoice($player_id, $side_num +1, 0);
