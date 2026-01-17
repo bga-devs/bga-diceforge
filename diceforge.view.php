@@ -100,7 +100,7 @@ class view_diceforge_diceforge extends game_view
 
             $previous = $players_table[ $previous ];
         }
-        
+
 /*********** Do not change anything below this line  ************/
     }
 }
