@@ -711,14 +711,16 @@ class diceforge extends Table
             $result['players'][$player_id]['fire_max'] =
                 self::MAX_FIRESHARD + self::CHEST_FIRESHARD * $player_chests;
 
-            $result['powerTokens'][$player_id] = $this->tokens->getTokensOfTypeInLocation(null, $player_id);
+            $result['powerTokens'][
+                $player_id
+            ] = $this->tokens->getTokensOfTypeInLocation(null, $player_id);
         }
 
         $result['rebellion'] = $this->getGameStateValue('rebellion');
         $result['hasCelestial'] =
             count($this->exploits->getCardsOfType('celestial')) > 0
-            ? true
-            : false;
+                ? true
+                : false;
         if ($result['rebellion'] >= 3) {
             $result['zones'] = $this->tokens->getTokensOfTypeInLocation(
                 'position_%'
@@ -827,11 +829,11 @@ class diceforge extends Table
             $counters['card_counter_p' . $current_player] = [
                 'counter_name' => 'card_counter_p' . $current_player,
                 'counter_value' =>
-                count(
-                    $this->exploits->getCardsInLocation(
-                        'table-' . $current_player
-                    )
-                ) +
+                    count(
+                        $this->exploits->getCardsInLocation(
+                            'table-' . $current_player
+                        )
+                    ) +
                     count(
                         $this->exploits->getCardsInLocation(
                             'pile1-' . $current_player
@@ -900,8 +902,8 @@ class diceforge extends Table
         // condition is required, for draft
         $currentPlayerNum =
             self::getGameStateValue('currentPlayerNum') == 0
-            ? 1
-            : self::getGameStateValue('currentPlayerNum');
+                ? 1
+                : self::getGameStateValue('currentPlayerNum');
         $progressionTurn = 100 / $nbTurns;
         $progressionPlayer = $progressionTurn / $nbPlayers;
         $currentProgression =
@@ -2582,11 +2584,7 @@ class diceforge extends Table
                 break;
             case 'playerOusting':
             case 'exploitForgeBoar':
-                if ($this->tokens->getTokenState('pegasus_remaining') != 0) {
-                    $endMultiState = 'pegasus';
-                } else {
-                    $endMultiState = 'exploitEffect';
-                }
+                $endMultiState = 'exploitEffect';
                 break;
         }
 
@@ -2739,7 +2737,9 @@ class diceforge extends Table
                                     $notifLoyalty['scepter'] + $scepter;
                             }
                         } elseif ($resourceType == 'hammer') {
-                            $notifPlayerArgs['notifHammer'][] = $this->increaseGold($player_id, 1, 'hammer');
+                            $notifPlayerArgs[
+                                'notifHammer'
+                            ][] = $this->increaseGold($player_id, 1, 'hammer');
                             $notifLoyalty['hammer'] =
                                 $notifLoyalty['hammer'] + 1;
                         }
@@ -2751,7 +2751,9 @@ class diceforge extends Table
                                 $this->canFillHammer($player_id) &&
                                 $this->hasAutoHammer($player_id)
                             ) {
-                                $notifPlayerArgs['notifHammer'][] = $this->increaseGold(
+                                $notifPlayerArgs[
+                                    'notifHammer'
+                                ][] = $this->increaseGold(
                                     $player_id,
                                     1,
                                     'hammer'
@@ -2774,7 +2776,9 @@ class diceforge extends Table
                             $this->increaseVP($player_id, 1);
                             $notifLoyalty['vp'] = $notifLoyalty['vp'] + 1;
                         } elseif ($resourceType == 'hammer') {
-                            $notifPlayerArgs['notifHammer'][] = $this->increaseGold($player_id, 1, 'hammer');
+                            $notifPlayerArgs[
+                                'notifHammer'
+                            ][] = $this->increaseGold($player_id, 1, 'hammer');
                             $notifLoyalty['hammer'] =
                                 $notifLoyalty['hammer'] + 1;
 
@@ -2789,7 +2793,9 @@ class diceforge extends Table
                                 $this->canFillHammer($player_id) &&
                                 $this->hasAutoHammer($player_id)
                             ) {
-                                $notifPlayerArgs['notifHammer'][] = $this->increaseGold(
+                                $notifPlayerArgs[
+                                    'notifHammer'
+                                ][] = $this->increaseGold(
                                     $player_id,
                                     1,
                                     'hammer'
@@ -2812,7 +2818,9 @@ class diceforge extends Table
                             $this->increaseVP($player_id, 1);
                             $notifLoyalty['vp'] = $notifLoyalty['vp'] + 1;
                         } elseif ($resourceType == 'hammer') {
-                            $notifPlayerArgs['notifHammer'][] = $this->increaseGold($player_id, 1, 'hammer');
+                            $notifPlayerArgs[
+                                'notifHammer'
+                            ][] = $this->increaseGold($player_id, 1, 'hammer');
                             $notifLoyalty['hammer'] =
                                 $notifLoyalty['hammer'] + 1;
 
@@ -3050,7 +3058,9 @@ class diceforge extends Table
                             );
                             $hammer = $value - $remainingGold;
 
-                            $notifPlayerArgs['notifHammer'][] = $this->increaseGold(
+                            $notifPlayerArgs[
+                                'notifHammer'
+                            ][] = $this->increaseGold(
                                 $player_id,
                                 $value - $remainingGold,
                                 'hammer'
@@ -3731,14 +3741,14 @@ class diceforge extends Table
                 //if (substr($tokID, 0, 7) == 'scepter') {
                 $new_gold =
                     $tok['state'] < $remaining_to_reduce
-                    ? 0
-                    : $tok['state'] - $remaining_to_reduce;
+                        ? 0
+                        : $tok['state'] - $remaining_to_reduce;
                 $this->tokens->setTokenState($tok['key'], $new_gold);
 
                 $res['scepter'] +=
                     $tok['state'] < $remaining_to_reduce
-                    ? $tok['state']
-                    : $remaining_to_reduce;
+                        ? $tok['state']
+                        : $remaining_to_reduce;
                 $remaining_to_reduce = $remaining_to_reduce - $tok['state'];
 
                 if ($remaining_to_reduce <= 0) {
@@ -3942,7 +3952,9 @@ class diceforge extends Table
                 }
 
                 $notifHammer[] = [
-                    'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
+                    'player_name' => $this->loadPlayersBasicInfos()[$player_id][
+                        'player_name'
+                    ],
                     'player_id' => $player_id,
                     'hammer_phase' => $phase,
                     'ressources' => $this->buildRessourceNotif([
@@ -9681,7 +9693,9 @@ class diceforge extends Table
     {
         self::checkAction('actUseTritonToken');
         $player_id = self::getCurrentPlayerId();
-        $player_name = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+        $player_name = $this->loadPlayersBasicInfos()[$player_id][
+            'player_name'
+        ];
         $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
 
         $turnPlayerId = $this->getGameStateValue('turnPlayerId');
@@ -9928,7 +9942,9 @@ class diceforge extends Table
     {
         self::checkAction('actUseCerberusToken');
         $player_id = self::getCurrentPlayerId();
-        $player_name = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+        $player_name = $this->loadPlayersBasicInfos()[$player_id][
+            'player_name'
+        ];
         $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
 
         if (!$use) {
@@ -10327,7 +10343,9 @@ class diceforge extends Table
                             0
                         );
 
-                        $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
+                        $player_info = $this->getPlayersAdditionnalInfo()[
+                            $player_id
+                        ];
                         $side = $player_info['side_choice_' . $die];
                         //throw new feException($player_info['ressource_choice'] . " " . $did . " " . $side);
                         //$this->debugVTO(2305535);
@@ -10452,7 +10470,9 @@ class diceforge extends Table
                     }
 
                     // get latest information
-                    $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
+                    $player_info = $this->getPlayersAdditionnalInfo()[
+                        $player_id
+                    ];
 
                     // go to next state
                     // if we need to choose (ressource or twin effect)
@@ -12155,7 +12175,9 @@ class diceforge extends Table
     function actPuzzleCelestial($auto = false)
     {
         $player_id = self::getCurrentPlayerId();
-        $player_name = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+        $player_name = $this->loadPlayersBasicInfos()[$player_id][
+            'player_name'
+        ];
 
         $this->resetTwins($player_id, false);
 
@@ -14137,10 +14159,10 @@ class diceforge extends Table
 
                 switch ($card_info['action']) {
                     case '4Throws':
-                        //$die_number =  $this->getGameStateValue( "enigmaDieNumber");
-                        //$retour[$player_id]['sides'][0] = array('id' => '', 'type' => $players_info[$player_id]['side_choice_' . $die_number], 'num' => $die_number);
-                        //$sideNum = $die_number;
-                        //break;
+                    //$die_number =  $this->getGameStateValue( "enigmaDieNumber");
+                    //$retour[$player_id]['sides'][0] = array('id' => '', 'type' => $players_info[$player_id]['side_choice_' . $die_number], 'num' => $die_number);
+                    //$sideNum = $die_number;
+                    //break;
                     case 'fullThrow2':
                     case 'looseThrow':
                     case '4ThrowsTransform':
@@ -15673,8 +15695,20 @@ class diceforge extends Table
         $dice1 = false;
         $dice2 = false;
 
-        $this->tokens->incTokenState('pegasus_remaining', -1);
+                // only one player should be set as multiactive
+                $multi[0] = $player_id;
+                self::giveExtraTime($player_id, 60);
 
+                $this->gamestate->setPlayersMultiactive(
+                    $multi,
+                    'exploitEffect'
+                );
+                $this->gamestate->nextState('forgeShip');
+            }
+            //$this->gamestate->nextState('exploitEffect');
+            else {
+                $this->gamestate->nextState('nextState');
+            }
         if ($dice == 1) {
             $dice1 = true;
             $this->setGameStateValue('enigmaDieNumber', 1);
@@ -15682,10 +15716,6 @@ class diceforge extends Table
             $dice2 = true;
             $this->setGameStateValue('enigmaDieNumber', 2);
         }
-
-        $choice = $this->blessing($player_id, $dice1, $dice2);
-        self::notifyAllPlayers("updateCounters", "", $this->getPlayersRessources());
-        $this->gamestate->nextState('nextState');
     }
 
     //function stExploitRessource() {
@@ -16516,7 +16546,9 @@ class diceforge extends Table
                     case 'forgeEverywhere':
                         //trident
                         // loose all gold
-                        $gold = $this->getPlayersAdditionnalInfo()[$player_id]['res_gold'];
+                        $gold = $this->getPlayersAdditionnalInfo()[$player_id][
+                            'res_gold'
+                        ];
                         $this->decreaseGold($player_id, $gold);
 
                         $notifPlayerArgs = $this->initNotif($player_id);
@@ -16774,19 +16806,6 @@ class diceforge extends Table
                         $this->setGameStateValue('timeGolem', -2);
                         //$this->tokens->setTokenState('mazestock_' . $player_id, -2);
                         // $this->dbSetChoice($player_id, self::RC_MAZE);
-                        break;
-                    case 'fortuneWheel':
-                        if ($this->tokens->getTokenLocation('wheel_1') == 'none') {
-                            $this->dbSetSideChoice($player_id, 1, -1);
-                            $this->dbSetSideChoice($player_id, 2, -1);
-                            $this->dbSetChoice($player_id, self::RC_SIDE_CHOICE);
-                            $ressourceChoice = true;
-                        } else {
-                            // trigger blessing
-                            $this->resetTwins();
-                            $ressourceChoice = $this->blessing($player_id, true, true, 1, true);
-                        }
-                        // Check of the sides done in the end
                         break;
                 }
             }
