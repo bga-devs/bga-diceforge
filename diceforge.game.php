@@ -1,5 +1,4 @@
 <?php
-
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
@@ -17,7 +16,10 @@
  *
  */
 
-require_once APP_GAMEMODULE_PATH . 'module/table/table.game.php';
+use Bga\GameFramework\Components\Deck;
+use Bga\GameFramework\StateType;
+use Bga\GameFramework\Table;
+
 require_once 'modules/tokens.php';
 
 class diceforge extends Table
@@ -39,8 +41,33 @@ class diceforge extends Table
     const RC_MISFORTUNE = 6;
     private $players_info;
 
+    public Deck $exploits;
+    public Deck $sides;
+    public Tokens $tokens;
+
+    public array $exploit_slot;
+    public array $exploit_draft;
+    public array $exploit_cost;
+    public array $decks;
+    public array $ressourceToText;
+    public array $shields;
+    public array $exploit_types;
+    public array $dice_sides;
+    public array $celestialDie ;
+    public array $celestialInfo;
+    public array $sides_init;
+    public array $pools;
+    public array $powers;
+    public array $powers_you;
+    public array $maze;
+    public array $titan_passives;
+    public array $titan_board;
+    public array $labyrinth_paths;
+    public array $labyrinth_rewards;
+
     function __construct()
     {
+
         // Your global variables labels:
         //  Here, you can assign labels to global variables you are using for this game.
         //  You can use any number of global variables with IDs between 10 and 99.
@@ -92,21 +119,13 @@ class diceforge extends Table
         ]);
 
         // Card init
-        $this->exploits = self::getNew('module.common.deck');
-        $this->exploits->init('exploit');
+        $this->exploits = $this->deckFactory->createDeck('exploit');
 
         // Dice & pool init
-        $this->sides = self::getNew('module.common.deck');
-        $this->sides->init('sides');
+        $this->sides = $this->deckFactory->createDeck('sides');
 
         // Tokens
         $this->tokens = new Tokens();
-    }
-
-    protected function getGameName()
-    {
-        // Used for translations and stuff. Please do not modify.
-        return 'diceforge';
     }
 
     /*
@@ -129,8 +148,6 @@ class diceforge extends Table
         $deckOption = $this->getGameStateValue('deckOption');
         $promoCards = $this->getGameStateValue('promoCards');
         $rebellion = $this->getGameStateValue('rebellion');
-        $cornucopia = $this->getGameStateValue("cornucopia");
-        $diceTower =  $this->getGameStateValue("diceTower");
 
         // Create players
         // Note: if you added some extra field on "player" table in the database (dbmodel.sql), you can initialize it there.
@@ -425,12 +442,6 @@ class diceforge extends Table
                 if ($cards[$toPick]['type'] != 'hydraPromo') {
                     $this->exploits->createCards($c, $island);
                 }
-                if ($cornucopia == 1) {
-                    $this->exploits->createCards([['type' => 'cornucopia', 'type_arg' => 0, 'nbr' => 1]], 2);
-                }
-                if ($diceTower == 1) {
-                    $this->exploits->createCards([['type' => 'diceTower', 'type_arg' => 0, 'nbr' => 1]], 6);
-                }
             }
         }
         // draft
@@ -595,6 +606,7 @@ class diceforge extends Table
         // Activate first player (which is in general a good idea :) )
         //$this->activeNextPlayer();
         /************ End of the game initialization *****/
+        return \STATE_BEGIN_TURN;
     }
 
     /*
@@ -1013,7 +1025,9 @@ class diceforge extends Table
                 ''
             );
         } elseif (
-            $this->maze[$this->tokens->getTokenState('position_' . $player_id)]['reward'] == 'treasure' &&
+            $this->maze[$this->tokens->getTokenState('position_' . $player_id)][
+                'reward'
+            ] == 'treasure' &&
             count(
                 $this->tokens->getTokensOfTypeInLocation(
                     'treasure%',
@@ -1022,7 +1036,9 @@ class diceforge extends Table
             ) == 0
         ) {
             $sides[$player_id]['action'] = 'mazeTreasure';
-            $sides[$player_id]['avTreasure'] = $this->tokens->getTokensOfTypeInLocation('treasure%', 'none');
+            $sides[$player_id][
+                'avTreasure'
+            ] = $this->tokens->getTokensOfTypeInLocation('treasure%', 'none');
         } elseif (
             $this->tokens->getTokenState('mazestock_' . $player_id) != 0 &&
             $this->tokens->getTokenState('puzzle_' . $player_id) &&
@@ -1031,11 +1047,15 @@ class diceforge extends Table
             $sides[$player_id]['action'] = 'mazePuzzle';
         } elseif (
             (count(
-                $this->maze[$this->tokens->getTokenState('position_' . $player_id)]['path']
+                $this->maze[
+                    $this->tokens->getTokenState('position_' . $player_id)
+                ]['path']
             ) > 1 &&
                 $this->tokens->getTokenState('mazestock_' . $player_id) > 0) ||
             (count(
-                $this->maze[$this->tokens->getTokenState('position_' . $player_id)]['reverse']
+                $this->maze[
+                    $this->tokens->getTokenState('position_' . $player_id)
+                ]['reverse']
             ) > 1 &&
                 /*$this->tokens->getTokenState("mazestock_" . $player_id) + */ $this->getGameStateValue(
                     'timeGolem'
@@ -1045,12 +1065,16 @@ class diceforge extends Table
             $sides[$player_id]['action'] = 'maze';
             if ($this->getGameStateValue('timeGolem') < 0) {
                 $way =
-                    $this->maze[$this->tokens->getTokenState('position_' . $player_id)]['reverse'];
+                    $this->maze[
+                        $this->tokens->getTokenState('position_' . $player_id)
+                    ]['reverse'];
             }
             //if ($this->tokens->getTokenState("mazestock_" . $player_id) > 0)
             else {
                 $way =
-                    $this->maze[$this->tokens->getTokenState('position_' . $player_id)]['path'];
+                    $this->maze[
+                        $this->tokens->getTokenState('position_' . $player_id)
+                    ]['path'];
             }
 
             $mazePath = [];
@@ -1107,7 +1131,9 @@ class diceforge extends Table
         } else {
             $sides[$player_id]['action'] = 'mazeConfirm';
             $sides[$player_id]['reward'] =
-                $this->maze[$this->tokens->getTokenState('position_' . $player_id)]['reward'];
+                $this->maze[
+                    $this->tokens->getTokenState('position_' . $player_id)
+                ]['reward'];
         }
 
         return $sides;
@@ -1308,7 +1334,9 @@ class diceforge extends Table
     {
         $notifPlayerArgs = [];
         $notifPlayerArgs['player_id'] = $player_id;
-        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[
+            $player_id
+        ]['player_name'];
         $notifPlayerArgs['gold'] = 0;
         $notifPlayerArgs['vp'] = 0;
         $notifPlayerArgs['moonshard'] = 0;
@@ -1508,7 +1536,7 @@ class diceforge extends Table
                     if (
                         !isset($setup_cards[$type][$card['position']]) ||
                         count($setup_cards[$type][$card['position']]) <=
-                        $nb_players
+                            $nb_players
                     ) {
                         $setup_cards[$type][$card['position']][] = [
                             'type' => $name,
@@ -1735,7 +1763,9 @@ class diceforge extends Table
                     '${player_name} rolls the Celestial Die → ${side_type}'
                 ),
                 [
-                    'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
+                    'player_name' => $this->loadPlayersBasicInfos()[$player_id][
+                        'player_name'
+                    ],
                     'side_type' => $side,
                     'sideCelestial' => $side,
                 ]
@@ -2012,7 +2042,7 @@ class diceforge extends Table
 
         if (
             $sideNum < 3 &&
-            $this->gamestate->state()['name'] == 'exploitRessource' &&
+            $this->gamestate->getCurrentMainState()->name == 'exploitRessource' &&
             !$misfortune
         ) {
             $toTransform = $this->getRessourcesToTransform();
@@ -2561,7 +2591,7 @@ class diceforge extends Table
      */
     function getNextState($ressourceChoice = null)
     {
-        $stateName = $this->gamestate->state()['name'];
+        $stateName = $this->gamestate->getCurrentMainState()->name;
         $endMultiState = '';
 
         switch ($stateName) {
@@ -2716,7 +2746,9 @@ class diceforge extends Table
                                 $this->canFillHammer($player_id) &&
                                 $this->hasAutoHammer($player_id)
                             ) {
-                                $notifPlayerArgs['notifHammer'][] = $this->increaseGold(
+                                $notifPlayerArgs[
+                                    'notifHammer'
+                                ][] = $this->increaseGold(
                                     $player_id,
                                     1,
                                     'hammer'
@@ -4018,8 +4050,8 @@ class diceforge extends Table
         $card_id = $this->getGameStateValue('exploitBought');
         if (
             $card_id != -1 &&
-            ($this->gamestate->state()['name'] == 'exploitRessource' ||
-                $this->gamestate->state()['name'] == 'exploitEffect')
+            ($this->gamestate->getCurrentMainState()->name == 'exploitRessource' ||
+                $this->gamestate->getCurrentMainState()->name == 'exploitEffect')
         ) {
             $card = $this->exploits->getCard($card_id);
             $card_info = $this->exploit_types[$card['type']];
@@ -4194,11 +4226,6 @@ class diceforge extends Table
     function hasBear($player_id)
     {
         return $this->countExploitInLocation('bear', 'pile2-' . $player_id);
-    }
-
-    function hasPegasus($player_id)
-    {
-        return $this->countExploitInLocation("pegasus", "pile2-" . $player_id);
     }
 
     function resolveTwin($player_id, $toResolve)
@@ -4671,7 +4698,7 @@ class diceforge extends Table
                 self::MAX_GOLD +
                 self::CHEST_GOLD * $player_chests +
                 $this->tokens->countTokensInLocAndKey('scepter', $player_id) *
-                6;
+                    6;
             //$player_gold = $player['res_gold'];
             $player_gold = $this->getGold($player_id);
             $res_gold = 0;
@@ -4866,7 +4893,7 @@ class diceforge extends Table
                 return self::RC_MAZE;
             } elseif (
                 $this->tokens->getTokenLocation('mazechoice_' . $player_id) ==
-                '0' &&
+                    '0' &&
                 $maze
             ) {
                 //throw new feException('machin');
@@ -5203,7 +5230,9 @@ class diceforge extends Table
         $triple = 1;
         $notifPlayerArgs = [];
         $notifPlayerArgs['player_id'] = $player_id;
-        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[
+            $player_id
+        ]['player_name'];
         $notifPlayerArgs['choice'] = false;
         $couldFillHammer = $this->canFillHammer($player_id);
         $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
@@ -5262,7 +5291,7 @@ class diceforge extends Table
             } elseif (
                 $misfortune &&
                 $this->tokens->getTokenLocation('misfortune_' . $sideNum) !=
-                $side
+                    $side
             ) {
                 throw new BgaUserException(
                     self::_('This side cannot be choosen')
@@ -5546,7 +5575,9 @@ class diceforge extends Table
                                 //throw new feException(print_r(in_array($res, $toTransform['ressource'])));
                                 if (
                                     !isset(
-                                        $this->dice_sides[$side]['ressource']['vp']
+                                        $this->dice_sides[$side]['ressource'][
+                                            'vp'
+                                        ]
                                     ) &&
                                     in_array($res, $toTransform['ressource'])
                                 ) {
@@ -5558,10 +5589,14 @@ class diceforge extends Table
                                 } elseif (
                                     in_array($res, $toTransform['ressource']) &&
                                     isset(
-                                        $this->dice_sides[$side]['ressource']['vp']
+                                        $this->dice_sides[$side]['ressource'][
+                                            'vp'
+                                        ]
                                     ) &&
                                     $value !=
-                                    $this->dice_sides[$side]['ressource']['vp']
+                                        $this->dice_sides[$side]['ressource'][
+                                            'vp'
+                                        ]
                                 ) {
                                     $this->tokens->setTokenState(
                                         $res . '_' . $player_id,
@@ -5609,14 +5644,16 @@ class diceforge extends Table
                 ($moonshard != 0 ||
                     $fireshard != 0 ||
                     ($vp != 0 &&
-                        $this->getLoyaltyArg($player_id, $sideNum, 'gold')['vp'] != 1))) ||
+                        $this->getLoyaltyArg($player_id, $sideNum, 'gold')[
+                            'vp'
+                        ] != 1))) ||
                 ($moonshard != 0 &&
                     ($gold != 0 || $fireshard != 0 || $vp != 0)) ||
                 ($fireshard != 0 &&
                     ($moonshard != 0 || $gold != 0 || $vp != 0)) ||
                 ($vp != 0 &&
                     $this->getLoyaltyArg($player_id, $sideNum, 'gold')['vp'] !=
-                    1 &&
+                        1 &&
                     ($moonshard != 0 || $fireshard != 0 || $gold != 0)))
         ) {
             throw new BgaVisibleSystemException(
@@ -5632,7 +5669,7 @@ class diceforge extends Table
                 $fireshard != 0 ||
                 ($vp != 0 &&
                     $this->getLoyaltyArg($player_id, $sideNum, 'gold')['vp'] !=
-                    1)) &&
+                        1)) &&
             $mode != 'steal2' &&
             $mode != 'transform'
         ) {
@@ -5643,36 +5680,36 @@ class diceforge extends Table
             if (
                 (isset($this->dice_sides[$side]['ressource']['gold']) &&
                     $this->dice_sides[$side]['ressource']['gold'] * $triple +
-                    $this->getLoyaltyArg(
-                        $player_id,
-                        $sideNum,
-                        'gold',
-                        $misfortune
-                    )['gold'] <
-                    $gold) ||
+                        $this->getLoyaltyArg(
+                            $player_id,
+                            $sideNum,
+                            'gold',
+                            $misfortune
+                        )['gold'] <
+                        $gold) ||
                 (isset($this->dice_sides[$side]['ressource']['moonshard']) &&
                     $this->dice_sides[$side]['ressource']['moonshard'] *
-                    $triple <
-                    $moonshard) ||
+                        $triple <
+                        $moonshard) ||
                 (isset($this->dice_sides[$side]['ressource']['fireshard']) &&
                     $this->dice_sides[$side]['ressource']['fireshard'] *
-                    $triple <
-                    $fireshard) ||
+                        $triple <
+                        $fireshard) ||
                 (isset($this->dice_sides[$side]['ressource']['vp']) &&
                     $this->dice_sides[$side]['ressource']['vp'] * $triple +
-                    $this->getLoyaltyArg(
-                        $player_id,
-                        $sideNum,
-                        'gold',
-                        $misfortune
-                    )['vp'] +
-                    $this->getLoyaltyArg(
-                        $player_id,
-                        $sideNum,
-                        'vp',
-                        $misfortune
-                    )['vp'] <
-                    $vp) ||
+                        $this->getLoyaltyArg(
+                            $player_id,
+                            $sideNum,
+                            'gold',
+                            $misfortune
+                        )['vp'] +
+                        $this->getLoyaltyArg(
+                            $player_id,
+                            $sideNum,
+                            'vp',
+                            $misfortune
+                        )['vp'] <
+                        $vp) ||
                 (!isset($this->dice_sides[$side]['ressource']['gold']) &&
                     $gold > 0) ||
                 (!isset($this->dice_sides[$side]['ressource']['moonshard']) &&
@@ -5681,12 +5718,12 @@ class diceforge extends Table
                     $fireshard > 0) ||
                 (!isset($this->dice_sides[$side]['ressource']['vp']) &&
                     $vp >
-                    $this->getLoyaltyArg(
-                        $player_id,
-                        $sideNum,
-                        'gold',
-                        $misfortune
-                    )['vp'])
+                        $this->getLoyaltyArg(
+                            $player_id,
+                            $sideNum,
+                            'gold',
+                            $misfortune
+                        )['vp'])
             ) {
                 throw new BgaVisibleSystemException(
                     'More resource allocated than authorized!'
@@ -5697,9 +5734,9 @@ class diceforge extends Table
             if (
                 isset($this->dice_sides[$side]['ressource'][$res_choosen]) &&
                 $this->dice_sides[$side]['ressource'][$res_choosen] *
-                $triple *
-                -1 !=
-                $notifPlayerArgs[$res_choosen]
+                    $triple *
+                    -1 !=
+                    $notifPlayerArgs[$res_choosen]
             ) {
                 throw new BgaVisibleSystemException(
                     'You need to allocate all the resources'
@@ -5929,7 +5966,9 @@ class diceforge extends Table
         $side_definition = $this->dice_sides[$otherSideType];
         $notifPlayerArgs = [];
         $notifPlayerArgs['player_id'] = $player_id;
-        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[
+            $player_id
+        ]['player_name'];
 
         if (
             $side_definition['type'] == 'simple' &&
@@ -6024,7 +6063,9 @@ class diceforge extends Table
 
     function maxHammer($player_id, $value)
     {
-        $hammer_position = $this->getPlayersAdditionnalInfo()[$player_id]['hammer_position'];
+        $hammer_position = $this->getPlayersAdditionnalInfo()[$player_id][
+            'hammer_position'
+        ];
         $remaining_hammer =
             $this->hasActiveHammer($player_id) * self::HAMMER_MAX_POSITION -
             $hammer_position;
@@ -6038,7 +6079,9 @@ class diceforge extends Table
 
     function remainingHammer($player_id)
     {
-        $hammer_position = $this->getPlayersAdditionnalInfo()[$player_id]['hammer_position'];
+        $hammer_position = $this->getPlayersAdditionnalInfo()[$player_id][
+            'hammer_position'
+        ];
         return $this->hasActiveHammer($player_id) * self::HAMMER_MAX_POSITION -
             $hammer_position;
     }
@@ -6236,7 +6279,9 @@ class diceforge extends Table
         $doubleThrow = false;
 
         $notifPlayerArgs['player_id'] = $player_id;
-        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[
+            $player_id
+        ]['player_name'];
         $notifPlayerArgs['vp'] = 0;
         $notifPlayerArgs['gold'] = 0;
         $notifPlayerArgs['moonshard'] = 0;
@@ -6356,7 +6401,9 @@ class diceforge extends Table
                     $ousted_player_id = $this->getGameStateValue(
                         'oustedPlayerId'
                     );
-                    $ousted_info = $this->getPlayersAdditionnalInfo()[$ousted_player_id];
+                    $ousted_info = $this->getPlayersAdditionnalInfo()[
+                        $ousted_player_id
+                    ];
 
                     if ($dice1 && $dice2) {
                         $side = $this->sides->getCard($ousted_info['throw_1']);
@@ -7178,7 +7225,7 @@ class diceforge extends Table
         // check at least one of movement
         if (
             abs($this->tokens->getTokenState('mazestock_' . $player_id)) +
-            abs($timeGolem) <
+                abs($timeGolem) <
             1
         ) {
             throw new BgaVisibleSystemException(
@@ -7205,8 +7252,12 @@ class diceforge extends Table
         }
 
         self::notifyAllPlayers('notifMazeMove', $msg, [
-            'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
-            'player_color' => $this->loadPlayersBasicInfos()[$player_id]['player_color'],
+            'player_name' => $this->loadPlayersBasicInfos()[$player_id][
+                'player_name'
+            ],
+            'player_color' => $this->loadPlayersBasicInfos()[$player_id][
+                'player_color'
+            ],
             'player_id' => $player_id,
             'position' => $next_position,
         ]);
@@ -7268,7 +7319,7 @@ class diceforge extends Table
                                 ),
                                 [
                                     'player_name' =>
-                                    $player_info['player_name'],
+                                        $player_info['player_name'],
                                     'ressources' => $this->buildRessourceNotif(
                                         $lost
                                     ),
@@ -7287,7 +7338,7 @@ class diceforge extends Table
                         ),
                         [
                             'player_name' =>
-                            $players_info[$player_id]['player_name'],
+                                $players_info[$player_id]['player_name'],
                             'ressources' => $this->buildRessourceNotif($gain),
                         ]
                     );
@@ -7453,8 +7504,8 @@ class diceforge extends Table
                 $this->setGameStateValue('mazeForge', 1);
                 // Only due to exploit management
                 if (
-                    $this->gamestate->state()['name'] == 'exploitEffect' ||
-                    $this->gamestate->state()['name'] == 'playerOustingChoice'
+                    $this->gamestate->getCurrentMainState()->name == 'exploitEffect' ||
+                    $this->gamestate->getCurrentMainState()->name == 'playerOustingChoice'
                 ) {
                     $notifPlayerArgs['choice'] = true;
                 } else {
@@ -7468,8 +7519,8 @@ class diceforge extends Table
                 // no choice to trigger as we want to go to forge state
                 // Only due to exploit management
                 if (
-                    $this->gamestate->state()['name'] == 'exploitEffect' ||
-                    $this->gamestate->state()['name'] == 'playerOustingChoice'
+                    $this->gamestate->getCurrentMainState()->name == 'exploitEffect' ||
+                    $this->gamestate->getCurrentMainState()->name == 'playerOustingChoice'
                 ) {
                     $notifPlayerArgs['choice'] = true;
                 } else {
@@ -7490,7 +7541,9 @@ class diceforge extends Table
 
                 //if (($scepterMoon + $this->getPlayersAdditionnalInfo()[$player_id]['res_moon']) >= 2) {
                 if (
-                    $this->getPlayersAdditionnalInfo()[$player_id]['res_moon'] >= 2 ||
+                    $this->getPlayersAdditionnalInfo()[$player_id][
+                        'res_moon'
+                    ] >= 2 ||
                     $this->hasTritonToken($player_id)
                 ) {
                     $notifPlayerArgs['choice'] = true;
@@ -7531,7 +7584,9 @@ class diceforge extends Table
                             '${player_name} is the first to complete the maze. ${player_name} chooses the visible face of each die'
                         ),
                         [
-                            'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
+                            'player_name' => $this->loadPlayersBasicInfos()[
+                                $player_id
+                            ]['player_name'],
                         ]
                     );
                 }
@@ -7932,7 +7987,9 @@ class diceforge extends Table
                 '${player_name} has forged ${discardedSides} sides therefore gains ${ressources}'
             ),
             [
-                'player_name' => $this->getPlayersAdditionnalInfo()[$player_id]['player_name'],
+                'player_name' => $this->getPlayersAdditionnalInfo()[$player_id][
+                    'player_name'
+                ],
                 'discardedSides' => $discardedSides,
                 'ressources' => $discardedSides . ' [VP]',
             ]
@@ -7997,8 +8054,12 @@ class diceforge extends Table
                         '${player_name} moves in the Titan path to ${position}'
                     ),
                     [
-                        'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
-                        'player_color' => $this->loadPlayersBasicInfos()[$player_id]['player_color'],
+                        'player_name' => $this->loadPlayersBasicInfos()[
+                            $player_id
+                        ]['player_name'],
+                        'player_color' => $this->loadPlayersBasicInfos()[
+                            $player_id
+                        ]['player_color'],
                         'player_id' => $player_id,
                         'position' => $lastPosition,
                     ]
@@ -8214,7 +8275,9 @@ class diceforge extends Table
         //throw new feException("side 1 $side1 & side 2 $side2");
         if ($this->getGameStateValue('celestialRunning')) {
             $celestialSide =
-                $this->celestialDie[$this->getGameStateValue('celestialDieSide')];
+                $this->celestialDie[
+                    $this->getGameStateValue('celestialDieSide')
+                ];
             $celestial = true;
             if ($celestialSide == 'celestialMirror') {
                 $celestialMirror = true;
@@ -8240,7 +8303,7 @@ class diceforge extends Table
         // #27008 add !$celestial to not manage cards choice if choice comes from a celestial roll
         if (
             $card_id != -1 &&
-            $this->gamestate->state()['name'] == 'exploitRessource' &&
+            $this->gamestate->getCurrentMainState()->name == 'exploitRessource' &&
             !$celestial
         ) {
             $card = $this->exploits->getCard($card_id);
@@ -8288,28 +8351,6 @@ class diceforge extends Table
                 case 'oustAll':
                     $oustAll = true;
                     $ousted = $this->getGameStateValue('oustedPlayerId');
-                    break;
-                case 'fortuneWheel':
-                    if ($this->tokens->getTokenLocation('wheel_1') != 'none') {
-                        break;
-                    }
-
-                    // We trigger this code only when no sides have been choosen
-                    $this->tokens->moveToken('wheel_1', $side1);
-                    $this->tokens->moveToken('wheel_2', $side2);
-                    self::notifyAllPlayers(
-                        "notifMessage",
-                        clienttranslate('${player_name} predicts that the sides ${sides_rolled} will roll'),
-                        [
-                            'player_name' => $notifPlayerArgs['player_name'],
-                            'sides_rolled' => $side1 . ',' . $side2,
-                        ]
-                    );
-                    $this->dbSetSideChoice($player_id, 1, "0");
-                    $this->dbSetSideChoice($player_id, 2, "0");
-                    $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
-                    $this->gamestate->nextState('nextState');
-                    return;
                     break;
             }
         }
@@ -9278,7 +9319,7 @@ class diceforge extends Table
         $this->setGameStateValue('celestialRunning', 0);
 
         if (
-            $this->gamestate->state()['name'] == 'doeRessourceChoice' &&
+            $this->gamestate->getCurrentMainState()->name == 'doeRessourceChoice' &&
             ($player_info['side_choice_1'] != '0' ||
                 $player_info['side_choice_2'] != '0')
         ) {
@@ -9294,7 +9335,7 @@ class diceforge extends Table
         }
         // Necessary for maze & ousting as no way to trigger it
         elseif (
-            $this->gamestate->state()['name'] == 'playerOustingChoice' &&
+            $this->gamestate->getCurrentMainState()->name == 'playerOustingChoice' &&
             $this->tokens->getTokenState("mazestock_$player_id") != 0
         ) {
             //// trigger maze management for ousting after a choice
@@ -9310,7 +9351,7 @@ class diceforge extends Table
             $this->oustingMazeManagement($player_id);
         } else {
             // we disable the user
-            switch ($this->gamestate->state()['name']) {
+            switch ($this->gamestate->getCurrentMainState()->name) {
                 case 'ressourceChoice':
                     $endMultiState = 'blessing';
                     break;
@@ -9553,7 +9594,9 @@ class diceforge extends Table
 
         if ($resource == '') {
             self::notifyAllPlayers('notifUseScepter', '', [
-                'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
+                'player_name' => $this->loadPlayersBasicInfos()[$player_id][
+                    'player_name'
+                ],
                 'player_id' => $player_id,
                 'moonshard' => self::getGameStateValue('scepterMoonshard'),
                 'fireshard' => self::getGameStateValue('scepterFireshard'),
@@ -9565,7 +9608,9 @@ class diceforge extends Table
                     '${player_name} resets its Blacksmith\'s scepter(s) position'
                 ),
                 [
-                    'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
+                    'player_name' => $this->loadPlayersBasicInfos()[$player_id][
+                        'player_name'
+                    ],
                     'player_id' => $player_id,
                     'moonshard' => self::getGameStateValue('scepterMoonshard'),
                     'fireshard' => self::getGameStateValue('scepterFireshard'),
@@ -9578,7 +9623,9 @@ class diceforge extends Table
                     '${player_name} converts its Blacksmith\'s scepter reserve in ${ressources}'
                 ),
                 [
-                    'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
+                    'player_name' => $this->loadPlayersBasicInfos()[$player_id][
+                        'player_name'
+                    ],
                     'player_id' => $player_id,
                     'ressources' => $this->buildRessourceNotif([
                         $resource => $amount,
@@ -9720,7 +9767,9 @@ class diceforge extends Table
 
         $notifPlayerArgs = [];
         $notifPlayerArgs['player_id'] = $player_id;
-        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[
+            $player_id
+        ]['player_name'];
         $couldFillHammer = $this->canFillHammer($player_id);
         // affect ressources
         $notifHammer = [];
@@ -9845,12 +9894,12 @@ class diceforge extends Table
         );
 
         if (
-            $this->gamestate->state()['name'] == 'secondAction' &&
+            $this->gamestate->getCurrentMainState()->name == 'secondAction' &&
             !$this->hasTritonToken($player_id) &&
             !$this->canTakeSecondAction($player_id)
         ) {
             $this->gamestate->nextState('endPlayerTurn');
-        } elseif ($this->gamestate->state()['name'] == 'reinforcement') {
+        } elseif ($this->gamestate->getCurrentMainState()->name == 'reinforcement') {
             $this->gamestate->nextState('reinforcement');
         } else {
             $this->gamestate->nextState('current');
@@ -9861,7 +9910,9 @@ class diceforge extends Table
     {
         self::checkAction('actUseCompanion');
         $player_id = self::getCurrentPlayerId();
-        $player_name = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+        $player_name = $this->loadPlayersBasicInfos()[$player_id][
+            'player_name'
+        ];
 
         $turnPlayerId = $this->getGameStateValue('turnPlayerId');
         if ($player_id != $turnPlayerId) {
@@ -9895,7 +9946,9 @@ class diceforge extends Table
 
         $notifPlayerArgs = [];
         $notifPlayerArgs['player_id'] = $player_id;
-        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[
+            $player_id
+        ]['player_name'];
 
         $this->increaseFireShard($player_id, $companion_info['state']);
         $this->increaseVP($player_id, $companion_info['state']);
@@ -9925,7 +9978,7 @@ class diceforge extends Table
         );
 
         if (
-            $this->gamestate->state()['name'] == 'secondAction' &&
+            $this->gamestate->getCurrentMainState()->name == 'secondAction' &&
             !$this->hasCompanionToken($player_id) &&
             !$this->canTakeSecondAction($player_id)
         ) {
@@ -9971,7 +10024,7 @@ class diceforge extends Table
             );
             $this->dbUpdateThrow($player_id, 2, reset($result)['id']);
 
-            if ($this->gamestate->state()['name'] == 'doeRessourceChoice') {
+            if ($this->gamestate->getCurrentMainState()->name == 'doeRessourceChoice') {
                 $this->setGameStateValue('enigmaDieNumber', -1);
             }
 
@@ -10006,9 +10059,13 @@ class diceforge extends Table
 
             $dice_number = $this->getGameStateValue('enigmaDieNumber');
             if ($dice_number == 1) {
-                $displaySides = $this->sides->getCard($player_info['throw_1'])['type'];
+                $displaySides = $this->sides->getCard($player_info['throw_1'])[
+                    'type'
+                ];
             } elseif ($dice_number == 2) {
-                $displaySides = $this->sides->getCard($player_info['throw_2'])['type'];
+                $displaySides = $this->sides->getCard($player_info['throw_2'])[
+                    'type'
+                ];
             } else {
                 $displaySides =
                     $this->sides->getCard($player_info['throw_1'])['type'] .
@@ -10037,7 +10094,7 @@ class diceforge extends Table
             // if reinforcement : one  (enigma die)
             // if ousted : both
             // card bought : depends on the card
-            $stateName = $this->gamestate->state()['name'];
+            $stateName = $this->gamestate->getCurrentMainState()->name;
             // blessing
             switch ($stateName) {
                 case 'ressourceChoice':
@@ -10209,7 +10266,7 @@ class diceforge extends Table
         $card_id = $this->getGameStateValue('exploitBought');
         if (
             $card_id != -1 &&
-            $this->gamestate->state()['name'] == 'exploitRessource'
+            $this->gamestate->getCurrentMainState()->name == 'exploitRessource'
         ) {
             $exploit = true;
             $card = $this->exploits->getCard($card_id);
@@ -10656,7 +10713,9 @@ class diceforge extends Table
                         if ($notifPlayerArgs['vp'] == 0) {
                             unset($notifPlayerArgs['vp']);
                         }
-                        $notifPlayerArgs['ressources'] = $this->buildRessourceNotif($notifPlayerArgs);
+                        $notifPlayerArgs[
+                            'ressources'
+                        ] = $this->buildRessourceNotif($notifPlayerArgs);
                         self::notifyAllPlayers(
                             'notifBlessing',
                             clienttranslate(
@@ -10985,7 +11044,11 @@ class diceforge extends Table
                     );
 
                     $notifPlayerArgs['player_id'] = $player_id;
-                    $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+                    $notifPlayerArgs[
+                        'player_name'
+                    ] = $this->loadPlayersBasicInfos()[$player_id][
+                        'player_name'
+                    ];
 
                     $notifPlayerArgs['ressources'] = $this->buildRessourceNotif(
                         $notifPlayerArgs
@@ -11078,7 +11141,9 @@ class diceforge extends Table
                         // gain 2 * X VP
                         $notifPlayerArgs = $this->initNotif($player_id);
                         $notifPlayerArgs['vp'] = 2 * $nbVp;
-                        $notifPlayerArgs['ressources'] = $this->buildRessourceNotif($notifPlayerArgs);
+                        $notifPlayerArgs[
+                            'ressources'
+                        ] = $this->buildRessourceNotif($notifPlayerArgs);
                         $this->increaseVP($player_id, $notifPlayerArgs['vp']);
 
                         self::notifyAllPlayers(
@@ -11351,7 +11416,9 @@ class diceforge extends Table
         $previousExploitId = $this->getGameStateValue('exploitBought');
         if ($previousExploitId != -1) {
             $previousExploit =
-                $this->exploit_types[$this->exploits->getCard($previousExploitId)['type']];
+                $this->exploit_types[
+                    $this->exploits->getCard($previousExploitId)['type']
+                ];
             if ($previousExploit['action'] == 'freeExploit') {
                 $hasPreviousExploit = true;
                 if (
@@ -11487,18 +11554,12 @@ class diceforge extends Table
                         '${player_name} gets ${ressources} from the Great Bear'
                     ),
                     [
-                        'player_name' => $this->loadPlayersBasicInfos()[$ousted_player]['player_name'],
+                        'player_name' => $this->loadPlayersBasicInfos()[
+                            $ousted_player
+                        ]['player_name'],
                         'ressources' => $vp . ' [VP]',
                     ]
                 );
-            }
-
-            // pegasus management
-            if (isset($ousted_player) && $ousted_player != null && $this->hasPegasus($ousted_player)) {
-                $this->tokens->setTokenState('pegasus_remaining', $this->hasPegasus($ousted_player));
-                $this->tokens->setTokenState('pegasus_player', $ousted_player);
-
-                $pegasus = true;
             }
 
             if (isset($ousted_player) && $ousted_player != null) {
@@ -11512,8 +11573,12 @@ class diceforge extends Table
                     ),
                     [
                         'player_name' => self::getActivePlayerName(),
-                        'ousted_player' => $this->loadPlayersBasicInfos()[$ousted_player]['player_color'],
-                        'ousted_player_name' => $this->loadPlayersBasicInfos()[$ousted_player]['player_name'],
+                        'ousted_player' => $this->loadPlayersBasicInfos()[
+                            $ousted_player
+                        ]['player_color'],
+                        'ousted_player_name' => $this->loadPlayersBasicInfos()[
+                            $ousted_player
+                        ]['player_name'],
                     ]
                 );
                 $this->incStat(1, 'nb_has_ousted', $player_id);
@@ -11524,7 +11589,9 @@ class diceforge extends Table
             $this->dbSetPosition($player_id, $card_info['island']);
 
             self::notifyAllPlayers('notifMovePawn', '', [
-                'player_color' => $this->loadPlayersBasicInfos()[$player_id]['player_color'],
+                'player_color' => $this->loadPlayersBasicInfos()[$player_id][
+                    'player_color'
+                ],
                 'island' => $card_info['island'],
             ]);
         }
@@ -11610,9 +11677,7 @@ class diceforge extends Table
             $card_info['nbStep']
         );
 
-        if ($pegasus) {
-            $this->gamestate->nextState('pegasusOusting');
-        } elseif (isset($ousted_player) && $ousted_player != null) {
+        if (isset($ousted_player) && $ousted_player != null) {
             $this->gamestate->nextState('playerOusting');
         } else {
             $this->gamestate->nextState('exploitEffect');
@@ -11691,7 +11756,7 @@ class diceforge extends Table
                 if (
                     $this->tokens->getTokenState("triple_$player_id") == 1 &&
                     $this->tokens->getTokenLocation('celestial_choice') !=
-                    'ship'
+                        'ship'
                 ) {
                     $cost = $cost - 4;
                 }
@@ -11766,7 +11831,7 @@ class diceforge extends Table
                     $celestialExploit = true;
                     break;
 
-                    // @todo: add a control on exploit forge so a player cannot take another die face than expected!
+                // @todo: add a control on exploit forge so a player cannot take another die face than expected!
             }
         }
 
@@ -11916,7 +11981,7 @@ class diceforge extends Table
 
                 // samething if ousting => triggers again mazemanagement, etc.
                 if (
-                    $this->gamestate->state()['name'] == 'oustedForgeShip' &&
+                    $this->gamestate->getCurrentMainState()->name == 'oustedForgeShip' &&
                     $this->tokens->getTokenState("mazestock_$player_id") != 0
                 ) {
                     if ($this->getGameStateValue('celestialRunning')) {
@@ -12014,7 +12079,9 @@ class diceforge extends Table
             'doNothing',
             '${player_name} does not upgrade a side',
             [
-                'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
+                'player_name' => $this->loadPlayersBasicInfos()[$player_id][
+                    'player_name'
+                ],
             ]
         );
 
@@ -12181,7 +12248,7 @@ class diceforge extends Table
 
         $this->resetTwins($player_id, false);
 
-        if ($this->gamestate->state()['type'] != 'game') {
+        if ($this->gamestate->getCurrentMainState()->type != StateType::GAME) {
             self::checkAction('actPuzzleCelestial');
         }
 
@@ -12275,7 +12342,9 @@ class diceforge extends Table
 
                     if (
                         $scepterMoon +
-                        $this->getPlayersAdditionnalInfo()[$player_id]['res_moon'] <
+                            $this->getPlayersAdditionnalInfo()[$player_id][
+                                'res_moon'
+                            ] <
                         2
                     ) {
                         if ($this->hasTritonToken($player_id)) {
@@ -12398,15 +12467,6 @@ class diceforge extends Table
         $this->incStat(1, 'nb_ressource_choice', $player_id);
 
         if ($disable) {
-            $card_id = $this->getGameStateValue("exploitBought");
-
-            if ($card_id != -1) {
-                $card = $this->exploits->getCard($card_id);
-                if ($card['type'] == 'leftHand') {
-                    $this->gamestate->nextState('pegasus');
-                    return;
-                }
-            }
             $this->gamestate->setPlayerNonMultiactive($player_id, 'nextState');
         } else {
             $this->gamestate->nextState('choice');
@@ -12445,8 +12505,12 @@ class diceforge extends Table
             ),
             [
                 'player_name' => self::getActivePlayerName(),
-                'ousted_player' => $this->loadPlayersBasicInfos()[$forgePlayerId]['player_color'],
-                'ousted_player_name' => $this->loadPlayersBasicInfos()[$forgePlayerId]['player_name'],
+                'ousted_player' => $this->loadPlayersBasicInfos()[
+                    $forgePlayerId
+                ]['player_color'],
+                'ousted_player_name' => $this->loadPlayersBasicInfos()[
+                    $forgePlayerId
+                ]['player_name'],
                 'side_type' => $card['type'],
             ]
         );
@@ -12883,7 +12947,9 @@ class diceforge extends Table
                         if ($notifPlayerArgs['vp'] == 0) {
                             unset($notifPlayerArgs['vp']);
                         }
-                        $notifPlayerArgs['ressources'] = $this->buildRessourceNotif($notifPlayerArgs);
+                        $notifPlayerArgs[
+                            'ressources'
+                        ] = $this->buildRessourceNotif($notifPlayerArgs);
                         self::notifyAllPlayers(
                             'notifBlessing',
                             '${player_name} gets ${ressources}',
@@ -12912,7 +12978,11 @@ class diceforge extends Table
                     $player_gold = $this->getGold($player_id);
                     $notifPlayerArgs = [];
                     $notifPlayerArgs['player_id'] = $player_id;
-                    $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+                    $notifPlayerArgs[
+                        'player_name'
+                    ] = $this->loadPlayersBasicInfos()[$player_id][
+                        'player_name'
+                    ];
                     foreach ($ressources as $res => $value) {
                         if ($value != 0) {
                             switch ($res) {
@@ -13210,7 +13280,7 @@ class diceforge extends Table
         $this->titanMove($player_to_play);
 
         // saving transition state
-        $stateName = $this->gamestate->state()['name'];
+        $stateName = $this->gamestate->getCurrentMainState()->name;
         $transition = '';
         switch ($stateName) {
             case 'divineBlessing':
@@ -13305,13 +13375,15 @@ class diceforge extends Table
 
         return [
             'isForging' =>
-            $this->getPlayersAdditionnalInfo()[$this->getActivePlayerId()]['forge'] == ''
-                ? false
-                : true,
+                $this->getPlayersAdditionnalInfo()[$this->getActivePlayerId()][
+                    'forge'
+                ] == ''
+                    ? false
+                    : true,
             'currentTurn' => self::getGameStateValue('turnCount'),
             'maxTurn' => self::getGameStateValue('nbTurns'),
             'scepters' =>
-            self::getGameStateValue('scepterFireshard') +
+                self::getGameStateValue('scepterFireshard') +
                 self::getGameStateValue('scepterMoonshard'),
             'companion' => $companions,
         ];
@@ -13331,7 +13403,7 @@ class diceforge extends Table
         // Say to JS if player is currently forging ? from global or ?
         return [
             'scepters' =>
-            self::getGameStateValue('scepterFireshard') +
+                self::getGameStateValue('scepterFireshard') +
                 self::getGameStateValue('scepterMoonshard'),
             'companion' => $companions,
         ];
@@ -13423,7 +13495,9 @@ class diceforge extends Table
                 // We add the message to notice the users that loyalty reward is included
                 if (
                     (isset(
-                        $this->dice_sides[$sides[$player_id]['sides'][0]['type']]['ressource']['gold']
+                        $this->dice_sides[
+                            $sides[$player_id]['sides'][0]['type']
+                        ]['ressource']['gold']
                     ) &&
                         $this->getLoyaltyArg(
                             $player_id,
@@ -13432,15 +13506,21 @@ class diceforge extends Table
                             true
                         )['gold'] != 0) ||
                     (isset(
-                        $this->dice_sides[$sides[$player_id]['sides'][0]['type']]['ressource']['vp']
+                        $this->dice_sides[
+                            $sides[$player_id]['sides'][0]['type']
+                        ]['ressource']['vp']
                     ) &&
-                        $this->getLoyaltyArg($player_id, $sideNum, 'vp', true)['vp'] != 0)
+                        $this->getLoyaltyArg($player_id, $sideNum, 'vp', true)[
+                            'vp'
+                        ] != 0)
                 ) {
                     $sides['loyalty'] = $msgLoyalty;
                     $sides['i18n'] = ['loyalty'];
                 }
 
-                $sides[$player_id]['possibilities'] = $this->calculatePossibilities(
+                $sides[$player_id][
+                    'possibilities'
+                ] = $this->calculatePossibilities(
                     $player_id,
                     $sides[$player_id]['sides'][0]['type'],
                     $sideNum,
@@ -13468,7 +13548,9 @@ class diceforge extends Table
 
         if ($this->getGameStateValue('celestialRunning')) {
             $sides['celestial'] =
-                $this->celestialDie[$this->getGameStateValue('celestialDieSide')];
+                $this->celestialDie[
+                    $this->getGameStateValue('celestialDieSide')
+                ];
         } else {
             $sides['celestial'] = '';
         }
@@ -13569,7 +13651,9 @@ class diceforge extends Table
                     ];
                     $sideNum = 4;
                     //var_dump(1);
-                    $sides[$player_id]['possibilities'] = $this->calculatePossibilities(
+                    $sides[$player_id][
+                        'possibilities'
+                    ] = $this->calculatePossibilities(
                         $player_id,
                         $sides[$player_id]['sides'][0]['type'],
                         $sideNum,
@@ -13582,7 +13666,7 @@ class diceforge extends Table
                 // celestial die specific sides
                 if (
                     $this->tokens->getTokenLocation('celestial_choice') !=
-                    '0' &&
+                        '0' &&
                     $this->tokens->getTokenLocation('celestial_choice') != null
                 ) {
                     $sides[$player_id]['sides'][0] = [
@@ -13594,7 +13678,9 @@ class diceforge extends Table
                     ];
                     $sideNum = 98;
                     //var_dump(2);
-                    $sides[$player_id]['possibilities'] = $this->calculatePossibilities(
+                    $sides[$player_id][
+                        'possibilities'
+                    ] = $this->calculatePossibilities(
                         $player_id,
                         $sides[$player_id]['sides'][0]['type'],
                         $sideNum,
@@ -13621,7 +13707,9 @@ class diceforge extends Table
                     $sides[$player_id]['sides'][0] = [
                         'id' => '',
                         'type' =>
-                        $players_info[$player_id]['side_choice_' . $twinChoice],
+                            $players_info[$player_id][
+                                'side_choice_' . $twinChoice
+                            ],
                         'num' => $twinChoice,
                     ];
                     $sideNum = $twinChoice;
@@ -13665,7 +13753,7 @@ class diceforge extends Table
                         $sides[$player_id]['sides'][0] = [
                             'id' => '',
                             'type' =>
-                            $players_info[$player_id]['side_choice_1'],
+                                $players_info[$player_id]['side_choice_1'],
                             'num' => 1,
                         ];
                         $sideNum = 1;
@@ -13678,7 +13766,7 @@ class diceforge extends Table
                         $sides[$player_id]['sides'][0] = [
                             'id' => '',
                             'type' =>
-                            $players_info[$player_id]['side_choice_2'],
+                                $players_info[$player_id]['side_choice_2'],
                             'num' => 2,
                         ];
                         $sideNum = 2;
@@ -13718,20 +13806,30 @@ class diceforge extends Table
                 if (
                     ($sideNum == 1 || $sideNum == 2) &&
                     ((isset(
-                        $this->dice_sides[$sides[$player_id]['sides'][0]['type']]['ressource']['gold']
+                        $this->dice_sides[
+                            $sides[$player_id]['sides'][0]['type']
+                        ]['ressource']['gold']
                     ) &&
-                        $this->getLoyaltyArg($player_id, $sideNum, 'gold')['gold'] != 0) ||
+                        $this->getLoyaltyArg($player_id, $sideNum, 'gold')[
+                            'gold'
+                        ] != 0) ||
                         (isset(
-                            $this->dice_sides[$sides[$player_id]['sides'][0]['type']]['ressource']['vp']
+                            $this->dice_sides[
+                                $sides[$player_id]['sides'][0]['type']
+                            ]['ressource']['vp']
                         ) &&
-                            $this->getLoyaltyArg($player_id, $sideNum, 'vp')['vp'] != 0))
+                            $this->getLoyaltyArg($player_id, $sideNum, 'vp')[
+                                'vp'
+                            ] != 0))
                 ) {
                     $sides['loyalty'] = $msgLoyalty;
                     $sides['i18n'] = ['loyalty'];
                 }
 
                 //var_dump(3);
-                $sides[$player_id]['possibilities'] = $this->calculatePossibilities(
+                $sides[$player_id][
+                    'possibilities'
+                ] = $this->calculatePossibilities(
                     $player_id,
                     $sides[$player_id]['sides'][0]['type'],
                     $sideNum,
@@ -13801,7 +13899,9 @@ class diceforge extends Table
                 }
             } elseif (
                 $this->getGameStateValue('celestialRunning') &&
-                $this->celestialDie[$this->getGameStateValue('celestialDieSide')] == 'doubleUpgrade'
+                $this->celestialDie[
+                    $this->getGameStateValue('celestialDieSide')
+                ] == 'doubleUpgrade'
             ) {
                 $retour['ship'] = 'doubleUpgrade';
                 $retour[$player_id]['sides'][0] = [
@@ -13829,8 +13929,8 @@ class diceforge extends Table
 
         $retour['minusCost'] =
             $retour[$player_id]['minusCost'] == 0
-            ? ''
-            : $retour[$player_id]['minusCost'] . ' [G]';
+                ? ''
+                : $retour[$player_id]['minusCost'] . ' [G]';
         return $retour;
     }
 
@@ -13907,14 +14007,16 @@ class diceforge extends Table
                     $retour['poolList'] = $this->getTridentSides();
                     break;
                 case 'memoryTokens':
-                    $retour['memory'] = $this->tokens->getTokensOfTypeInLocation(
+                    $retour[
+                        'memory'
+                    ] = $this->tokens->getTokensOfTypeInLocation(
                         $card['type'] . '%_' . self::getActivePlayerId(),
                         'none'
                     );
                     break;
-                    //case "throwCelestialDie":
-                    //    $retour['celestial'] = $this->celestialDie[$this->getGameStateValue( "celestialDieSide")];
-                    //    break ;
+                //case "throwCelestialDie":
+                //    $retour['celestial'] = $this->celestialDie[$this->getGameStateValue( "celestialDieSide")];
+                //    break ;
             }
 
             $retour['info'] = [
@@ -13925,7 +14027,9 @@ class diceforge extends Table
 
             if ($this->getGameStateValue('celestialRunning')) {
                 $retour['celestial'] =
-                    $this->celestialDie[$this->getGameStateValue('celestialDieSide')];
+                    $this->celestialDie[
+                        $this->getGameStateValue('celestialDieSide')
+                    ];
             } else {
                 $retour['celestial'] = '';
             }
@@ -13962,7 +14066,9 @@ class diceforge extends Table
 
         if ($this->getGameStateValue('celestialRunning')) {
             $retour['celestial'] =
-                $this->celestialDie[$this->getGameStateValue('celestialDieSide')];
+                $this->celestialDie[
+                    $this->getGameStateValue('celestialDieSide')
+                ];
         } else {
             $retour['celestial'] = '';
         }
@@ -13982,7 +14088,9 @@ class diceforge extends Table
             if ($player_info['ressource_choice'] == self::RC_SIDE_CHOICE) {
                 $retour[$player_id]['action'] = 'side';
                 if ($card_info['action'] == 'oustAll') {
-                    $retour[$player_id]['oustedPlayerId'] = $this->getGameStateValue('oustedPlayerId');
+                    $retour[$player_id][
+                        'oustedPlayerId'
+                    ] = $this->getGameStateValue('oustedPlayerId');
                 }
                 $dice_number = $this->getGameStateValue('enigmaDieNumber');
 
@@ -14123,7 +14231,9 @@ class diceforge extends Table
                     ];
                     $sideNum = 4;
                     //var_dump(5);
-                    $retour[$player_id]['possibilities'] = $this->calculatePossibilities(
+                    $retour[$player_id][
+                        'possibilities'
+                    ] = $this->calculatePossibilities(
                         $player_id,
                         $retour[$player_id]['sides'][0]['type'],
                         $sideNum,
@@ -14135,7 +14245,7 @@ class diceforge extends Table
                 // celestial die specific sides
                 if (
                     $this->tokens->getTokenLocation('celestial_choice') !=
-                    '0' &&
+                        '0' &&
                     $this->tokens->getTokenLocation('celestial_choice') != null
                 ) {
                     $retour[$player_id]['sides'][0] = [
@@ -14147,7 +14257,9 @@ class diceforge extends Table
                     ];
                     $sideNum = 98;
                     //var_dump(2);
-                    $retour[$player_id]['possibilities'] = $this->calculatePossibilities(
+                    $retour[$player_id][
+                        'possibilities'
+                    ] = $this->calculatePossibilities(
                         $player_id,
                         $retour[$player_id]['sides'][0]['type'],
                         $sideNum,
@@ -14185,7 +14297,9 @@ class diceforge extends Table
                             $retour[$player_id]['sides'][0] = [
                                 'id' => '',
                                 'type' =>
-                                $players_info[$player_id]['side_choice_' . $twinChoice],
+                                    $players_info[$player_id][
+                                        'side_choice_' . $twinChoice
+                                    ],
                                 'num' => $twinChoice,
                             ];
                             $sideNum = $twinChoice;
@@ -14198,7 +14312,7 @@ class diceforge extends Table
                             $retour[$player_id]['sides'][0] = [
                                 'id' => '',
                                 'type' =>
-                                $players_info[$player_id]['side_choice_1'],
+                                    $players_info[$player_id]['side_choice_1'],
                                 'num' => 1,
                             ];
                             $sideNum = 1;
@@ -14211,7 +14325,7 @@ class diceforge extends Table
                             $retour[$player_id]['sides'][0] = [
                                 'id' => '',
                                 'type' =>
-                                $players_info[$player_id]['side_choice_2'],
+                                    $players_info[$player_id]['side_choice_2'],
                                 'num' => 2,
                             ];
                             $sideNum = 2;
@@ -14228,7 +14342,9 @@ class diceforge extends Table
                                 $retour[$player_id]['sides'][0] = [
                                     'id' => '',
                                     'type' =>
-                                    $players_info[$player_id]['side_choice_1'],
+                                        $players_info[$player_id][
+                                            'side_choice_1'
+                                        ],
                                     'num' => 1,
                                 ];
                                 $sideNum = 1;
@@ -14241,7 +14357,9 @@ class diceforge extends Table
                                 $retour[$player_id]['sides'][0] = [
                                     'id' => '',
                                     'type' =>
-                                    $players_info[$player_id]['side_choice_2'],
+                                        $players_info[$player_id][
+                                            'side_choice_2'
+                                        ],
                                     'num' => 2,
                                 ];
                                 $sideNum = 2;
@@ -14272,14 +14390,16 @@ class diceforge extends Table
                         //if ($players_info[$player_id]['side_choice_1'] == 'triple' || $players_info[$player_id]['side_choice_2'] == 'triple' )
                         if (
                             $this->tokens->getTokenState("triple_$player_id") ==
-                            1 &&
+                                1 &&
                             $sideNum < 3
                         ) {
                             $retour[$player_id]['triple'] = 3;
                         }
 
                         //var_dump(6);
-                        $retour[$player_id]['possibilities'] = $this->calculatePossibilities(
+                        $retour[$player_id][
+                            'possibilities'
+                        ] = $this->calculatePossibilities(
                             $player_id,
                             $retour[$player_id]['sides'][0]['type'],
                             $sideNum,
@@ -14290,7 +14410,9 @@ class diceforge extends Table
                         if (
                             ($sideNum == 1 || $sideNum == 2) &&
                             ((isset(
-                                $this->dice_sides[$retour[$player_id]['sides'][0]['type']]['ressource']['gold']
+                                $this->dice_sides[
+                                    $retour[$player_id]['sides'][0]['type']
+                                ]['ressource']['gold']
                             ) &&
                                 $this->getLoyaltyArg(
                                     $player_id,
@@ -14298,7 +14420,9 @@ class diceforge extends Table
                                     'gold'
                                 )['gold'] != 0) ||
                                 (isset(
-                                    $this->dice_sides[$retour[$player_id]['sides'][0]['type']]['ressource']['vp']
+                                    $this->dice_sides[
+                                        $retour[$player_id]['sides'][0]['type']
+                                    ]['ressource']['vp']
                                 ) &&
                                     $this->getLoyaltyArg(
                                         $player_id,
@@ -14566,7 +14690,9 @@ class diceforge extends Table
                                 'num' => 5,
                             ];
                         }
-                        $retour[$player_id]['possibilities'] = $this->possibilityAddText($possibilities);
+                        $retour[$player_id][
+                            'possibilities'
+                        ] = $this->possibilityAddText($possibilities);
                         break;
                 }
 
@@ -14899,11 +15025,11 @@ class diceforge extends Table
                     foreach ($players_info as $player_id => $players) {
                         if (
                             $players['ressource_choice'] ==
-                            self::RC_SIDE_CHOICE ||
+                                self::RC_SIDE_CHOICE ||
                             $players['ressource_choice'] ==
-                            self::RC_RESSOURCE ||
+                                self::RC_RESSOURCE ||
                             $players['ressource_choice'] ==
-                            self::RC_ACTION_CHOICE ||
+                                self::RC_ACTION_CHOICE ||
                             $players['ressource_choice'] == self::RC_MAZE ||
                             $players['ressource_choice'] == self::RC_MISFORTUNE
                         ) {
@@ -15149,7 +15275,7 @@ class diceforge extends Table
     // Activation of correct players
     function stRessourceChoice()
     {
-        $stateName = $this->gamestate->state()['name'];
+        $stateName = $this->gamestate->getCurrentMainState()->name;
         $nextState = '';
         $endMultiState = '';
 
@@ -15235,7 +15361,7 @@ class diceforge extends Table
                         $players['ressource_choice'] == self::RC_SIDE_CHOICE ||
                         $players['ressource_choice'] == self::RC_RESSOURCE ||
                         $players['ressource_choice'] ==
-                        self::RC_ACTION_CHOICE ||
+                            self::RC_ACTION_CHOICE ||
                         $players['ressource_choice'] == self::RC_MAZE ||
                         $players['ressource_choice'] == self::RC_MISFORTUNE
                     ) {
@@ -15255,7 +15381,9 @@ class diceforge extends Table
                     // if player has a ship => enable only this user
                     //if ($this->hasUnusedShip($player_id)) {
                     if (
-                        $this->getPlayersAdditionnalInfo()[$player_id]['ressource_choice'] == self::RC_FORGESHIP
+                        $this->getPlayersAdditionnalInfo()[$player_id][
+                            'ressource_choice'
+                        ] == self::RC_FORGESHIP
                     ) {
                         self::giveExtraTime($player_id, 45);
                         $this->gamestate->setPlayersMultiactive(
@@ -15428,11 +15556,11 @@ class diceforge extends Table
         ) {
             if (
                 $reinforcement['type_arg'] == '0' &&
-                $reinforcement['type'] == 'companion' and
+                    $reinforcement['type'] == 'companion' and
                 $this->tokens->getTokenState(
                     'companion_' . $reinforcement['id']
                 ) <
-                5
+                    5
             ) {
                 $this->actReinforcement(
                     $reinforcement['id'],
@@ -15587,137 +15715,6 @@ class diceforge extends Table
         }
     }
 
-    // Switch of user that owns the Pegasus
-    function stPegasusChange()
-    {
-        $player_id = $this->getGameStateValue('oustedPlayerId');
-        $this->setGameStateValue("oracleReinforcement", 0);
-        self::giveExtraTime([$player_id], 45);
-        $this->gamestate->setPlayersMultiactive([$player_id], 'stOusting');
-        $this->gamestate->nextState('nextState');
-    }
-
-    function argsPegasusIsland()
-    {
-        $islands = [1, 2, 3, 4, 5, 6, 7];
-
-        return ['islands' => array_values(array_diff($islands, self::getObjectListFromDB("SELECT position FROM player WHERE position != 'begin'", true)))];
-    }
-
-    function actPegasusIsland($island)
-    {
-        self::checkAction('actPegasusIsland');
-        $player_id = self::getCurrentPlayerId();
-        $args = $this->argsPegasusIsland();
-
-        if (!in_array($island, $args['islands'])) {
-            throw new \BgaVisibleSystemException('The island is occupied. Should not happen');
-        }
-
-        $this->dbSetPosition($player_id, $island);
-        $playerInfo = $this->loadPlayersBasicInfos()[$player_id];
-
-        self::notifyAllPlayers(
-            "notifMovePawn",
-            clienttranslate('Pegasus: ${player_name} moves to island ${island}'),
-            array(
-                'player_color' => $playerInfo['player_color'],
-                'player_name' => $playerInfo['player_name'],
-                'island'       => $island
-            )
-        );
-        $card_id = $this->getGameStateValue("exploitBought");
-
-        if ($card_id != -1) {
-            $card = $this->exploits->getCard($card_id);
-            if ($card['type'] == 'leftHand') {
-                $this->gamestate->nextState('minor');
-                return;
-            }
-        }
-        $this->gamestate->nextState('ousting');
-    }
-
-    function stPegasusMinor()
-    {
-        $player_id = self::getCurrentPlayerId();
-        // if players need to choose, go to correct state
-        if ($this->isRessourceChoice()) {
-            $continue = $this->stRessourceChoiceAdvanced(null, false);
-            if ($continue)
-                return;
-        } elseif ($this->hasMazeStock($player_id)) {
-            // Maze movement
-            if (!$this->mazeManagement($player_id)) {
-                $this->gamestate->nextState('pegasus');
-                return;
-            }
-        } elseif ($this->misfortuneState() != 0) {
-
-            $toEnable = $this->misfortuneAllocation();
-
-            // allocate if choice ==> token
-
-            self::giveExtraTime($toEnable, 45);
-            $this->gamestate->setPlayersMultiactive(array($toEnable), 'blessing');
-            $this->tokens->moveToken('resolveMisfortune', 'none', 0);
-            $this->gamestate->nextState('misfortune');
-            return;
-        } elseif ($this->tokens->getTokenState('pegasus_remaining') == 0) {
-            $this->tokens->setTokenState('pegasus_player', 0);
-            $card_id = $this->getGameStateValue("exploitBought");
-            if ($card_id != -1) {
-                $card = $this->exploits->getCard($card_id);
-                if ($card['type'] == 'leftHand') {
-                    $this->gamestate->nextState('leftHand');
-                    return;
-                }
-            }
-            $this->gamestate->nextState('ousting');
-            return;
-        } elseif (count($this->gamestate->getActivePlayerList()) == 0) {
-            $this->gamestate->setPlayersMultiactive([$this->tokens->getTokenState('pegasus_player')], 'nextState');
-            $this->gamestate->nextState('nextState');
-        }
-    }
-
-    function argsPegasusMinor()
-    {
-        return ['canDo' => $this->tokens->getTokenState('pegasus_remaining') != 0];
-    }
-
-    function actPegasusMinor($dice)
-    {
-        self::checkAction("actPegasusMinor");
-        $player_id         = self::getCurrentPlayerId();
-        $this->resetThrowTokens();
-        $this->resetTwins();
-        $dice1 = false;
-        $dice2 = false;
-
-                // only one player should be set as multiactive
-                $multi[0] = $player_id;
-                self::giveExtraTime($player_id, 60);
-
-                $this->gamestate->setPlayersMultiactive(
-                    $multi,
-                    'exploitEffect'
-                );
-                $this->gamestate->nextState('forgeShip');
-            }
-            //$this->gamestate->nextState('exploitEffect');
-            else {
-                $this->gamestate->nextState('nextState');
-            }
-        if ($dice == 1) {
-            $dice1 = true;
-            $this->setGameStateValue('enigmaDieNumber', 1);
-        } else {
-            $dice2 = true;
-            $this->setGameStateValue('enigmaDieNumber', 2);
-        }
-    }
-
     //function stExploitRessource() {
     //    $celestialRunning = $this->getGameStateValue( "celestialRunning");
     //    $player_id = self::getActivePlayerId();
@@ -15797,7 +15794,11 @@ class diceforge extends Table
                         count(
                             array_intersect(
                                 array_keys(
-                                    $this->dice_sides[$players_info[$cur_player_id]['side_choice_1']]['ressource']
+                                    $this->dice_sides[
+                                        $players_info[$cur_player_id][
+                                            'side_choice_1'
+                                        ]
+                                    ]['ressource']
                                 ),
                                 $toTransform['ressource']
                             )
@@ -15821,7 +15822,11 @@ class diceforge extends Table
                         count(
                             array_intersect(
                                 array_keys(
-                                    $this->dice_sides[$players_info[$cur_player_id]['side_choice_2']]['ressource']
+                                    $this->dice_sides[
+                                        $players_info[$cur_player_id][
+                                            'side_choice_2'
+                                        ]
+                                    ]['ressource']
                                 ),
                                 $toTransform['ressource']
                             )
@@ -15854,9 +15859,6 @@ class diceforge extends Table
             $this->gamestate->setPlayersMultiactive([$toEnable], 'nextState');
             $this->tokens->moveToken('resolveMisfortune', 'none', 0);
             $this->gamestate->nextState('misfortune');
-            return;
-        } elseif ($this->tokens->getTokenState('pegasus_remaining') != 0) {
-            $this->gamestate->nextState('pegasus');
             return;
         } elseif (
             $card_id != -1 &&
@@ -15975,13 +15977,19 @@ class diceforge extends Table
 
                         $notifPlayerArgs = [];
                         $notifPlayerArgs['player_id'] = $player_id;
-                        $notifPlayerArgs['player_name'] = $this->loadPlayersBasicInfos()[$player_id]['player_name'];
+                        $notifPlayerArgs[
+                            'player_name'
+                        ] = $this->loadPlayersBasicInfos()[$player_id][
+                            'player_name'
+                        ];
                         $notifPlayerArgs['moonshard'] = 3;
                         if (!$this->canFillHammer($player_id)) {
                             $notifPlayerArgs['gold'] = 3 - $scepter;
                             $notifPlayerArgs['scepter'] = $scepter;
                         }
-                        $notifPlayerArgs['ressources'] = $this->buildRessourceNotif($notifPlayerArgs);
+                        $notifPlayerArgs[
+                            'ressources'
+                        ] = $this->buildRessourceNotif($notifPlayerArgs);
                         self::notifyAllPlayers(
                             'notifBlessing',
                             '${player_name} gets ${ressources}',
@@ -16253,7 +16261,9 @@ class diceforge extends Table
                                 [
                                     'i18n' => ['card_name_trans'],
                                     'player_name' =>
-                                    $players_info[$player_id]['player_name'],
+                                        $players_info[$player_id][
+                                            'player_name'
+                                        ],
                                     'card_name' => $card_info['name'],
                                     'card_name_trans' => $card_info['name'],
                                 ]
@@ -16328,7 +16338,9 @@ class diceforge extends Table
                                     [
                                         'i18n' => ['card_name_trans'],
                                         'player_name' =>
-                                        $players_info[$aff_player_id]['player_name'],
+                                            $players_info[$aff_player_id][
+                                                'player_name'
+                                            ],
                                         'card_name' => $card_info['name'],
                                         'card_name_trans' => $card_info['name'],
                                         'ressources' => $this->buildRessourceNotif(
@@ -16349,7 +16361,9 @@ class diceforge extends Table
                                 [
                                     'i18n' => ['card_name_trans'],
                                     'player_name' =>
-                                    $players_info[$player_id]['player_name'],
+                                        $players_info[$player_id][
+                                            'player_name'
+                                        ],
                                     'card_name' => $card_info['name'],
                                     'card_name_trans' => $card_info['name'],
                                     'ressources' => $this->buildRessourceNotif([
@@ -16392,10 +16406,10 @@ class diceforge extends Table
                                         [
                                             'i18n' => ['card_name_trans'],
                                             'player_name' =>
-                                            $player_info['player_name'],
+                                                $player_info['player_name'],
                                             'card_name' => $card_info['name'],
                                             'card_name_trans' =>
-                                            $card_info['name'],
+                                                $card_info['name'],
                                             'ressources' => $this->buildRessourceNotif(
                                                 $lost
                                             ),
@@ -16425,7 +16439,9 @@ class diceforge extends Table
                                 [
                                     'i18n' => ['card_name_trans'],
                                     'player_name' =>
-                                    $players_info[$player_id]['player_name'],
+                                        $players_info[$player_id][
+                                            'player_name'
+                                        ],
                                     'card_name' => $card_info['name'],
                                     'card_name_trans' => $card_info['name'],
                                     'ressources' => $this->buildRessourceNotif(
@@ -16468,7 +16484,9 @@ class diceforge extends Table
                                 if ($notifPlayerArgs['vp'] == 0) {
                                     unset($notifPlayerArgs['vp']);
                                 }
-                                $notifPlayerArgs['ressources'] = $this->buildRessourceNotif(
+                                $notifPlayerArgs[
+                                    'ressources'
+                                ] = $this->buildRessourceNotif(
                                     $notifPlayerArgs
                                 );
                                 self::notifyAllPlayers(
@@ -16491,7 +16509,9 @@ class diceforge extends Table
 
                         $notifPlayerArgs = $this->initNotif($player_id);
                         $notifPlayerArgs['vp'] = $nbFeats * 2;
-                        $notifPlayerArgs['ressources'] = $this->buildRessourceNotif($notifPlayerArgs);
+                        $notifPlayerArgs[
+                            'ressources'
+                        ] = $this->buildRessourceNotif($notifPlayerArgs);
                         $notifPlayerArgs['nbFeats'] = $nbFeats;
                         self::notifyAllPlayers(
                             'notifBlessing',
@@ -16533,7 +16553,9 @@ class diceforge extends Table
 
                         $notifPlayerArgs = $this->initNotif($player_id);
                         $notifPlayerArgs['vp'] = $nbSide * 2;
-                        $notifPlayerArgs['ressources'] = $this->buildRessourceNotif($notifPlayerArgs);
+                        $notifPlayerArgs[
+                            'ressources'
+                        ] = $this->buildRessourceNotif($notifPlayerArgs);
                         $notifPlayerArgs['nbSide'] = $nbSide;
                         $notifPlayerArgs['vp'] = '[VP]';
                         self::notifyAllPlayers(
@@ -16554,7 +16576,9 @@ class diceforge extends Table
                         $notifPlayerArgs = $this->initNotif($player_id);
                         $notifPlayerArgs['gold'] = $gold;
                         $notifPlayerArgs['vp'] = null;
-                        $notifPlayerArgs['ressources'] = $this->buildRessourceNotif($notifPlayerArgs);
+                        $notifPlayerArgs[
+                            'ressources'
+                        ] = $this->buildRessourceNotif($notifPlayerArgs);
                         self::notifyAllPlayers(
                             'notifBlessing',
                             clienttranslate(
@@ -16622,9 +16646,9 @@ class diceforge extends Table
                                         'i18n' => ['card_name_trans'],
                                         'player_name' => self::getActivePlayerName(),
                                         'ousted_player' =>
-                                        $players['player_color'],
+                                            $players['player_color'],
                                         'ousted_player_name' =>
-                                        $players['player_name'],
+                                            $players['player_name'],
                                         'card_name' => $card_info['name'],
                                         'card_name_trans' => $card_info['name'],
                                     ]
@@ -16675,23 +16699,19 @@ class diceforge extends Table
                                         ),
                                         [
                                             'player_name' =>
-                                            $players['player_name'],
+                                                $players['player_name'],
                                             'ressources' => $vp . ' [VP]',
                                         ]
                                     );
-                                }
-                                // pegasus management
-                                if ($this->hasPegasus($all_player_id) && $all_player_id != $player_id) {
-                                    $this->tokens->setTokenState('pegasus_remaining', $this->hasPegasus($all_player_id));
-                                    $this->tokens->setTokenState('pegasus_player', $all_player_id);
-                                    $pegasus = true;
                                 }
 
                                 // move ousted player
                                 $this->dbSetPosition($all_player_id, 'begin');
 
                                 self::notifyAllPlayers('notifMovePawn', '', [
-                                    'player_color' => $this->loadPlayersBasicInfos()[$all_player_id]['player_color'],
+                                    'player_color' => $this->loadPlayersBasicInfos()[
+                                        $all_player_id
+                                    ]['player_color'],
                                     'island' => 'init',
                                 ]);
 
@@ -16762,7 +16782,9 @@ class diceforge extends Table
                                 '${player_name} chooses the visible face of each die'
                             ),
                             [
-                                'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
+                                'player_name' => $this->loadPlayersBasicInfos()[
+                                    $player_id
+                                ]['player_name'],
                             ]
                         );
 
@@ -16921,28 +16943,6 @@ class diceforge extends Table
 
             // disable all users
             self::DbQuery('UPDATE player SET player_is_multiactive = 0');
-            if ($card_info['action'] == 'fortuneWheel') {
-                // check choice of sides
-                // if one of the side match => 8 VP, if 2 => 20 VP
-                // in progress
-                $previsions = [$this->tokens->getTokenLocation('wheel_1'), $this->tokens->getTokenLocation('wheel_2')];
-                $rolled = [current($this->sides->getCardsInLocation('dice1-p' . $player_id, 0))['type'], current($this->sides->getCardsInLocation('dice2-p' . $player_id, 0))['type']];
-
-                if (($previsions[0] == $rolled[0] && $previsions[1] == $rolled[1]) || ($previsions[1] == $rolled[0] && $previsions[0] == $rolled[1])) {
-                    $vp = 20;
-                } elseif ($previsions[0] == $rolled[0] || $previsions[0] == $rolled[1] || $previsions[1] == $rolled[0] || $previsions[1] == $rolled[1]) {
-                    $vp = 8;
-                } else {
-                    $vp = 0;
-                }
-
-                $this->increaseVP($player_id, $vp);
-                $this->incStat($vp, 'nb_vp_exploit', $player_id);
-                self::notifyAllPlayers("notifBlessing", clienttranslate('${player_name} gets ${ressources} from the Wheel of Fortune'), array(
-                    'player_name'   => $this->getActivePlayerName(),
-                    'ressources'    => $vp . ' [VP]'
-                ));
-            }
         }
 
         // #35073 : add check of misfortune
@@ -17003,8 +17003,12 @@ class diceforge extends Table
         $player_id = self::getCurrentPlayerId(); // !! We must only return informations visible by this player !!
         $this->tokens->setTokenState('position_' . $player_id, $pos);
         self::notifyAllPlayers('notifTitanMove', '', [
-            'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
-            'player_color' => $this->loadPlayersBasicInfos()[$player_id]['player_color'],
+            'player_name' => $this->loadPlayersBasicInfos()[$player_id][
+                'player_name'
+            ],
+            'player_color' => $this->loadPlayersBasicInfos()[$player_id][
+                'player_color'
+            ],
             'player_id' => $player_id,
             'position' => $pos,
         ]);
@@ -17151,7 +17155,9 @@ class diceforge extends Table
                             '${player_name} looses ${ressources} due to its position on the Titan board'
                         ),
                         [
-                            'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
+                            'player_name' => $this->loadPlayersBasicInfos()[
+                                $player_id
+                            ]['player_name'],
                             'player_id' => $player_id,
                             'ressources' => $this->buildRessourceNotif([
                                 'vp' => $reward * -1,
@@ -17167,7 +17173,9 @@ class diceforge extends Table
                             '${player_name} gets ${ressources} due to its position on the Titan board'
                         ),
                         [
-                            'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
+                            'player_name' => $this->loadPlayersBasicInfos()[
+                                $player_id
+                            ]['player_name'],
                             'player_id' => $player_id,
                             'ressources' => $this->buildRessourceNotif([
                                 'vp' => $reward,
@@ -17189,7 +17197,9 @@ class diceforge extends Table
         $this->gamestate->nextState();
     }
 
-    function stPoule() {}
+    function stPoule()
+    {
+    }
 
     //////////////////////////////////////////////////////////////////////////////
     //////////// Zombie

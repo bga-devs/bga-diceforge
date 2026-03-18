@@ -38,9 +38,8 @@ class view_diceforge_diceforge extends game_view
         $players       = $this->game->loadPlayersBasicInfos();
         $players_nbr   = count( $players );
         $players_table = $this->game->getNextPlayerTable();
-        global $g_user;
-        $current_player_id = $g_user->get_id(); 
-        $isSpectator   = isset( $players[ $current_player_id ]['player_color'] ) ? false : true;
+        $current_player_id = $this->getCurrentPlayerId(); 
+        $isSpectator   = !isset( $players[ $current_player_id ]);
 
         /*********** Place your code below:  ************/
 
