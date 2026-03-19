@@ -27,7 +27,12 @@ use Bga\GameFramework\BgaUserException;
 use Bga\GameFramework\Components\Deck;
 use Bga\GameFramework\StateType;
 
-class Game extends \Bga\GameFramework\Table
+use \DiceForge\Resources\ResourceChoice;
+
+require_once __DIR__ . '/resource_choice.php';
+require_once __DIR__ . '/ResourceChoiceHelper.php';
+
+class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 {
     const MAX_GOLD = 12;
     const MAX_FIRESHARD = 6;
@@ -37,18 +42,12 @@ class Game extends \Bga\GameFramework\Table
     const CHEST_FIRESHARD = 3;
     const CHEST_MOONSHARD = 3;
     const HAMMER_MAX_POSITION = 30;
-    const RC_NOTHING_TODO = -1;
-    const RC_RESSOURCE = 1;
-    const RC_FORGESHIP = 2;
-    const RC_ACTION_CHOICE = 3;
-    const RC_SIDE_CHOICE = 4;
-    const RC_MAZE = 5;
-    const RC_MISFORTUNE = 6;
     private $players_info;
 
     public Deck $exploits;
     public Deck $sides;
     public Tokens $tokens;
+    private readonly ResourceChoiceHelper $resourceChoiceHelper;
 
     public array $exploit_slot;
     public array $exploit_draft;
@@ -132,6 +131,18 @@ class Game extends \Bga\GameFramework\Table
 
         // Tokens
         $this->tokens = new Tokens();
+        $this->resourceChoiceHelper = new ResourceChoiceHelper($this);
+    }
+
+    // ResourceChoiceDb interface implementation
+    public function executeQuery(string $sql): void
+    {
+        self::DbQuery($sql);
+    }
+
+    public function getUniqueValue(string $sql): mixed
+    {
+        return (int) self::getUniqueValueFromDB($sql);
     }
 
     /*
@@ -737,8 +748,8 @@ class Game extends \Bga\GameFramework\Table
         $result['rebellion'] = $this->getGameStateValue('rebellion');
         $result['hasCelestial'] =
             count($this->exploits->getCardsOfType('celestial')) > 0
-                ? true
-                : false;
+            ? true
+            : false;
         if ($result['rebellion'] >= 3) {
             $result['zones'] = $this->tokens->getTokensOfTypeInLocation(
                 'position_%'
@@ -847,11 +858,11 @@ class Game extends \Bga\GameFramework\Table
             $counters['card_counter_p' . $current_player] = [
                 'counter_name' => 'card_counter_p' . $current_player,
                 'counter_value' =>
-                    count(
-                        $this->exploits->getCardsInLocation(
-                            'table-' . $current_player
-                        )
-                    ) +
+                count(
+                    $this->exploits->getCardsInLocation(
+                        'table-' . $current_player
+                    )
+                ) +
                     count(
                         $this->exploits->getCardsInLocation(
                             'pile1-' . $current_player
@@ -920,8 +931,8 @@ class Game extends \Bga\GameFramework\Table
         // condition is required, for draft
         $currentPlayerNum =
             self::getGameStateValue('currentPlayerNum') == 0
-                ? 1
-                : self::getGameStateValue('currentPlayerNum');
+            ? 1
+            : self::getGameStateValue('currentPlayerNum');
         $progressionTurn = 100 / $nbTurns;
         $progressionPlayer = $progressionTurn / $nbPlayers;
         $currentProgression =
@@ -1542,7 +1553,7 @@ class Game extends \Bga\GameFramework\Table
                     if (
                         !isset($setup_cards[$type][$card['position']]) ||
                         count($setup_cards[$type][$card['position']]) <=
-                            $nb_players
+                        $nb_players
                     ) {
                         $setup_cards[$type][$card['position']][] = [
                             'type' => $name,
@@ -1779,7 +1790,7 @@ class Game extends \Bga\GameFramework\Table
 
             if ($this->canUseTwins($player_id)) {
                 // can be rerolled
-                $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
                 return null;
             }
         }
@@ -1813,14 +1824,14 @@ class Game extends \Bga\GameFramework\Table
             case 'celestialMirror':
                 //$this->dbSetSideChoice($player_id, 1, -1);
                 $this->tokens->moveToken('celestial_choice', 'celestialMirror');
-                $this->dbSetChoice($player_id, self::RC_SIDE_CHOICE);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_SIDE_CHOICE);
                 $notifPlayerArgs['choice'] = true;
                 break;
             case 'chooseSide':
                 //$this->dbSetSideChoice($player_id, 1, -1);
                 //$this->dbSetSideChoice($player_id, 2, -1);
                 $this->tokens->moveToken('celestial_choice', 'chooseSide');
-                $this->dbSetChoice($player_id, self::RC_SIDE_CHOICE);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_SIDE_CHOICE);
                 $notifPlayerArgs['choice'] = true;
                 break;
             case 'doubleUpgrade':
@@ -2988,8 +2999,8 @@ class Game extends \Bga\GameFramework\Table
             ) {
                 if (!$doNotSetChoice) {
                     $this->dbSetSideChoice($player_id, $sideNum, $sideType);
-                    //$this->setChoice($player_id, self::RC_RESSOURCE);
-                    $this->dbSetChoice($player_id, self::RC_RESSOURCE);
+                    //$this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
                 }
                 $choice_tmp = true;
                 $ignoreSetChoice = true;
@@ -3018,10 +3029,10 @@ class Game extends \Bga\GameFramework\Table
                                     $sideNum,
                                     $sideType
                                 );
-                                //$this->setChoice($player_id, self::RC_RESSOURCE);
-                                $this->dbSetChoice(
+                                //$this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
+                                $this->resourceChoiceHelper->dbSetChoice(
                                     $player_id,
-                                    self::RC_RESSOURCE
+                                    ResourceChoice::RC_RESSOURCE
                                 );
                             }
                             $choice_tmp = true;
@@ -3057,9 +3068,9 @@ class Game extends \Bga\GameFramework\Table
                                     $sideType
                                 );
                                 //throw new feException("toto");
-                                $this->dbSetChoice(
+                                $this->resourceChoiceHelper->dbSetChoice(
                                     $player_id,
-                                    self::RC_RESSOURCE
+                                    ResourceChoice::RC_RESSOURCE
                                 );
                             }
                             $choice_tmp = true;
@@ -3078,7 +3089,7 @@ class Game extends \Bga\GameFramework\Table
                                 //throw new feException("fuck");
                                 $this->setChoice(
                                     $player_id,
-                                    self::RC_RESSOURCE
+                                    ResourceChoice::RC_RESSOURCE
                                 );
                             }
                             $choice_tmp = true;
@@ -3213,9 +3224,9 @@ class Game extends \Bga\GameFramework\Table
                                     $sideNum,
                                     $sideType
                                 );
-                                $this->dbSetChoice(
+                                $this->resourceChoiceHelper->dbSetChoice(
                                     $player_id,
-                                    self::RC_RESSOURCE
+                                    ResourceChoice::RC_RESSOURCE
                                 );
                             }
                             $choice_tmp = true;
@@ -3241,7 +3252,7 @@ class Game extends \Bga\GameFramework\Table
                         // TODO: check if sentinel effect applies
                         //if ($resToTransform) {
                         //    $this->dbSetSideChoice($player_id, $sideNum, $sideType);
-                        //    $this->dbSetChoice($player_id, self::RC_RESSOURCE);
+                        //    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
                         //    $choice_tmp = true;
                         //    $ignoreSetChoice = true;
                         //}
@@ -3384,25 +3395,25 @@ class Game extends \Bga\GameFramework\Table
             }
 
             if (!$ship && !$ignoreSetChoice && !$doNotSetChoice) {
-                //$this->setChoice($player_id, self::RC_NOTHING_TODO);
-                $this->setChoice($player_id, self::RC_RESSOURCE);
+                //$this->setChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
+                $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
             }
         } elseif ($side_definition['type'] == 'choice') {
             if (!$doNotSetChoice) {
                 $this->dbSetSideChoice($player_id, $sideNum, $sideType);
-                $this->setChoice($player_id, self::RC_RESSOURCE);
+                $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
             }
             $notifPlayerArgs['choice'] = true;
         } elseif ($side_definition['type'] == 'mirror') {
             if (!$doNotSetChoice) {
                 $this->dbSetSideChoice($player_id, $sideNum, -1);
-                $this->setChoice($player_id, self::RC_SIDE_CHOICE);
+                $this->setChoice($player_id, ResourceChoice::RC_SIDE_CHOICE);
             }
             $notifPlayerArgs['choice'] = true;
         } elseif ($side_definition['type'] == 'forge') {
             if ($multiple != -1 && !$doNotSetChoice) {
                 $this->dbSetSideChoice($player_id, $sideNum, $sideType);
-                $this->setChoice($player_id, self::RC_FORGESHIP);
+                $this->setChoice($player_id, ResourceChoice::RC_FORGESHIP);
             }
         } elseif (
             $side_definition['type'] == 'dependent' &&
@@ -3444,7 +3455,7 @@ class Game extends \Bga\GameFramework\Table
         }
         //elseif ($side_definition['type'] == 'triple') {
         //  $this->dbSetSideChoice($player_id, $sideNum, '0');
-        //  $this->setChoice($player_id, self::RC_NOTHING_TODO);
+        //  $this->setChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
         //}
 
         //if ($notifPlayerArgs['choice'] == false)
@@ -3611,12 +3622,12 @@ class Game extends \Bga\GameFramework\Table
         //    $ignoreSetChoice = true;
 
         //if (!$ship && !$ignoreSetChoice)
-        //    //$this->setChoice($player_id, self::RC_NOTHING_TODO);
-        //    $this->setChoice($player_id, self::RC_RESSOURCE);
+        //    //$this->setChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
+        //    $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
 
         //elseif ($side_definition['type'] == 'triple') {
         //  $this->dbSetSideChoice($player_id, $sideNum, '0');
-        //  $this->setChoice($player_id, self::RC_NOTHING_TODO);
+        //  $this->setChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
         //}
 
         //if ($notifPlayerArgs['choice'] == false)
@@ -3779,14 +3790,14 @@ class Game extends \Bga\GameFramework\Table
                 //if (substr($tokID, 0, 7) == 'scepter') {
                 $new_gold =
                     $tok['state'] < $remaining_to_reduce
-                        ? 0
-                        : $tok['state'] - $remaining_to_reduce;
+                    ? 0
+                    : $tok['state'] - $remaining_to_reduce;
                 $this->tokens->setTokenState($tok['key'], $new_gold);
 
                 $res['scepter'] +=
                     $tok['state'] < $remaining_to_reduce
-                        ? $tok['state']
-                        : $remaining_to_reduce;
+                    ? $tok['state']
+                    : $remaining_to_reduce;
                 $remaining_to_reduce = $remaining_to_reduce - $tok['state'];
 
                 if ($remaining_to_reduce <= 0) {
@@ -4032,7 +4043,7 @@ class Game extends \Bga\GameFramework\Table
             if (
                 $player_id !== null &&
                 $this->getGameStateValue('mazeForge') == 1 &&
-                $this->getRessourceChoice($player_id) == self::RC_FORGESHIP
+                $this->resourceChoiceHelper->getRessourceChoice($player_id) == ResourceChoice::RC_FORGESHIP
             ) {
                 return true;
             }
@@ -4040,7 +4051,7 @@ class Game extends \Bga\GameFramework\Table
             if (
                 $player_id !== null &&
                 $this->getGameStateValue('celestialRunning') == 1 &&
-                $this->getRessourceChoice($player_id) == self::RC_FORGESHIP
+                $this->resourceChoiceHelper->getRessourceChoice($player_id) == ResourceChoice::RC_FORGESHIP
             ) {
                 return true;
             }
@@ -4159,14 +4170,14 @@ class Game extends \Bga\GameFramework\Table
      * Check if any player has a need for choice
      * @return : boolean
      */
-    function isRessourceChoice($action = null, $player_id = null)
+    function isRessourceChoice(?ResourceChoice $action = null, $player_id = null)
     {
         $sql = 'SELECT distinct 1 FROM player WHERE ';
 
         if ($action == null) {
             $sql .= ' ressource_choice != -1';
         } else {
-            $sql .= ' ressource_choice = ' . $action;
+            $sql .= ' ressource_choice = ' . $action->value;
         }
 
         if ($player_id != null) {
@@ -4671,32 +4682,32 @@ class Game extends \Bga\GameFramework\Table
         );
     }
 
-    function setChoice($player_id, $action, $boarAction = false, $debug = false)
+    function setChoice($player_id, ?ResourceChoice $action, $boarAction = false, $debug = false)
     {
         $player = $this->getPlayersAdditionnalInfo()[$player_id];
         $old_value = $player['ressource_choice'];
 
         if (
-            $action == self::RC_NOTHING_TODO &&
+            $action == ResourceChoice::RC_NOTHING_TODO &&
             $this->hasCerberusToken($player_id)
         ) {
             // && $player['side_choice_1'] == '0' && $player['side_choice_2'] == '0') {
-            $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
+            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
         } elseif (
-            $action == self::RC_NOTHING_TODO ||
-            $action == self::RC_SIDE_CHOICE
+            $action == ResourceChoice::RC_NOTHING_TODO ||
+            $action == ResourceChoice::RC_SIDE_CHOICE
         ) {
             // || $old_value == RC_NOTHING_TODO) {
-            $this->dbSetChoice($player_id, $action);
+            $this->resourceChoiceHelper->dbSetChoice($player_id, $action);
             return $action;
-        } elseif ($action == self::RC_ACTION_CHOICE) {
-            $this->dbSetChoice($player_id, $action);
+        } elseif ($action == ResourceChoice::RC_ACTION_CHOICE) {
+            $this->resourceChoiceHelper->dbSetChoice($player_id, $action);
             return $action;
         }
         //elseif (($old_value == RC_FORGESHIP && $action == RC_RESSOURCE) || ($old_value == RC_RESSOURCE && $action == RC_FORGESHIP)) {
         elseif (
-            $action == self::RC_RESSOURCE ||
-            $action == self::RC_FORGESHIP ||
+            $action == ResourceChoice::RC_RESSOURCE ||
+            $action == ResourceChoice::RC_FORGESHIP ||
             $action == null
         ) {
             $player_chests = $this->hasChest($player_id);
@@ -4704,7 +4715,7 @@ class Game extends \Bga\GameFramework\Table
                 self::MAX_GOLD +
                 self::CHEST_GOLD * $player_chests +
                 $this->tokens->countTokensInLocAndKey('scepter', $player_id) *
-                    6;
+                6;
             //$player_gold = $player['res_gold'];
             $player_gold = $this->getGold($player_id);
             $res_gold = 0;
@@ -4742,8 +4753,8 @@ class Game extends \Bga\GameFramework\Table
 
             if ($resolveTwin == true) {
                 //throw new feException("titi");
-                $this->dbSetChoice($player_id, self::RC_RESSOURCE);
-                return self::RC_RESSOURCE;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
+                return ResourceChoice::RC_RESSOURCE;
             } elseif (
                 !$this->tokens->getTokenState('cerberus_' . $player_id) &&
                 $this->canUseTwins($player_id) &&
@@ -4756,12 +4767,12 @@ class Game extends \Bga\GameFramework\Table
                 //$this->tokens->getTokenState("puzzle_" . $player_id) == 1)
             ) {
                 //throw new feException("top");
-                $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
-                return self::RC_ACTION_CHOICE;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
+                return ResourceChoice::RC_ACTION_CHOICE;
             } elseif ($celestialChoice != '0' && $celestialChoice == 'ship') {
                 //throw new feException('tt');
-                $this->dbSetChoice($player_id, self::RC_FORGESHIP);
-                return self::RC_FORGESHIP;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
+                return ResourceChoice::RC_FORGESHIP;
             } elseif (
                 $celestialChoice != '0' &&
                 $celestialChoice != '' &&
@@ -4769,47 +4780,47 @@ class Game extends \Bga\GameFramework\Table
                 $celestialChoice != 'mirror'
             ) {
                 //throw new feException('tt');
-                $this->dbSetChoice($player_id, self::RC_RESSOURCE);
-                return self::RC_RESSOURCE;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
+                return ResourceChoice::RC_RESSOURCE;
             } elseif ($celestialChoice == 'mirror') {
                 //throw new feException('tt');
-                $this->dbSetChoice($player_id, self::RC_SIDE_CHOICE);
-                return self::RC_SIDE_CHOICE;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_SIDE_CHOICE);
+                return ResourceChoice::RC_SIDE_CHOICE;
             } elseif ($celestial && $this->canUseTwins($player_id)) {
-                $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
-                return self::RC_ACTION_CHOICE;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
+                return ResourceChoice::RC_ACTION_CHOICE;
             } elseif ($side1 == '-1' || $side2 == '-1') {
-                $this->dbSetChoice($player_id, self::RC_SIDE_CHOICE);
-                return self::RC_SIDE_CHOICE;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_SIDE_CHOICE);
+                return ResourceChoice::RC_SIDE_CHOICE;
             }
             //elseif ($misfortune != 0) {
             //    // trigger misfortune
-            //    $this->dbSetChoice($player_id, self::RC_MISFORTUNE);
-            //    return self::RC_MISFORTUNE;
+            //    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_MISFORTUNE);
+            //    return ResourceChoice::RC_MISFORTUNE;
             //}
             // add double celestial roll
             elseif (
                 $maze &&
                 $celestialChoice == '0' &&
                 $this->getGameStateValue('doubleCelestialRoll') == 1 &&
-                $action != self::RC_RESSOURCE
+                $action != ResourceChoice::RC_RESSOURCE
             ) {
                 //throw new feException("cele double");
-                $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
-                return self::RC_NOTHING_TODO;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
+                return ResourceChoice::RC_NOTHING_TODO;
             } elseif (
                 !$maze &&
                 $side1 != 'ship' &&
                 $side2 != 'ship' &&
                 ($side1 != '0' || $side2 != '0') &&
-                $action != self::RC_RESSOURCE &&
+                $action != ResourceChoice::RC_RESSOURCE &&
                 (!$this->canUseTwins($player_id) ||
                     !$this->tokens->getTokenState('cerberus_' . $player_id))
             ) {
                 //throw new feException (debug_print_backtrace());
                 //throw new feException("bbbbb " . $action);
-                $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
-                return self::RC_NOTHING_TODO;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
+                return ResourceChoice::RC_NOTHING_TODO;
             } elseif (
                 !$maze &&
                 $side1 != 'ship' &&
@@ -4822,13 +4833,13 @@ class Game extends \Bga\GameFramework\Table
                 //if ($debug)
                 //    throw new feException("side 1 $side1 side 2 $side2 boar $boar");
                 //    throw new feException("bb");
-                $this->dbSetChoice($player_id, self::RC_RESSOURCE);
-                return self::RC_RESSOURCE;
-                //$this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
-                //return self::RC_NOTHING_TODO;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
+                return ResourceChoice::RC_RESSOURCE;
+                //$this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
+                //return ResourceChoice::RC_NOTHING_TODO;
             } elseif ($maze && ($side1 == 'ship' || $side2 == 'ship')) {
-                $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
-                return self::RC_ACTION_CHOICE;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
+                return ResourceChoice::RC_ACTION_CHOICE;
             } elseif (
                 $side1 == 'ship' &&
                 ($side2 == '0' || $side2 == 'triple') &&
@@ -4836,8 +4847,8 @@ class Game extends \Bga\GameFramework\Table
                 $twins == 0 &&
                 $misfortune == 0
             ) {
-                $this->dbSetChoice($player_id, self::RC_FORGESHIP);
-                return self::RC_FORGESHIP;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
+                return ResourceChoice::RC_FORGESHIP;
             } elseif (
                 $side2 == 'ship' &&
                 ($side1 == '0' || $side1 == 'triple') &&
@@ -4845,8 +4856,8 @@ class Game extends \Bga\GameFramework\Table
                 $twins == 0 &&
                 $misfortune == 0
             ) {
-                $this->dbSetChoice($player_id, self::RC_FORGESHIP);
-                return self::RC_FORGESHIP;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
+                return ResourceChoice::RC_FORGESHIP;
             }
             // ask use of token IF has a valid token & has not been enabled by boar
             //elseif ($side1 == '0' && $side2 == '0' && $boar == 0 && !$boarAction && $this->hasCerberusToken($player_id)) {
@@ -4857,9 +4868,9 @@ class Game extends \Bga\GameFramework\Table
                 $this->hasCerberusToken($player_id) &&
                 $twins == 0
             ) {
-                $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
                 //throw new feException("tt");
-                return self::RC_ACTION_CHOICE;
+                return ResourceChoice::RC_ACTION_CHOICE;
             } elseif (
                 $side1 == '0' &&
                 $side2 == '0' &&
@@ -4869,42 +4880,42 @@ class Game extends \Bga\GameFramework\Table
                 $misfortune == 0
             ) {
                 //throw new feException("aa");
-                $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
-                return self::RC_NOTHING_TODO;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
+                return ResourceChoice::RC_NOTHING_TODO;
             } elseif (
                 ($boar != 0 || $twins != 0) &&
                 $side1 != 'ship' &&
                 $side2 != 'ship'
             ) {
-                $this->dbSetChoice($player_id, self::RC_RESSOURCE);
-                return self::RC_RESSOURCE;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
+                return ResourceChoice::RC_RESSOURCE;
             } elseif (
                 ($boar != 0 || $twins != 0) &&
                 (($side1 == 'ship' && $side2 == '0') ||
                     ($side1 == '0' && $side2 == 'ship'))
             ) {
-                $this->dbSetChoice($player_id, self::RC_RESSOURCE);
-                return self::RC_RESSOURCE;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
+                return ResourceChoice::RC_RESSOURCE;
             } elseif ($side2 == 'ship' && $side1 == 'ship') {
-                $this->dbSetChoice($player_id, self::RC_FORGESHIP);
-                return self::RC_FORGESHIP;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
+                return ResourceChoice::RC_FORGESHIP;
             } elseif (
                 ($side1 == '0' && $side2 != '0') ||
                 ($side2 == '0' && $side1 != '0')
             ) {
-                $this->dbSetChoice($player_id, self::RC_RESSOURCE);
-                return self::RC_RESSOURCE;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
+                return ResourceChoice::RC_RESSOURCE;
             } elseif ($mazestock != 0 && $puzzle == 1) {
-                $this->dbSetChoice($player_id, self::RC_MAZE);
-                return self::RC_MAZE;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_MAZE);
+                return ResourceChoice::RC_MAZE;
             } elseif (
                 $this->tokens->getTokenLocation('mazechoice_' . $player_id) ==
-                    '0' &&
+                '0' &&
                 $maze
             ) {
                 //throw new feException('machin');
-                $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
-                return self::RC_NOTHING_TODO;
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
+                return ResourceChoice::RC_NOTHING_TODO;
             } elseif ($side1 != 'ship' && $side1 != '0') {
                 $side = $side1;
             } elseif ($side2 != 'ship' && $side2 != '0') {
@@ -4922,12 +4933,12 @@ class Game extends \Bga\GameFramework\Table
                 }
 
                 if ($max_gold - $player_gold < $res_gold) {
-                    $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
                     //throw new feException("toto6");
-                    return self::RC_ACTION_CHOICE;
+                    return ResourceChoice::RC_ACTION_CHOICE;
                 } else {
-                    $this->dbSetChoice($player_id, self::RC_RESSOURCE);
-                    return self::RC_RESSOURCE;
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
+                    return ResourceChoice::RC_RESSOURCE;
                 }
             }
         }
@@ -4949,22 +4960,6 @@ class Game extends \Bga\GameFramework\Table
         } else {
             return true;
         }
-    }
-
-    // Depending on the value, different meaning
-    //  value = -1 => no choice necessary
-    //  value = 1 => Ressource
-    //  value = 2 => Ship to forge
-    //  value = 3 => Action Choice necessary
-    //  value = 4 => Side Choice
-    function dbSetChoice($player_id, $value)
-    {
-        $sql =
-            'UPDATE player SET ressource_choice = ' .
-            $value .
-            ' WHERE player_id = ' .
-            $player_id;
-        return self::DbQuery($sql);
     }
 
     function dbSetForge($player_id, $value)
@@ -5011,19 +5006,6 @@ class Game extends \Bga\GameFramework\Table
             "' WHERE player_id = " .
             $player_id;
         return self::DbQuery($sql);
-    }
-
-    function getRessourceChoice($player_id)
-    {
-        $sql = 'SELECT ressource_choice FROM player';
-
-        if ($player_id != null) {
-            $sql .= ' WHERE player_id = ' . $player_id;
-        }
-
-        $dbres = self::getUniqueValueFromDB($sql, true);
-
-        return $dbres;
     }
 
     function dbSetGold($player_id, $value)
@@ -5297,7 +5279,7 @@ class Game extends \Bga\GameFramework\Table
             } elseif (
                 $misfortune &&
                 $this->tokens->getTokenLocation('misfortune_' . $sideNum) !=
-                    $side
+                $side
             ) {
                 throw new BgaUserException(
                     self::_('This side cannot be choosen')
@@ -5659,7 +5641,7 @@ class Game extends \Bga\GameFramework\Table
                     ($moonshard != 0 || $gold != 0 || $vp != 0)) ||
                 ($vp != 0 &&
                     $this->getLoyaltyArg($player_id, $sideNum, 'gold')['vp'] !=
-                        1 &&
+                    1 &&
                     ($moonshard != 0 || $fireshard != 0 || $gold != 0)))
         ) {
             throw new BgaVisibleSystemException(
@@ -5675,7 +5657,7 @@ class Game extends \Bga\GameFramework\Table
                 $fireshard != 0 ||
                 ($vp != 0 &&
                     $this->getLoyaltyArg($player_id, $sideNum, 'gold')['vp'] !=
-                        1)) &&
+                    1)) &&
             $mode != 'steal2' &&
             $mode != 'transform'
         ) {
@@ -5686,36 +5668,36 @@ class Game extends \Bga\GameFramework\Table
             if (
                 (isset($this->dice_sides[$side]['ressource']['gold']) &&
                     $this->dice_sides[$side]['ressource']['gold'] * $triple +
-                        $this->getLoyaltyArg(
-                            $player_id,
-                            $sideNum,
-                            'gold',
-                            $misfortune
-                        )['gold'] <
-                        $gold) ||
+                    $this->getLoyaltyArg(
+                        $player_id,
+                        $sideNum,
+                        'gold',
+                        $misfortune
+                    )['gold'] <
+                    $gold) ||
                 (isset($this->dice_sides[$side]['ressource']['moonshard']) &&
                     $this->dice_sides[$side]['ressource']['moonshard'] *
-                        $triple <
-                        $moonshard) ||
+                    $triple <
+                    $moonshard) ||
                 (isset($this->dice_sides[$side]['ressource']['fireshard']) &&
                     $this->dice_sides[$side]['ressource']['fireshard'] *
-                        $triple <
-                        $fireshard) ||
+                    $triple <
+                    $fireshard) ||
                 (isset($this->dice_sides[$side]['ressource']['vp']) &&
                     $this->dice_sides[$side]['ressource']['vp'] * $triple +
-                        $this->getLoyaltyArg(
-                            $player_id,
-                            $sideNum,
-                            'gold',
-                            $misfortune
-                        )['vp'] +
-                        $this->getLoyaltyArg(
-                            $player_id,
-                            $sideNum,
-                            'vp',
-                            $misfortune
-                        )['vp'] <
-                        $vp) ||
+                    $this->getLoyaltyArg(
+                        $player_id,
+                        $sideNum,
+                        'gold',
+                        $misfortune
+                    )['vp'] +
+                    $this->getLoyaltyArg(
+                        $player_id,
+                        $sideNum,
+                        'vp',
+                        $misfortune
+                    )['vp'] <
+                    $vp) ||
                 (!isset($this->dice_sides[$side]['ressource']['gold']) &&
                     $gold > 0) ||
                 (!isset($this->dice_sides[$side]['ressource']['moonshard']) &&
@@ -5724,12 +5706,12 @@ class Game extends \Bga\GameFramework\Table
                     $fireshard > 0) ||
                 (!isset($this->dice_sides[$side]['ressource']['vp']) &&
                     $vp >
-                        $this->getLoyaltyArg(
-                            $player_id,
-                            $sideNum,
-                            'gold',
-                            $misfortune
-                        )['vp'])
+                    $this->getLoyaltyArg(
+                        $player_id,
+                        $sideNum,
+                        'gold',
+                        $misfortune
+                    )['vp'])
             ) {
                 throw new BgaVisibleSystemException(
                     'More resource allocated than authorized!'
@@ -5740,9 +5722,9 @@ class Game extends \Bga\GameFramework\Table
             if (
                 isset($this->dice_sides[$side]['ressource'][$res_choosen]) &&
                 $this->dice_sides[$side]['ressource'][$res_choosen] *
-                    $triple *
-                    -1 !=
-                    $notifPlayerArgs[$res_choosen]
+                $triple *
+                -1 !=
+                $notifPlayerArgs[$res_choosen]
             ) {
                 throw new BgaVisibleSystemException(
                     'You need to allocate all the resources'
@@ -5884,16 +5866,16 @@ class Game extends \Bga\GameFramework\Table
         } elseif ($maze) {
             $action = $this->setChoice($player_id, null, $boar);
             if (
-                $action == self::RC_NOTHING_TODO ||
-                $action == self::RC_FORGESHIP
+                $action == ResourceChoice::RC_NOTHING_TODO ||
+                $action == ResourceChoice::RC_FORGESHIP
             ) {
                 return true;
             }
         } elseif ($celestial) {
             if ($player_info['twins'] > 0) {
-                $this->dbSetChoice($player_id, self::RC_RESSOURCE);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
             } else {
-                $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
             }
             return true;
         } elseif (
@@ -5906,8 +5888,8 @@ class Game extends \Bga\GameFramework\Table
             $this->dbUpdateUnrolled();
 
             if (
-                $action == self::RC_NOTHING_TODO ||
-                $action == self::RC_FORGESHIP
+                $action == ResourceChoice::RC_NOTHING_TODO ||
+                $action == ResourceChoice::RC_FORGESHIP
             ) {
                 return true;
             }
@@ -5931,7 +5913,7 @@ class Game extends \Bga\GameFramework\Table
             $player_info['boar'] == 0
         ) {
             // if ship, other state will be triggered. Disable the user
-            $this->setChoice($player_id, self::RC_FORGESHIP);
+            $this->setChoice($player_id, ResourceChoice::RC_FORGESHIP);
             $this->dbUpdateUnrolled();
             return true;
         }
@@ -5949,14 +5931,14 @@ class Game extends \Bga\GameFramework\Table
                 $otherSide = 2;
             }
             $this->dbSetSideChoice($player_id, $otherSide, -1);
-            $this->setChoice($player_id, self::RC_SIDE_CHOICE);
+            $this->setChoice($player_id, ResourceChoice::RC_SIDE_CHOICE);
         } elseif (
             (($twins && $twinsFinished) || !$twins) &&
             !$this->canUseTwins($player_id) &&
             $player_info['side_choice_' . $otherSide] != '0'
         ) {
             //throw new feException('test');
-            $this->setChoice($player_id, self::RC_NOTHING_TODO);
+            $this->setChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
             return true;
         }
         //throw new feException("stop");
@@ -6499,7 +6481,7 @@ class Game extends \Bga\GameFramework\Table
                     $notifPlayerArgs['dice2']
                 );
             }
-            $this->setChoice($player_id, self::RC_ACTION_CHOICE);
+            $this->setChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
             self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
             return true;
         }
@@ -6512,7 +6494,7 @@ class Game extends \Bga\GameFramework\Table
             ($result_sides[0]['type'] == 'mirror' ||
                 $result_sides[1]['type'] == 'mirror')
         ) {
-            $this->dbSetChoice($player_id, self::RC_SIDE_CHOICE);
+            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_SIDE_CHOICE);
             if ($result_sides[0]['type'] == 'mirror') {
                 $this->dbSetSideChoice($player_id, '1', -1);
 
@@ -6522,7 +6504,7 @@ class Game extends \Bga\GameFramework\Table
                 ) {
                     $boarId = $this->getBoar($result_sides[1]['type']);
                     $this->dbIncBoar($boarId, true);
-                    $this->setChoice($boarId, self::RC_RESSOURCE);
+                    $this->setChoice($boarId, ResourceChoice::RC_RESSOURCE);
                 }
 
                 // misfortune : nothing to do, mirror & misfortune cannot be together
@@ -6546,7 +6528,7 @@ class Game extends \Bga\GameFramework\Table
                 ) {
                     $boarId = $this->getBoar($result_sides[0]['type']);
                     $this->dbIncBoar($boarId, true);
-                    $this->setChoice($boarId, self::RC_RESSOURCE);
+                    $this->setChoice($boarId, ResourceChoice::RC_RESSOURCE);
                 }
 
                 // misfortune : nothing to do, mirror & misfortune cannot be together
@@ -6608,8 +6590,8 @@ class Game extends \Bga\GameFramework\Table
                     $notifPlayerArgs['dice2']
                 );
                 // check if we need to process misfortune
-                if ($this->setChoice($player_id, null) != self::RC_MISFORTUNE) {
-                    $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
+                if ($this->setChoice($player_id, null) != ResourceChoice::RC_MISFORTUNE) {
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
                 }
                 self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
                 return true;
@@ -6639,7 +6621,7 @@ class Game extends \Bga\GameFramework\Table
                 $this->dbIncBoar($this->getBoar($side['type']), true);
                 $this->setChoice(
                     $this->getBoar($side['type']),
-                    self::RC_RESSOURCE
+                    ResourceChoice::RC_RESSOURCE
                 );
             }
             // do we have to move in the maze?
@@ -6655,7 +6637,7 @@ class Game extends \Bga\GameFramework\Table
                     $mis_player_id
                 );
                 //$this->dbIncMisfortune($mis_player_id, true);
-                //$this->setChoice($mis_player_id, self::RC_RESSOURCE);
+                //$this->setChoice($mis_player_id, ResourceChoice::RC_RESSOURCE);
             }
         }
 
@@ -6677,7 +6659,7 @@ class Game extends \Bga\GameFramework\Table
                 $this->dbIncBoar($this->getBoar($otherSide), true);
                 $this->setChoice(
                     $this->getBoar($otherSide),
-                    self::RC_RESSOURCE
+                    ResourceChoice::RC_RESSOURCE
                 );
             }
         }
@@ -6733,7 +6715,7 @@ class Game extends \Bga\GameFramework\Table
                     }
 
                     // $this->setChoice($player_id, null);
-                    $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
                     self::notifyAllPlayers(
                         'notifBlessing',
                         '',
@@ -7012,8 +6994,8 @@ class Game extends \Bga\GameFramework\Table
         } elseif ($mazestock > 0) {
             $way = 'increase';
         } else {
-            if ($player_info['ressource_choice'] == self::RC_MAZE) {
-                $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+            if ($player_info['ressource_choice'] == ResourceChoice::RC_MAZE->value) {
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
             }
 
             return true;
@@ -7021,7 +7003,7 @@ class Game extends \Bga\GameFramework\Table
 
         for ($i = 0; $i < abs((int)$mazestock) + abs((int)$timeGolem); $i++) {
             $position = $this->tokens->getTokenState('position_' . $player_id);
-            $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
 
             // nothing to do as we are on the last square
             if ($position == 36) {
@@ -7052,7 +7034,7 @@ class Game extends \Bga\GameFramework\Table
             // check if decision => setchoice
             //$choice = $this->mazeHasChoice($player_id, $position, $way);
             //if ($choice !== false) {
-            //    $this->dbSetChoice($player_id, self::RC_MAZE);
+            //    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_MAZE);
             //    $this->setGameStateInitialValue("monoRessourceChoice", 1);
             //    return false;
             //}
@@ -7066,7 +7048,7 @@ class Game extends \Bga\GameFramework\Table
                         isset($mazeSquare['reverse']) &&
                         count($mazeSquare['reverse']) > 1)
                 ) {
-                    $this->dbSetChoice($player_id, self::RC_MAZE);
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_MAZE);
                     $this->setGameStateValue('mazeForcePath', 1);
                     $this->setGameStateInitialValue('monoRessourceChoice', 1);
 
@@ -7082,7 +7064,7 @@ class Game extends \Bga\GameFramework\Table
 
             //// if player side choice => attendre
             // should not happen
-            //if (in_array($player_info['ressource_choice'], array(self::RC_RESSOURCE, self::RC_SIDE_CHOICE, self::RC_ACTION_CHOICE)))
+            //if (in_array($player_info['ressource_choice'], array(ResourceChoice::RC_RESSOURCE, ResourceChoice::RC_SIDE_CHOICE, ResourceChoice::RC_ACTION_CHOICE)))
             //    throw new feException("truru");
 
             // move & decrease stock
@@ -7148,7 +7130,7 @@ class Game extends \Bga\GameFramework\Table
 
             $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
 
-            if ($player_info['ressource_choice'] == self::RC_FORGESHIP) {
+            if ($player_info['ressource_choice'] == ResourceChoice::RC_FORGESHIP->value) {
                 break;
             }
             //$player_info = $this->getPlayersAdditionnalInfo()[$player_id];
@@ -7164,7 +7146,7 @@ class Game extends \Bga\GameFramework\Table
                 $this->tokens->getTokenState('puzzle_' . $player_id) == 1 &&
                 $this->tokens->getTokenState('mazestock_' . $player_id) != 0
             ) {
-                $this->dbSetChoice($player_id, self::RC_MAZE);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_MAZE);
                 return false;
             }
 
@@ -7175,7 +7157,7 @@ class Game extends \Bga\GameFramework\Table
         //throw new feException("titi12");
         $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
 
-        if ($player_info['ressource_choice'] != self::RC_FORGESHIP) {
+        if ($player_info['ressource_choice'] != ResourceChoice::RC_FORGESHIP->value) {
             $this->triggerCelestialWhenMaze0($player_id);
         }
         //throw new feException(print_r($player_info));
@@ -7231,7 +7213,7 @@ class Game extends \Bga\GameFramework\Table
         // check at least one of movement
         if (
             abs((int)$this->tokens->getTokenState('mazestock_' . $player_id)) +
-                abs((int)$timeGolem) <
+            abs((int)$timeGolem) <
             1
         ) {
             throw new BgaVisibleSystemException(
@@ -7325,7 +7307,7 @@ class Game extends \Bga\GameFramework\Table
                                 ),
                                 [
                                     'player_name' =>
-                                        $player_info['player_name'],
+                                    $player_info['player_name'],
                                     'ressources' => $this->buildRessourceNotif(
                                         $lost
                                     ),
@@ -7344,7 +7326,7 @@ class Game extends \Bga\GameFramework\Table
                         ),
                         [
                             'player_name' =>
-                                $players_info[$player_id]['player_name'],
+                            $players_info[$player_id]['player_name'],
                             'ressources' => $this->buildRessourceNotif($gain),
                         ]
                     );
@@ -7419,7 +7401,7 @@ class Game extends \Bga\GameFramework\Table
                 $celestial = $this->rollCelestial($player_id, true);
                 if ($celestial == 'doubleUpgrade') {
                     //goto Forge ship
-                    $this->dbSetChoice($player_id, self::RC_FORGESHIP);
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
                     $notifPlayerArgs['choice'] = true;
                     $forge = true;
                     //$this->setChoice($player_id, null);
@@ -7445,7 +7427,7 @@ class Game extends \Bga\GameFramework\Table
                 elseif ($celestial === null) {
                     $notifPlayerArgs['choice'] = true;
                     $this->setGameStateInitialValue('monoRessourceChoice', 1);
-                    $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
                     return true;
                 }
                 break;
@@ -7466,7 +7448,7 @@ class Game extends \Bga\GameFramework\Table
 
                 if ($celestial == 'doubleUpgrade') {
                     //goto Forge ship
-                    $this->dbSetChoice($player_id, self::RC_FORGESHIP);
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
                     $notifPlayerArgs['choice'] = true;
                     $forge = true;
                     //$this->setChoice($player_id, null);
@@ -7492,7 +7474,7 @@ class Game extends \Bga\GameFramework\Table
                 elseif ($celestial === null) {
                     $notifPlayerArgs['choice'] = true;
                     $this->setGameStateInitialValue('monoRessourceChoice', 1);
-                    $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
 
                     if ($secondRoll) {
                         $this->setGameStateValue('doubleCelestialRoll', 0);
@@ -7506,7 +7488,7 @@ class Game extends \Bga\GameFramework\Table
                 }
                 break;
             case 'forgeShip':
-                $this->dbSetChoice($player_id, self::RC_FORGESHIP);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
                 $this->setGameStateValue('mazeForge', 1);
                 // Only due to exploit management
                 if (
@@ -7521,7 +7503,7 @@ class Game extends \Bga\GameFramework\Table
             case 'forge':
                 $this->setGameStateValue('forgeClassical', 1);
                 $this->setGameStateValue('mazeForge', 1);
-                $this->dbSetChoice($player_id, self::RC_FORGESHIP);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
                 // no choice to trigger as we want to go to forge state
                 // Only due to exploit management
                 if (
@@ -7579,7 +7561,7 @@ class Game extends \Bga\GameFramework\Table
                     $this->setGameStateValue('mazeFinished', 1);
                     $this->dbSetSideChoice($player_id, 1, -1);
                     $this->dbSetSideChoice($player_id, 2, -1);
-                    $this->dbSetChoice($player_id, self::RC_SIDE_CHOICE);
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_SIDE_CHOICE);
                     $notifPlayerArgs['choice'] = true;
                     $firstFinish = true;
                     $this->setGameStateValue('firstFinish', $player_id);
@@ -7654,7 +7636,7 @@ class Game extends \Bga\GameFramework\Table
                 !$forge &&
                 !$firstFinish
             ) {
-                $this->dbSetChoice($player_id, self::RC_MAZE);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_MAZE);
             }
 
             $this->setGameStateInitialValue('monoRessourceChoice', 1);
@@ -7831,7 +7813,7 @@ class Game extends \Bga\GameFramework\Table
                 self::isMisfortune($player_info['side_choice_2']) != 0 ||
                 ($choice && $multiple == -1)
             ) {
-                $this->setChoice($player_id, self::RC_RESSOURCE);
+                $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
             }
             return $notifPlayerArgs;
         }
@@ -7972,7 +7954,7 @@ class Game extends \Bga\GameFramework\Table
             ) {
                 $this->setChoice($player_id, null);
             } elseif ($multiple == -1 && $choice) {
-                $this->setChoice($player_id, self::RC_RESSOURCE);
+                $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
             }
         }
         return $notifPlayerArgs;
@@ -8382,7 +8364,7 @@ class Game extends \Bga\GameFramework\Table
                 ) {
                     $boarId = $this->getBoar($side1);
                     $this->dbIncBoar($boarId, true);
-                    $this->setChoice($boarId, self::RC_RESSOURCE);
+                    $this->setChoice($boarId, ResourceChoice::RC_RESSOURCE);
 
                     // activate player if inactive and only if there is no conflict
                     if (
@@ -8404,7 +8386,7 @@ class Game extends \Bga\GameFramework\Table
                         $side1,
                         $mis_player_id
                     );
-                    $this->setChoice($mis_player_id, self::RC_RESSOURCE);
+                    $this->setChoice($mis_player_id, ResourceChoice::RC_RESSOURCE);
 
                     // activate player if inactive and only if there is no conflict
                     if (
@@ -8439,7 +8421,7 @@ class Game extends \Bga\GameFramework\Table
                 ) {
                     $boarId = $this->getBoar($side2);
                     $this->dbIncBoar($boarId, true);
-                    $this->setChoice($boarId, self::RC_RESSOURCE);
+                    $this->setChoice($boarId, ResourceChoice::RC_RESSOURCE);
 
                     // activate player if inactive and only if there is no conflict
                     if (
@@ -8461,7 +8443,7 @@ class Game extends \Bga\GameFramework\Table
                         $side2,
                         $mis_player_id
                     );
-                    $this->setChoice($mis_player_id, self::RC_RESSOURCE);
+                    $this->setChoice($mis_player_id, ResourceChoice::RC_RESSOURCE);
 
                     // activate player if inactive and only if there is no conflict
                     if (
@@ -8492,7 +8474,7 @@ class Game extends \Bga\GameFramework\Table
             if (substr($side98, -4) == 'Boar' && $this->getBoar($side98) != 0) {
                 $boarId = $this->getBoar($side98);
                 $this->dbIncBoar($boarId, true);
-                $this->setChoice($boarId, self::RC_RESSOURCE);
+                $this->setChoice($boarId, ResourceChoice::RC_RESSOURCE);
 
                 // activate player if inactive and only if there is no conflict
                 if (
@@ -8514,7 +8496,7 @@ class Game extends \Bga\GameFramework\Table
                     $side98,
                     $mis_player_id
                 );
-                $this->setChoice($mis_player_id, self::RC_RESSOURCE);
+                $this->setChoice($mis_player_id, ResourceChoice::RC_RESSOURCE);
 
                 // activate player if inactive and only if there is no conflict
                 if (
@@ -8548,7 +8530,7 @@ class Game extends \Bga\GameFramework\Table
             if (substr($side1, -4) == 'Boar' && $this->getBoar($side1) != 0) {
                 $boarId = $this->getBoar($side1);
                 $this->dbIncBoar($boarId, true);
-                $this->setChoice($boarId, self::RC_RESSOURCE);
+                $this->setChoice($boarId, ResourceChoice::RC_RESSOURCE);
 
                 // activate player if inactive and only if there is no conflict
                 if (
@@ -8586,7 +8568,7 @@ class Game extends \Bga\GameFramework\Table
             if (substr($side2, -4) == 'Boar' && $this->getBoar($side2) != 0) {
                 $boarId = $this->getBoar($side2);
                 $this->dbIncBoar($boarId, true);
-                $this->setChoice($boarId, self::RC_RESSOURCE);
+                $this->setChoice($boarId, ResourceChoice::RC_RESSOURCE);
 
                 // activate player if inactive and only if there is no conflict
                 if (
@@ -8634,7 +8616,7 @@ class Game extends \Bga\GameFramework\Table
                 $boarId = $this->getBoar($side1);
                 $this->dbIncBoar($boarId, true);
                 $this->dbIncBoar($boarId, true);
-                $this->setChoice($boarId, self::RC_RESSOURCE);
+                $this->setChoice($boarId, ResourceChoice::RC_RESSOURCE);
 
                 // activate player if inactive and only if there is no conflict
                 if (
@@ -8653,7 +8635,7 @@ class Game extends \Bga\GameFramework\Table
                 $boarId = $this->getBoar($side2);
                 $this->dbIncBoar($boarId, true);
                 $this->dbIncBoar($boarId, true);
-                $this->setChoice($boarId, self::RC_RESSOURCE);
+                $this->setChoice($boarId, ResourceChoice::RC_RESSOURCE);
 
                 // activate player if inactive and only if there is no conflict
                 if (
@@ -8932,7 +8914,7 @@ class Game extends \Bga\GameFramework\Table
             ($side1 == null && $side2 == 'triple') ||
             $celestialChoice == 'triple'
         ) {
-            $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
             if ($celestialChoice == 'triple') {
                 $this->tokens->moveToken('celestial_choice', '0');
             }
@@ -9028,7 +9010,7 @@ class Game extends \Bga\GameFramework\Table
 
             if ($goldLimitReached) {
                 //$this->setChoice($player_id, null);
-                $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
                 self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
                 $this->gamestate->nextState('choice');
                 //$this->setGameStateValue("firstFinish", 0);
@@ -9224,7 +9206,7 @@ class Game extends \Bga\GameFramework\Table
                 ) {
                     $this->setChoice(
                         $player_id,
-                        self::RC_RESSOURCE,
+                        ResourceChoice::RC_RESSOURCE,
                         false,
                         true
                     );
@@ -9310,7 +9292,7 @@ class Game extends \Bga\GameFramework\Table
 
         $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
 
-        if ($player_info['ressource_choice'] == self::RC_NOTHING_TODO) {
+        if ($player_info['ressource_choice'] == ResourceChoice::RC_NOTHING_TODO->value) {
             //$this->dbSetSideChoice($player_id, 1, '0');
             //$this->dbSetSideChoice($player_id, 2, '0');
         }
@@ -9318,7 +9300,7 @@ class Game extends \Bga\GameFramework\Table
         //throw new feException(print_r($notifPlayerArgs));
 
         if ($ship) {
-            $this->setChoice($player_id, self::RC_FORGESHIP);
+            $this->setChoice($player_id, ResourceChoice::RC_FORGESHIP);
         }
 
         $this->dbUpdateUnrolled();
@@ -9330,11 +9312,11 @@ class Game extends \Bga\GameFramework\Table
                 $player_info['side_choice_2'] != '0')
         ) {
             $this->setGameStateValue('celestialRunning', 0);
-            $this->setChoice($player_id, self::RC_RESSOURCE);
+            $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
             $this->gamestate->nextState('choice');
         } elseif (
-            $player_info['ressource_choice'] == self::RC_RESSOURCE ||
-            $player_info['ressource_choice'] == self::RC_ACTION_CHOICE
+            $player_info['ressource_choice'] == ResourceChoice::RC_RESSOURCE->value ||
+            $player_info['ressource_choice'] == ResourceChoice::RC_ACTION_CHOICE->value
         ) {
             $this->setGameStateValue('celestialRunning', 0);
             $this->gamestate->nextState('choice');
@@ -9523,7 +9505,7 @@ class Game extends \Bga\GameFramework\Table
         // we let the system determine the correct ressource choice
         $ressourceChoice = $this->setChoice($player_id, null);
 
-        if ($ressourceChoice != self::RC_FORGESHIP) {
+        if ($ressourceChoice != ResourceChoice::RC_FORGESHIP) {
             // Go to correct State
             // depends on the state name
             $next_state = $this->getNextState();
@@ -9755,7 +9737,7 @@ class Game extends \Bga\GameFramework\Table
 
         if (
             $player_id != $turnPlayerId &&
-            $player_info['ressource_choice'] != self::RC_MAZE
+            $player_info['ressource_choice'] != ResourceChoice::RC_MAZE->value
         ) {
             throw new BgaVisibleSystemException(
                 'You cannot use this action you are not active'
@@ -10016,7 +9998,7 @@ class Game extends \Bga\GameFramework\Table
             //                          )
             //                      );
             // reset choice
-            $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
 
             // we save the face if there was a modification
             $result = $this->sides->getCardsInLocation(
@@ -10216,9 +10198,9 @@ class Game extends \Bga\GameFramework\Table
                             );
                             break;
                         default:
-                            $this->dbSetChoice(
+                            $this->resourceChoiceHelper->dbSetChoice(
                                 $player_id,
-                                self::RC_NOTHING_TODO
+                                ResourceChoice::RC_NOTHING_TODO
                             );
                             break;
                     }
@@ -10245,7 +10227,7 @@ class Game extends \Bga\GameFramework\Table
                 $this->getPlayersRessources()
             );
             if ($choice && $player_info['ressource_choice'] == -1) {
-                $this->setChoice($player_id, self::RC_RESSOURCE);
+                $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
             }
 
             if ($choice) {
@@ -10293,7 +10275,7 @@ class Game extends \Bga\GameFramework\Table
             //    $this->incGameStateValue( "exploitRemainingThrows", 1);
             //$this->debugVTO($player_id);
             if ($roll == 'doubleUpgrade') {
-                $this->dbSetChoice($player_id, self::RC_FORGESHIP);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
             }
 
             $this->gamestate->nextState('nextState');
@@ -10336,7 +10318,7 @@ class Game extends \Bga\GameFramework\Table
             //if ($this->getCelestial() == "doubleUpgrade")
             //    $this->incGameStateValue( "exploitRemainingThrows", 1);
             if ($side == 'doubleUpgrade') {
-                $this->dbSetChoice($player_id, self::RC_FORGESHIP);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
             }
 
             $this->gamestate->nextState('nextState');
@@ -10351,8 +10333,8 @@ class Game extends \Bga\GameFramework\Table
             switch ($action) {
                 case 'ressource':
                     if ($side == 'ship') {
-                        $this->dbSetChoice($player_id, self::RC_FORGESHIP);
-                        $next_state = $this->getNextState(self::RC_FORGESHIP);
+                        $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
+                        $next_state = $this->getNextState(ResourceChoice::RC_FORGESHIP->value);
                         $this->gamestate->setPlayerNonMultiactive(
                             $player_id,
                             $next_state
@@ -10391,14 +10373,14 @@ class Game extends \Bga\GameFramework\Table
                             $this->dbIncBoar($this->getBoar($side), true);
                             $this->setChoice(
                                 $this->getBoar($side),
-                                self::RC_RESSOURCE
+                                ResourceChoice::RC_RESSOURCE
                             );
                         }
                         //// Misfortune : do not do as it will be assign though blessing
                         //elseif (self::isMisfortune($side) != false) {
                         //    $mis_player_id = self::isMisfortune($side);
                         //    $this->dbIncMisfortune($mis_player_id, true);
-                        //    $this->setChoice($mis_player_id, self::RC_RESSOURCE);
+                        //    $this->setChoice($mis_player_id, ResourceChoice::RC_RESSOURCE);
                         //}
 
                         $this->tokens->setTokenState(
@@ -10414,9 +10396,9 @@ class Game extends \Bga\GameFramework\Table
                         //$this->debugVTO(2305535);
                         // Mirror choice
                         if ($did && $side == '-1') {
-                            $this->dbSetChoice(
+                            $this->resourceChoiceHelper->dbSetChoice(
                                 $player_id,
-                                self::RC_SIDE_CHOICE
+                                ResourceChoice::RC_SIDE_CHOICE
                             );
                             $this->gamestate->nextState('choice');
                         }
@@ -10426,13 +10408,13 @@ class Game extends \Bga\GameFramework\Table
                                 'twinChoice_' . $player_id,
                                 $die
                             );
-                            $this->dbSetChoice($player_id, self::RC_RESSOURCE);
+                            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
                             $this->gamestate->nextState('choice');
                         }
                         // we need to choose the twin resource
                         elseif ($player_info['twins'] != 0) {
                             $this->resolveTwin($player_id, true);
-                            $this->dbSetChoice($player_id, self::RC_RESSOURCE);
+                            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
                             $this->gamestate->nextState('choice');
                         }
                         // if we have some maze, we need to move in it
@@ -10441,11 +10423,11 @@ class Game extends \Bga\GameFramework\Table
                                 'mazestock_' . $player_id
                             ) != 0
                         ) {
-                            $this->dbSetChoice(
+                            $this->resourceChoiceHelper->dbSetChoice(
                                 $player_id,
-                                self::RC_NOTHING_TODO
+                                ResourceChoice::RC_NOTHING_TODO
                             );
-                            //$ret = $this->dbSetChoice($player_id, self::RC_MAZE);
+                            //$ret = $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_MAZE);
                             //throw new feException ($ret);
                             $this->gamestate->nextState('nextState');
                         }
@@ -10461,10 +10443,10 @@ class Game extends \Bga\GameFramework\Table
                         }
                         // other side is ship
                         elseif ($otherSide == 'ship') {
-                            $this->dbSetChoice($player_id, self::RC_FORGESHIP);
+                            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
                             $this->titanMove($player_id);
                             $next_state = $this->getNextState(
-                                self::RC_FORGESHIP
+                                ResourceChoice::RC_FORGESHIP->value
                             );
                             $this->gamestate->setPlayerNonMultiactive(
                                 $player_id,
@@ -10552,8 +10534,8 @@ class Game extends \Bga\GameFramework\Table
                             'mazestock_' . $player_id
                         ) != 0
                     ) {
-                        $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
-                        //$ret = $this->dbSetChoice($player_id, self::RC_MAZE);
+                        $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
+                        //$ret = $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_MAZE);
                         //throw new feException ($ret);
                         $this->gamestate->nextState('blessing');
                     } elseif ($this->canUseTwins($player_id)) {
@@ -10569,7 +10551,7 @@ class Game extends \Bga\GameFramework\Table
                         $this->gamestate->nextState('choice');
                     }
                     //// we need to choose as we have a maze and another side
-                    //elseif ($player_info['ressource_choice'] == self::RC_SIDE_CHOICE) {
+                    //elseif ($player_info['ressource_choice'] == ResourceChoice::RC_SIDE_CHOICE) {
                     //    $this->gamestate->nextState("choice");
                     //}
                     // cannot use twins, we trigger ressource allocation
@@ -10581,8 +10563,8 @@ class Game extends \Bga\GameFramework\Table
                     ) {
                         $this->actActionChoice('ressource', $otherDie);
                     } elseif ($otherSide == 'ship') {
-                        $this->dbSetChoice($player_id, self::RC_FORGESHIP);
-                        $next_state = $this->getNextState(self::RC_FORGESHIP);
+                        $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
+                        $next_state = $this->getNextState(ResourceChoice::RC_FORGESHIP->value);
                         $this->gamestate->setPlayerNonMultiactive(
                             $player_id,
                             $next_state
@@ -10603,15 +10585,15 @@ class Game extends \Bga\GameFramework\Table
         );
 
         //if ($action == 'forge') {
-        //    $this->dbSetChoice($player_id, self::RC_FORGESHIP);
+        //    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
         //    // Go to correct State
         //    // depends on the state name
-        //    $next_state = $this->getNextState(self::RC_FORGESHIP);
+        //    $next_state = $this->getNextState(ResourceChoice::RC_FORGESHIP);
         //    $this->gamestate->setPlayerNonMultiactive($player_id, $next_state);
         //    //$this->gamestate->setPlayersMultiactive(self::getCurrentPlayerId(), $next_state );
         //}
         //else {
-        //    //$this->dbSetChoice($player_id, self::RC_RESSOURCE);
+        //    //$this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
         //
         //    $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
         //
@@ -10628,7 +10610,7 @@ class Game extends \Bga\GameFramework\Table
         //
         //    // nothing done, so choice
         //    if (!$did) {
-        //        $this->dbSetChoice($player_id, self::RC_RESSOURCE);
+        //        $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
         //        $this->gamestate->nextState("choice");
         //    }
         //    else
@@ -10985,7 +10967,7 @@ class Game extends \Bga\GameFramework\Table
 
                             if ($this->canFillHammer($player_id)) {
                                 $ressourceChoice = true;
-                                $this->dbSetChoice($player_id, 1);
+                                $this->resourceChoiceHelper->dbSetChoice($player_id, 1);
                                 $this->dbSetSideChoice($player_id, 1, 'G3');
                             } else {
                                 //$this->increaseGold($player_id, 3);
@@ -11026,7 +11008,7 @@ class Game extends \Bga\GameFramework\Table
                         $notifPlayerArgs['vp'] = 1;
                         if ($this->canFillHammer($player_id)) {
                             $ressourceChoice = true;
-                            $this->dbSetChoice($player_id, 1);
+                            $this->resourceChoiceHelper->dbSetChoice($player_id, 1);
                             $this->dbSetSideChoice($player_id, 1, 'G3');
                         } else {
                             //$this->increaseGold($player_id, 3);
@@ -11200,7 +11182,7 @@ class Game extends \Bga\GameFramework\Table
                         $this->dbIncBoar($this->getBoar($side['type']), true);
                         $this->setChoice(
                             $this->getBoar($side['type']),
-                            self::RC_RESSOURCE
+                            ResourceChoice::RC_RESSOURCE
                         );
                     }
                     // Misfortune
@@ -11212,7 +11194,7 @@ class Game extends \Bga\GameFramework\Table
                             $side['type'],
                             $mis_player_id
                         );
-                        $this->setChoice($mis_player_id, self::RC_RESSOURCE);
+                        $this->setChoice($mis_player_id, ResourceChoice::RC_RESSOURCE);
                     }
 
                     self::notifyAllPlayers(
@@ -11762,7 +11744,7 @@ class Game extends \Bga\GameFramework\Table
                 if (
                     $this->tokens->getTokenState("triple_$player_id") == 1 &&
                     $this->tokens->getTokenLocation('celestial_choice') !=
-                        'ship'
+                    'ship'
                 ) {
                     $cost = $cost - 4;
                 }
@@ -11837,7 +11819,7 @@ class Game extends \Bga\GameFramework\Table
                     $celestialExploit = true;
                     break;
 
-                // @todo: add a control on exploit forge so a player cannot take another die face than expected!
+                    // @todo: add a control on exploit forge so a player cannot take another die face than expected!
             }
         }
 
@@ -11980,7 +11962,7 @@ class Game extends \Bga\GameFramework\Table
 
             $ressourceChoice = $this->setChoice($player_id, null);
 
-            if ($ressourceChoice != self::RC_FORGESHIP) {
+            if ($ressourceChoice != ResourceChoice::RC_FORGESHIP->value) {
                 // Go to correct State
                 // depends on the state name
                 $next_state = $this->getNextState($ressourceChoice);
@@ -12013,7 +11995,7 @@ class Game extends \Bga\GameFramework\Table
             if ($this->getGameStateValue('celestialRunning')) {
                 $this->setGameStateValue('celestialRunning', 0);
                 $this->incGameStateValue('exploitRemainingThrows', -1);
-                $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
             }
             //throw new feException("truc dd" . $this->getNextState());
             $this->gamestate->nextState($this->getNextState());
@@ -12276,7 +12258,7 @@ class Game extends \Bga\GameFramework\Table
         }
 
         if ($roll == 'doubleUpgrade' && !$this->canUseTwins($player_id)) {
-            $this->dbSetChoice($player_id, self::RC_FORGESHIP);
+            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
         }
 
         if (!$auto) {
@@ -12313,7 +12295,7 @@ class Game extends \Bga\GameFramework\Table
 
         // refuse conversion
         if (!$willDo) {
-            //$this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+            //$this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
             $this->setChoice($player_id, null);
             $this->gamestate->setPlayerNonMultiactive($player_id, 'nextState');
         } else {
@@ -12708,14 +12690,14 @@ class Game extends \Bga\GameFramework\Table
                         $ressources
                     );
                     // Even if player has a cerberus token, should not be asked to rethrow
-                    $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
                     $disable = true;
                     break;
                 //case 'oustAll':
                 //    // mode die1
                 //    $disable = $this->takeRessource2($player_id, 'blessing', $sideNum, $side, $ressources);
                 //    // Even if player has a cerberus token, should not be asked to rethrow
-                //    $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+                //    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
                 //    $disable = true;
                 //    break;
                 case 'throwCelestialDie':
@@ -12973,7 +12955,7 @@ class Game extends \Bga\GameFramework\Table
                         $this->getPlayersRessources()
                     );
                     if ($sideNum == 5) {
-                        $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+                        $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
                         $disable = true;
                     } else {
                         $disable = false;
@@ -13018,7 +13000,7 @@ class Game extends \Bga\GameFramework\Table
                                 $this->ressourceToText[$res];
                         }
                     }
-                    $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
                     $disable = true;
 
                     self::notifyAllPlayers(
@@ -13175,7 +13157,7 @@ class Game extends \Bga\GameFramework\Table
             ) {
                 $boarId = $this->getBoar($side1['type']);
                 $this->dbIncBoar($boarId, true);
-                $this->setChoice($boarId, self::RC_RESSOURCE);
+                $this->setChoice($boarId, ResourceChoice::RC_RESSOURCE);
             }
             $side_def = $this->dice_sides[$side1['type']];
             if (
@@ -13212,7 +13194,7 @@ class Game extends \Bga\GameFramework\Table
             ) {
                 $boarId = $this->getBoar($side2['type']);
                 $this->dbIncBoar($boarId, true);
-                $this->setChoice($boarId, self::RC_RESSOURCE);
+                $this->setChoice($boarId, ResourceChoice::RC_RESSOURCE);
             }
             $side_def = $this->dice_sides[$side2['type']];
             if (
@@ -13384,12 +13366,12 @@ class Game extends \Bga\GameFramework\Table
                 $this->getPlayersAdditionnalInfo()[$this->getActivePlayerId()][
                     'forge'
                 ] == ''
-                    ? false
-                    : true,
+                ? false
+                : true,
             'currentTurn' => self::getGameStateValue('turnCount'),
             'maxTurn' => self::getGameStateValue('nbTurns'),
             'scepters' =>
-                self::getGameStateValue('scepterFireshard') +
+            self::getGameStateValue('scepterFireshard') +
                 self::getGameStateValue('scepterMoonshard'),
             'companion' => $companions,
         ];
@@ -13409,7 +13391,7 @@ class Game extends \Bga\GameFramework\Table
         // Say to JS if player is currently forging ? from global or ?
         return [
             'scepters' =>
-                self::getGameStateValue('scepterFireshard') +
+            self::getGameStateValue('scepterFireshard') +
                 self::getGameStateValue('scepterMoonshard'),
             'companion' => $companions,
         ];
@@ -13565,7 +13547,7 @@ class Game extends \Bga\GameFramework\Table
             $player_info = $players_info[$player_id];
 
             // if we are in a sideChoice
-            if ($player_info['ressource_choice'] == self::RC_SIDE_CHOICE) {
+            if ($player_info['ressource_choice'] == ResourceChoice::RC_SIDE_CHOICE->value) {
                 $sides[$player_id]['action'] = 'side';
                 $dice_number = $this->getGameStateValue('enigmaDieNumber');
                 // used to trigger last effect of the maze
@@ -13639,7 +13621,7 @@ class Game extends \Bga\GameFramework\Table
                 }
 
                 $sides[$player_id]['mirror'] = $nbSideChoice;
-            } elseif ($player_info['ressource_choice'] == self::RC_RESSOURCE) {
+            } elseif ($player_info['ressource_choice'] == ResourceChoice::RC_RESSOURCE->value) {
                 $sides[$player_id]['action'] = 'ressource';
                 $sideNum = 0;
                 // If we are in Ressource Choice
@@ -13672,7 +13654,7 @@ class Game extends \Bga\GameFramework\Table
                 // celestial die specific sides
                 if (
                     $this->tokens->getTokenLocation('celestial_choice') !=
-                        '0' &&
+                    '0' &&
                     $this->tokens->getTokenLocation('celestial_choice') != null
                 ) {
                     $sides[$player_id]['sides'][0] = [
@@ -13759,7 +13741,7 @@ class Game extends \Bga\GameFramework\Table
                         $sides[$player_id]['sides'][0] = [
                             'id' => '',
                             'type' =>
-                                $players_info[$player_id]['side_choice_1'],
+                            $players_info[$player_id]['side_choice_1'],
                             'num' => 1,
                         ];
                         $sideNum = 1;
@@ -13772,7 +13754,7 @@ class Game extends \Bga\GameFramework\Table
                         $sides[$player_id]['sides'][0] = [
                             'id' => '',
                             'type' =>
-                                $players_info[$player_id]['side_choice_2'],
+                            $players_info[$player_id]['side_choice_2'],
                             'num' => 2,
                         ];
                         $sideNum = 2;
@@ -13845,10 +13827,10 @@ class Game extends \Bga\GameFramework\Table
                 // bug 10866
                 //$sides[$player_id]['sideNum'] = $sideNum;
             } elseif (
-                $player_info['ressource_choice'] == self::RC_ACTION_CHOICE
+                $player_info['ressource_choice'] == ResourceChoice::RC_ACTION_CHOICE->value
             ) {
                 $sides = $this->generateActionChoiceArgs($player_id, $sides);
-            } elseif ($player_info['ressource_choice'] == self::RC_MAZE) {
+            } elseif ($player_info['ressource_choice'] == ResourceChoice::RC_MAZE->value) {
                 $sides = $this->generateMazeChoiceArgs($player_id, $sides);
             }
         }
@@ -13935,8 +13917,8 @@ class Game extends \Bga\GameFramework\Table
 
         $retour['minusCost'] =
             $retour[$player_id]['minusCost'] == 0
-                ? ''
-                : $retour[$player_id]['minusCost'] . ' [G]';
+            ? ''
+            : $retour[$player_id]['minusCost'] . ' [G]';
         return $retour;
     }
 
@@ -14020,9 +14002,9 @@ class Game extends \Bga\GameFramework\Table
                         'none'
                     );
                     break;
-                //case "throwCelestialDie":
-                //    $retour['celestial'] = $this->celestialDie[$this->getGameStateValue( "celestialDieSide")];
-                //    break ;
+                    //case "throwCelestialDie":
+                    //    $retour['celestial'] = $this->celestialDie[$this->getGameStateValue( "celestialDieSide")];
+                    //    break ;
             }
 
             $retour['info'] = [
@@ -14091,7 +14073,7 @@ class Game extends \Bga\GameFramework\Table
             $retour[$player_id]['reschoi'] = $player_info['ressource_choice'];
             //throw new feException(print_r($player_info));
             // if we are in a sideChoice
-            if ($player_info['ressource_choice'] == self::RC_SIDE_CHOICE) {
+            if ($player_info['ressource_choice'] == ResourceChoice::RC_SIDE_CHOICE->value) {
                 $retour[$player_id]['action'] = 'side';
                 if ($card_info['action'] == 'oustAll') {
                     $retour[$player_id][
@@ -14202,7 +14184,7 @@ class Game extends \Bga\GameFramework\Table
                 }
 
                 $retour[$player_id]['mirror'] = $mirror;
-            } elseif ($player_info['ressource_choice'] == self::RC_RESSOURCE) {
+            } elseif ($player_info['ressource_choice'] == ResourceChoice::RC_RESSOURCE->value) {
                 $retour[$player_id]['action'] = 'ressource';
                 $choiceExclude = [
                     '-1',
@@ -14251,7 +14233,7 @@ class Game extends \Bga\GameFramework\Table
                 // celestial die specific sides
                 if (
                     $this->tokens->getTokenLocation('celestial_choice') !=
-                        '0' &&
+                    '0' &&
                     $this->tokens->getTokenLocation('celestial_choice') != null
                 ) {
                     $retour[$player_id]['sides'][0] = [
@@ -14277,10 +14259,10 @@ class Game extends \Bga\GameFramework\Table
 
                 switch ($card_info['action']) {
                     case '4Throws':
-                    //$die_number =  $this->getGameStateValue( "enigmaDieNumber");
-                    //$retour[$player_id]['sides'][0] = array('id' => '', 'type' => $players_info[$player_id]['side_choice_' . $die_number], 'num' => $die_number);
-                    //$sideNum = $die_number;
-                    //break;
+                        //$die_number =  $this->getGameStateValue( "enigmaDieNumber");
+                        //$retour[$player_id]['sides'][0] = array('id' => '', 'type' => $players_info[$player_id]['side_choice_' . $die_number], 'num' => $die_number);
+                        //$sideNum = $die_number;
+                        //break;
                     case 'fullThrow2':
                     case 'looseThrow':
                     case '4ThrowsTransform':
@@ -14318,7 +14300,7 @@ class Game extends \Bga\GameFramework\Table
                             $retour[$player_id]['sides'][0] = [
                                 'id' => '',
                                 'type' =>
-                                    $players_info[$player_id]['side_choice_1'],
+                                $players_info[$player_id]['side_choice_1'],
                                 'num' => 1,
                             ];
                             $sideNum = 1;
@@ -14331,7 +14313,7 @@ class Game extends \Bga\GameFramework\Table
                             $retour[$player_id]['sides'][0] = [
                                 'id' => '',
                                 'type' =>
-                                    $players_info[$player_id]['side_choice_2'],
+                                $players_info[$player_id]['side_choice_2'],
                                 'num' => 2,
                             ];
                             $sideNum = 2;
@@ -14396,7 +14378,7 @@ class Game extends \Bga\GameFramework\Table
                         //if ($players_info[$player_id]['side_choice_1'] == 'triple' || $players_info[$player_id]['side_choice_2'] == 'triple' )
                         if (
                             $this->tokens->getTokenState("triple_$player_id") ==
-                                1 &&
+                            1 &&
                             $sideNum < 3
                         ) {
                             $retour[$player_id]['triple'] = 3;
@@ -14704,7 +14686,7 @@ class Game extends \Bga\GameFramework\Table
 
                 //$retour[$player_id]['possibilities'] = $this->calculatePossibilities($player_id, $retour[$player_id]['sides'][0]['type'], $sideNum, $card_info['action'], $retour[$player_id]['triple']);
             } elseif (
-                $player_info['ressource_choice'] == self::RC_ACTION_CHOICE
+                $player_info['ressource_choice'] == ResourceChoice::RC_ACTION_CHOICE->value
             ) {
                 $retour = $this->generateActionChoiceArgs($player_id, $retour);
                 //if ($players_info[$player_id]['side_choice_1'] != "0" && $players_info[$player_id]['side_choice_2'] != "0") {
@@ -14720,7 +14702,7 @@ class Game extends \Bga\GameFramework\Table
                 //        $retour[$player_id]['action'] = 'cerberusToken';
                 //    }
                 //}
-            } elseif ($player_info['ressource_choice'] == self::RC_MAZE) {
+            } elseif ($player_info['ressource_choice'] == ResourceChoice::RC_MAZE->value) {
                 $retour = $this->generateMazeChoiceArgs($player_id, $retour);
                 //// do we manage a ressource choice?
                 //if ($this->tokens->getTokenLocation("mazechoice_" . $player_id) != "0") {
@@ -15016,11 +14998,11 @@ class Game extends \Bga\GameFramework\Table
             if ($monoResolution == 0) {
                 // if action ressource to allocate or choice => ressource choice
                 if (
-                    $this->isRessourceChoice(self::RC_RESSOURCE) ||
-                    $this->isRessourceChoice(self::RC_ACTION_CHOICE) ||
-                    $this->isRessourceChoice(self::RC_SIDE_CHOICE) ||
-                    $this->isRessourceChoice(self::RC_MAZE) ||
-                    $this->isRessourceChoice(self::RC_MISFORTUNE)
+                    $this->isRessourceChoice(ResourceChoice::RC_RESSOURCE) ||
+                    $this->isRessourceChoice(ResourceChoice::RC_ACTION_CHOICE) ||
+                    $this->isRessourceChoice(ResourceChoice::RC_SIDE_CHOICE) ||
+                    $this->isRessourceChoice(ResourceChoice::RC_MAZE) ||
+                    $this->isRessourceChoice(ResourceChoice::RC_MISFORTUNE)
                 ) {
                     // activation of players needging a choice
                     $this->players_info = null;
@@ -15031,13 +15013,13 @@ class Game extends \Bga\GameFramework\Table
                     foreach ($players_info as $player_id => $players) {
                         if (
                             $players['ressource_choice'] ==
-                                self::RC_SIDE_CHOICE ||
+                            ResourceChoice::RC_SIDE_CHOICE->value ||
                             $players['ressource_choice'] ==
-                                self::RC_RESSOURCE ||
+                            ResourceChoice::RC_RESSOURCE->value ||
                             $players['ressource_choice'] ==
-                                self::RC_ACTION_CHOICE ||
-                            $players['ressource_choice'] == self::RC_MAZE ||
-                            $players['ressource_choice'] == self::RC_MISFORTUNE
+                            ResourceChoice::RC_ACTION_CHOICE->value ||
+                            $players['ressource_choice'] == ResourceChoice::RC_MAZE->value ||
+                            $players['ressource_choice'] == ResourceChoice::RC_MISFORTUNE->value
                         ) {
                             $multi[$i++] = $player_id;
                             self::giveExtraTime($player_id, 60);
@@ -15048,7 +15030,7 @@ class Game extends \Bga\GameFramework\Table
                     return;
                 }
                 // If ship needs to be managed
-                elseif ($this->isRessourceChoice(self::RC_FORGESHIP)) {
+                elseif ($this->isRessourceChoice(ResourceChoice::RC_FORGESHIP)) {
                     //if ($this->hasUnusedShip()) {
                     $player_id = self::getActivePlayerId();
                     for ($i = 1; $i <= $this->getPlayersNumber(); $i++) {
@@ -15077,7 +15059,7 @@ class Game extends \Bga\GameFramework\Table
                                 false,
                                 false
                             );
-                            $this->setChoice($player_id, self::RC_RESSOURCE);
+                            $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
                         }
                         if ($players_info[$player_id]['side_choice_2'] != '0') {
                             $did = $this->blessing(
@@ -15088,7 +15070,7 @@ class Game extends \Bga\GameFramework\Table
                                 false,
                                 false
                             );
-                            $this->setChoice($player_id, self::RC_RESSOURCE);
+                            $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
                         }
                         $player_id = $this->getNextPlayerTable()[$player_id];
                     }
@@ -15122,12 +15104,12 @@ class Game extends \Bga\GameFramework\Table
 
                     // if player has a ressource choice
                     if (
-                        $res_choice == self::RC_RESSOURCE ||
-                        $res_choice == self::RC_ACTION_CHOICE ||
-                        $res_choice == self::RC_SIDE_CHOICE ||
-                        $res_choice == self::RC_MAZE
+                        $res_choice == ResourceChoice::RC_RESSOURCE->value ||
+                        $res_choice == ResourceChoice::RC_ACTION_CHOICE->value ||
+                        $res_choice == ResourceChoice::RC_SIDE_CHOICE->value ||
+                        $res_choice == ResourceChoice::RC_MAZE->value
                     ) {
-                        // || $res_choice == self::RC_MISFORTUNE) {
+                        // || $res_choice == ResourceChoice::RC_MISFORTUNE) {
                         self::giveExtraTime($player_id, 60);
                         $this->gamestate->setPlayersMultiactive(
                             [$player_id],
@@ -15139,7 +15121,7 @@ class Game extends \Bga\GameFramework\Table
                     // if player has a ship => enable only this user
                     //elseif ($this->hasUnusedShip($player_id)) {
                     elseif (
-                        $this->isRessourceChoice(self::RC_FORGESHIP, $player_id)
+                        $this->isRessourceChoice(ResourceChoice::RC_FORGESHIP, $player_id)
                     ) {
                         self::giveExtraTime($player_id, 45);
                         $this->gamestate->setPlayersMultiactive(
@@ -15179,7 +15161,7 @@ class Game extends \Bga\GameFramework\Table
                                 false
                             );
                         }
-                        $this->setChoice($player_id, self::RC_RESSOURCE);
+                        $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
                         //throw new feException(print_r($this->getPlayersAdditionnalInfo()[$player_id]));
                         self::notifyAllPlayers(
                             'updateCounters',
@@ -15314,7 +15296,7 @@ class Game extends \Bga\GameFramework\Table
 
         foreach ($players_info as $player_id => $players) {
             if (
-                $players['ressource_choice'] == self::RC_NOTHING_TODO &&
+                $players['ressource_choice'] == ResourceChoice::RC_NOTHING_TODO &&
                 $players['side_choice_1'] == '0' &&
                 $players['side_choice_2'] == '0'
             ) {
@@ -15350,11 +15332,11 @@ class Game extends \Bga\GameFramework\Table
             self::DbQuery('UPDATE player SET player_is_multiactive = 0');
             // if action ressource to allocate or choice => ressource choice
             if (
-                $this->isRessourceChoice(self::RC_RESSOURCE) ||
-                $this->isRessourceChoice(self::RC_ACTION_CHOICE) ||
-                $this->isRessourceChoice(self::RC_SIDE_CHOICE) ||
-                $this->isRessourceChoice(self::RC_MAZE) ||
-                $this->isRessourceChoice(self::RC_MISFORTUNE)
+                $this->isRessourceChoice(ResourceChoice::RC_RESSOURCE) ||
+                $this->isRessourceChoice(ResourceChoice::RC_ACTION_CHOICE) ||
+                $this->isRessourceChoice(ResourceChoice::RC_SIDE_CHOICE) ||
+                $this->isRessourceChoice(ResourceChoice::RC_MAZE) ||
+                $this->isRessourceChoice(ResourceChoice::RC_MISFORTUNE)
             ) {
                 // activation of players needging a choice
                 $this->players_info = null;
@@ -15364,12 +15346,12 @@ class Game extends \Bga\GameFramework\Table
 
                 foreach ($players_info as $player_id => $players) {
                     if (
-                        $players['ressource_choice'] == self::RC_SIDE_CHOICE ||
-                        $players['ressource_choice'] == self::RC_RESSOURCE ||
+                        $players['ressource_choice'] == ResourceChoice::RC_SIDE_CHOICE->value ||
+                        $players['ressource_choice'] == ResourceChoice::RC_RESSOURCE->value ||
                         $players['ressource_choice'] ==
-                            self::RC_ACTION_CHOICE ||
-                        $players['ressource_choice'] == self::RC_MAZE ||
-                        $players['ressource_choice'] == self::RC_MISFORTUNE
+                        ResourceChoice::RC_ACTION_CHOICE->value ||
+                        $players['ressource_choice'] == ResourceChoice::RC_MAZE->value ||
+                        $players['ressource_choice'] == ResourceChoice::RC_MISFORTUNE->value
                     ) {
                         $multi[$i++] = $player_id;
                         self::giveExtraTime($player_id, 60);
@@ -15380,7 +15362,7 @@ class Game extends \Bga\GameFramework\Table
                 return true;
             }
             // If ship needs to be managed
-            elseif ($this->isRessourceChoice(self::RC_FORGESHIP)) {
+            elseif ($this->isRessourceChoice(ResourceChoice::RC_FORGESHIP)) {
                 //if ($this->hasUnusedShip()) {
                 $player_id = self::getActivePlayerId();
                 for ($i = 1; $i <= $this->getPlayersNumber(); $i++) {
@@ -15389,7 +15371,7 @@ class Game extends \Bga\GameFramework\Table
                     if (
                         $this->getPlayersAdditionnalInfo()[$player_id][
                             'ressource_choice'
-                        ] == self::RC_FORGESHIP
+                        ] == ResourceChoice::RC_FORGESHIP->value
                     ) {
                         self::giveExtraTime($player_id, 45);
                         $this->gamestate->setPlayersMultiactive(
@@ -15429,7 +15411,7 @@ class Game extends \Bga\GameFramework\Table
                             false,
                             false
                         );
-                        $this->setChoice($player_id, self::RC_RESSOURCE);
+                        $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
                     }
                     if ($players_info[$player_id]['side_choice_2'] != '0') {
                         $did = $this->blessing(
@@ -15440,7 +15422,7 @@ class Game extends \Bga\GameFramework\Table
                             false,
                             false
                         );
-                        $this->setChoice($player_id, self::RC_RESSOURCE);
+                        $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
                     }
 
                     $player_id = $this->getNextPlayerTable()[$player_id];
@@ -15485,7 +15467,7 @@ class Game extends \Bga\GameFramework\Table
                             false,
                             false
                         );
-                        $this->setChoice($player_id, self::RC_RESSOURCE);
+                        $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
                     }
                     if ($players_info[$player_id]['side_choice_2'] != '0') {
                         $did = $this->blessing(
@@ -15496,7 +15478,7 @@ class Game extends \Bga\GameFramework\Table
                             false,
                             false
                         );
-                        $this->setChoice($player_id, self::RC_RESSOURCE);
+                        $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
                     }
                     $player_id = $this->getNextPlayerTable()[$player_id];
                 }
@@ -15562,11 +15544,11 @@ class Game extends \Bga\GameFramework\Table
         ) {
             if (
                 $reinforcement['type_arg'] == '0' &&
-                    $reinforcement['type'] == 'companion' and
+                $reinforcement['type'] == 'companion' and
                 $this->tokens->getTokenState(
                     'companion_' . $reinforcement['id']
                 ) <
-                    5
+                5
             ) {
                 $this->actReinforcement(
                     $reinforcement['id'],
@@ -15621,10 +15603,10 @@ class Game extends \Bga\GameFramework\Table
             );
         } else {
             $choice = $this->blessing($player_id);
-            $act = $this->setChoice($player_id, self::RC_RESSOURCE);
+            $act = $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
 
             if (
-                $act == self::RC_NOTHING_TODO &&
+                $act == ResourceChoice::RC_NOTHING_TODO &&
                 $this->hasMazeStock($player_id)
             ) {
                 $this->mazeManagement($player_id);
@@ -15665,7 +15647,7 @@ class Game extends \Bga\GameFramework\Table
                 }
 
                 if ($hasGold && $hasTitan) {
-                    $this->dbSetChoice($player_id, self::RC_ACTION_CHOICE);
+                    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
                 }
             }
 
@@ -15680,12 +15662,12 @@ class Game extends \Bga\GameFramework\Table
             $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
 
             if (
-                $player_info['ressource_choice'] == self::RC_RESSOURCE ||
-                $player_info['ressource_choice'] == self::RC_SIDE_CHOICE ||
-                $player_info['ressource_choice'] == self::RC_MAZE ||
-                $player_info['ressource_choice'] == self::RC_ACTION_CHOICE ||
-                $player_info['ressource_choice'] == self::RC_MISFORTUNE ||
-                ($player_info['ressource_choice'] != self::RC_FORGESHIP &&
+                $player_info['ressource_choice'] == ResourceChoice::RC_RESSOURCE->value ||
+                $player_info['ressource_choice'] == ResourceChoice::RC_SIDE_CHOICE->value ||
+                $player_info['ressource_choice'] == ResourceChoice::RC_MAZE->value ||
+                $player_info['ressource_choice'] == ResourceChoice::RC_ACTION_CHOICE->value ||
+                $player_info['ressource_choice'] == ResourceChoice::RC_MISFORTUNE->value ||
+                ($player_info['ressource_choice'] != ResourceChoice::RC_FORGESHIP->value &&
                     $this->hasCerberusToken($player_id))
             ) {
                 $multi = [];
@@ -15700,7 +15682,7 @@ class Game extends \Bga\GameFramework\Table
                     'exploitEffect'
                 );
                 $this->gamestate->nextState('choice');
-            } elseif ($player_info['ressource_choice'] == self::RC_FORGESHIP) {
+            } elseif ($player_info['ressource_choice'] == ResourceChoice::RC_FORGESHIP->value) {
                 $multi = [];
                 $i = 0;
 
@@ -15727,7 +15709,7 @@ class Game extends \Bga\GameFramework\Table
     //
     //    if ($celestialRunning) {
     //        if ($this->getCelestial() == "doubleUpgrade")
-    //            $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
+    //            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
     //            $this->gamestate->nextState("nextState");
     //    }
     //}
@@ -15769,20 +15751,20 @@ class Game extends \Bga\GameFramework\Table
         //    $toTransform = $this->getRessourcesToTransform();
         //    if ($players_info[$player_id]['side_choice_1'] != '0') {
         //        if (count(array_intersect(array_keys($this->dice_sides[$players_info[$player_id]['side_choice_1']]['ressource']), $toTransform['ressource'])) != 0) {
-        //            $this->setChoice($player_id, self::RC_RESSOURCE);
+        //            $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
         //        }
         //        else {
         //            $did = $this->blessing($player_id, true, false, 1, false, false);
-        //            $this->setChoice($player_id, self::RC_RESSOURCE);
+        //            $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
         //        }
         //    }
         //    if ($players_info[$player_id]['side_choice_2'] != '0') {
         //        if (count(array_intersect(array_keys($this->dice_sides[$players_info[$player_id]['side_choice_2']]['ressource']), $toTransform['ressource'])) != 0) {
-        //            $this->setChoice($player_id, self::RC_RESSOURCE);
+        //            $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
         //        }
         //        else {
         //            $did = $this->blessing($player_id, false, true, 1, false, false);
-        //            $this->setChoice($player_id, self::RC_RESSOURCE);
+        //            $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
         //        }
         //    }
         //    //$this->setChoice($player_id, null);
@@ -15810,7 +15792,7 @@ class Game extends \Bga\GameFramework\Table
                             )
                         ) != 0
                     ) {
-                        $this->setChoice($cur_player_id, self::RC_RESSOURCE);
+                        $this->setChoice($cur_player_id, ResourceChoice::RC_RESSOURCE);
                     } else {
                         $did = $this->blessing(
                             $cur_player_id,
@@ -15820,7 +15802,7 @@ class Game extends \Bga\GameFramework\Table
                             false,
                             false
                         );
-                        $this->setChoice($cur_player_id, self::RC_RESSOURCE);
+                        $this->setChoice($cur_player_id, ResourceChoice::RC_RESSOURCE);
                     }
                 }
                 if ($players_info[$cur_player_id]['side_choice_2'] != '0') {
@@ -15838,7 +15820,7 @@ class Game extends \Bga\GameFramework\Table
                             )
                         ) != 0
                     ) {
-                        $this->setChoice($cur_player_id, self::RC_RESSOURCE);
+                        $this->setChoice($cur_player_id, ResourceChoice::RC_RESSOURCE);
                     } else {
                         $did = $this->blessing(
                             $cur_player_id,
@@ -15848,7 +15830,7 @@ class Game extends \Bga\GameFramework\Table
                             false,
                             false
                         );
-                        $this->setChoice($cur_player_id, self::RC_RESSOURCE);
+                        $this->setChoice($cur_player_id, ResourceChoice::RC_RESSOURCE);
                     }
                 }
                 $cur_player_id = $this->getNextPlayerTable()[$cur_player_id];
@@ -15933,7 +15915,7 @@ class Game extends \Bga\GameFramework\Table
                         }
                         $this->dbSetSideChoice($player_id, 1, -1);
                         $this->dbSetSideChoice($player_id, 2, -1);
-                        $this->dbSetChoice($player_id, self::RC_SIDE_CHOICE);
+                        $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_SIDE_CHOICE);
                         $ressourceChoice = true;
                         break;
 
@@ -15969,7 +15951,7 @@ class Game extends \Bga\GameFramework\Table
                         $this->increaseMoonShard($player_id, 3);
                         if ($this->canFillHammer($player_id)) {
                             $ressourceChoice = true;
-                            $this->dbSetChoice($player_id, 1);
+                            $this->resourceChoiceHelper->dbSetChoice($player_id, 1);
                             $this->dbSetSideChoice($player_id, 1, 'G3');
                         } else {
                             $scepter = $this->increaseGold(
@@ -16233,7 +16215,7 @@ class Game extends \Bga\GameFramework\Table
                             );
                         }
                         // player has to choose the resource
-                        $this->dbSetChoice($player_id, self::RC_RESSOURCE);
+                        $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
                         $ressourceChoice = true;
                         break;
                     case 'throwCelestialDie':
@@ -16243,9 +16225,9 @@ class Game extends \Bga\GameFramework\Table
                         if (in_array($side, ['doubleUpgrade'])) {
                             $remainingThrows++;
                             $goAgain = true;
-                            $this->dbSetChoice($player_id, self::RC_FORGESHIP);
+                            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_FORGESHIP);
                             //$this->incGameStateValue("exploitRemainingThrows", 1);
-                            //$this->dbSetChoice($player_id, self::RC_RESSOURCE);
+                            //$this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
                             //$ressourceChoice = true;
                         }
                         //    $forge = true;
@@ -16412,10 +16394,10 @@ class Game extends \Bga\GameFramework\Table
                                         [
                                             'i18n' => ['card_name_trans'],
                                             'player_name' =>
-                                                $player_info['player_name'],
+                                            $player_info['player_name'],
                                             'card_name' => $card_info['name'],
                                             'card_name_trans' =>
-                                                $card_info['name'],
+                                            $card_info['name'],
                                             'ressources' => $this->buildRessourceNotif(
                                                 $lost
                                             ),
@@ -16462,7 +16444,7 @@ class Game extends \Bga\GameFramework\Table
                         // right hand
                         // #35764 replace of getgoldResource to getGold
                         if ($this->getGold($player_id) > 0) {
-                            $this->dbSetChoice($player_id, self::RC_RESSOURCE);
+                            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
                             $ressourceChoice = true;
                         }
                         break;
@@ -16472,7 +16454,7 @@ class Game extends \Bga\GameFramework\Table
                             // add 4G (choice hammer / scepter)
                             if ($this->canFillHammer($player_id)) {
                                 $ressourceChoice = true;
-                                $this->dbSetChoice($player_id, 1);
+                                $this->resourceChoiceHelper->dbSetChoice($player_id, 1);
                                 $this->dbSetSideChoice($player_id, 1, 'G4');
                                 $remainingThrows = 100;
                                 break;
@@ -16652,9 +16634,9 @@ class Game extends \Bga\GameFramework\Table
                                         'i18n' => ['card_name_trans'],
                                         'player_name' => self::getActivePlayerName(),
                                         'ousted_player' =>
-                                            $players['player_color'],
+                                        $players['player_color'],
                                         'ousted_player_name' =>
-                                            $players['player_name'],
+                                        $players['player_name'],
                                         'card_name' => $card_info['name'],
                                         'card_name_trans' => $card_info['name'],
                                     ]
@@ -16705,7 +16687,7 @@ class Game extends \Bga\GameFramework\Table
                                         ),
                                         [
                                             'player_name' =>
-                                                $players['player_name'],
+                                            $players['player_name'],
                                             'ressources' => $vp . ' [VP]',
                                         ]
                                     );
@@ -16745,7 +16727,7 @@ class Game extends \Bga\GameFramework\Table
 
                                 //$this->dbSetSideChoice($player_id, 1, -1);
                                 //$this->dbSetSideChoice($player_id, 2, -1);
-                                //$this->dbSetChoice($player_id, self::RC_SIDE_CHOICE);
+                                //$this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_SIDE_CHOICE);
                                 //$ressourceChoice = true;
                             }
                         }
@@ -16779,7 +16761,7 @@ class Game extends \Bga\GameFramework\Table
                         //goddess
                         $this->dbSetSideChoice($player_id, 1, -1);
                         $this->dbSetSideChoice($player_id, 2, -1);
-                        $this->dbSetChoice($player_id, self::RC_SIDE_CHOICE);
+                        $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_SIDE_CHOICE);
                         $ressourceChoice = true;
                         $this->setGameStateValue('goddessChoice', 1);
                         self::notifyAllPlayers(
@@ -16827,13 +16809,13 @@ class Game extends \Bga\GameFramework\Table
                     case 'greatGolem':
                         //$this->tokens->setTokenState('mazestock_' . $player_id, 2);
                         $this->tokens->incTokenState("mazestock_$player_id", 2);
-                        // $this->dbSetChoice($player_id, self::RC_MAZE);
+                        // $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_MAZE);
                         break;
                     case 'timeGolem':
                         //$this->tokens->incTokenState("mazestock_$player_id", -2);
                         $this->setGameStateValue('timeGolem', -2);
                         //$this->tokens->setTokenState('mazestock_' . $player_id, -2);
-                        // $this->dbSetChoice($player_id, self::RC_MAZE);
+                        // $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_MAZE);
                         break;
                 }
             }
@@ -17161,9 +17143,7 @@ class Game extends \Bga\GameFramework\Table
                             '${player_name} looses ${ressources} due to its position on the Titan board'
                         ),
                         [
-                            'player_name' => $this->loadPlayersBasicInfos()[
-                                $player_id
-                            ]['player_name'],
+                            'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
                             'player_id' => $player_id,
                             'ressources' => $this->buildRessourceNotif([
                                 'vp' => $reward * -1,
@@ -17179,9 +17159,7 @@ class Game extends \Bga\GameFramework\Table
                             '${player_name} gets ${ressources} due to its position on the Titan board'
                         ),
                         [
-                            'player_name' => $this->loadPlayersBasicInfos()[
-                                $player_id
-                            ]['player_name'],
+                            'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
                             'player_id' => $player_id,
                             'ressources' => $this->buildRessourceNotif([
                                 'vp' => $reward,
@@ -17203,9 +17181,7 @@ class Game extends \Bga\GameFramework\Table
         $this->gamestate->nextState();
     }
 
-    function stPoule()
-    {
-    }
+    function stPoule() {}
 
     //////////////////////////////////////////////////////////////////////////////
     //////////// Zombie
@@ -17226,7 +17202,7 @@ class Game extends \Bga\GameFramework\Table
         // remove all sides + boar
         $this->dbSetSideChoice($active_player, 1, '0');
         $this->dbSetSideChoice($active_player, 2, '0');
-        $this->dbSetChoice($active_player, self::RC_NOTHING_TODO);
+        $this->resourceChoiceHelper->dbSetChoice($active_player, ResourceChoice::RC_NOTHING_TODO);
         $this->tokens->setTokenState('mazechoice_' . $active_player, '0');
         $this->tokens->setTokenState('mazestock_' . $active_player, '0');
         $this->tokens->setTokenState('puzzle_' . $active_player, '0');
