@@ -15,7 +15,9 @@
  *
  *
  */
-class Tokens extends APP_GameClass {
+namespace Bga\Games\diceforge;
+
+class Tokens extends \APP_DbObject {
     var $table;
     var $autoreshuffle = false; // If true, a new deck is automatically formed with a reshuffled discard as soon at is needed
     var $autoreshuffle_trigger = null; // Callback to a method called when an autoreshuffle occurs

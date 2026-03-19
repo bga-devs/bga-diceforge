@@ -16,13 +16,18 @@
  *
  */
 
+declare(strict_types=1);
+
+namespace Bga\Games\diceforge;
+
+require_once 'tokens.php';
+
+use Bga\GameFramework\BgaVisibleSystemException;
+use Bga\GameFramework\BgaUserException;
 use Bga\GameFramework\Components\Deck;
 use Bga\GameFramework\StateType;
-use Bga\GameFramework\Table;
 
-require_once 'modules/tokens.php';
-
-class diceforge extends Table
+class Game extends \Bga\GameFramework\Table
 {
     const MAX_GOLD = 12;
     const MAX_FIRESHARD = 6;
@@ -75,6 +80,7 @@ class diceforge extends Table
         //  the corresponding ID in gameoptions.inc.php.
         // Note: afterwards, you can get/set the global variables with getGameStateValue/setGameStateInitialValue/setGameStateValue
         parent::__construct();
+        require 'material.inc.php';
         self::initGameStateLabels([
             'firstPlayerId' => 10,
             'diceThrows' => 11,
@@ -668,7 +674,7 @@ class diceforge extends Table
             $this->sides->countCardsInLocations()
             as $location => $number
         ) {
-            if (substr($location, 0, 2) !== 'di' && $location !== 'forging') {
+            if (substr((string)$location, 0, 2) !== 'di' && $location !== 'forging') {
                 foreach ($this->sides->getCardsInLocation($location) as $card) {
                     $result['sides'][$location][] = $card;
                 }
@@ -6100,39 +6106,39 @@ class diceforge extends Table
 
         $notif = [];
         if (isset($args['gold']) && $args['gold'] != 0) {
-            $notif[] = abs($args['gold']) . ' [G]' . $toAdd;
+            $notif[] = abs((int)$args['gold']) . ' [G]' . $toAdd;
         }
 
         if (isset($args['moonshard']) && $args['moonshard'] != 0) {
-            $notif[] = abs($args['moonshard']) . ' [MS]';
+            $notif[] = abs((int)$args['moonshard']) . ' [MS]';
         }
 
         if (isset($args['fireshard']) && $args['fireshard'] != 0) {
-            $notif[] = abs($args['fireshard']) . ' [FS]';
+            $notif[] = abs((int)$args['fireshard']) . ' [FS]';
         }
 
         if (isset($args['hammer']) && $args['hammer'] != 0) {
-            $notif[] = abs($args['hammer']) . ' [H]';
+            $notif[] = abs((int)$args['hammer']) . ' [H]';
         }
 
         if (isset($args['vp'])) {
-            $notif[] = abs($args['vp']) . ' [VP]';
+            $notif[] = abs((int)$args['vp']) . ' [VP]';
         }
 
         if (isset($args['scepter']) && $args['scepter'] != 0) {
-            $notif[] = abs($args['scepter']) . ' [S]';
+            $notif[] = abs((int)$args['scepter']) . ' [S]';
         }
 
         if (isset($args['ancientshard']) && $args['ancientshard'] != 0) {
-            $notif[] = abs($args['ancientshard']) . ' [AS]';
+            $notif[] = abs((int)$args['ancientshard']) . ' [AS]';
         }
 
         if (isset($args['maze']) && $args['maze'] != 0) {
-            $notif[] = abs($args['maze']) . ' [M]';
+            $notif[] = abs((int)$args['maze']) . ' [M]';
         }
 
         if (isset($args['loyalty']) && $args['loyalty'] != 0) {
-            $notif[] = abs($args['loyalty']) . ' [L]';
+            $notif[] = abs((int)$args['loyalty']) . ' [L]';
         }
 
         return implode(' ', $notif);
@@ -7013,7 +7019,7 @@ class diceforge extends Table
             return true;
         }
 
-        for ($i = 0; $i < abs($mazestock) + abs($timeGolem); $i++) {
+        for ($i = 0; $i < abs((int)$mazestock) + abs((int)$timeGolem); $i++) {
             $position = $this->tokens->getTokenState('position_' . $player_id);
             $this->dbSetChoice($player_id, self::RC_NOTHING_TODO);
 
@@ -7224,8 +7230,8 @@ class diceforge extends Table
 
         // check at least one of movement
         if (
-            abs($this->tokens->getTokenState('mazestock_' . $player_id)) +
-                abs($timeGolem) <
+            abs((int)$this->tokens->getTokenState('mazestock_' . $player_id)) +
+                abs((int)$timeGolem) <
             1
         ) {
             throw new BgaVisibleSystemException(
@@ -8014,7 +8020,7 @@ class diceforge extends Table
                 $way = 'increase';
             }
 
-            for ($i = 0; $i < abs($titanStock); $i++) {
+            for ($i = 0; $i < abs((int)$titanStock); $i++) {
                 $position = $this->tokens->getTokenState(
                     'position_' . $player_id
                 );
@@ -13007,7 +13013,7 @@ class diceforge extends Table
                                     break;
                             }
                             $notifPlayerArgs[$res] =
-                                abs($value) .
+                                abs((int)$value) .
                                 ' ' .
                                 $this->ressourceToText[$res];
                         }
