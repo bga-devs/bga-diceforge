@@ -2,6 +2,8 @@
 
 # IDE
 /.vscode/*
+!/.vscode/settings.json
+!/.vscode/extensions.json
 
 # Composer
 /vendor/
