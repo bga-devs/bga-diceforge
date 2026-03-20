@@ -81,18 +81,6 @@ if ( !defined('STATE_BEGIN_TURN') )
 
  
 $machinestates = array(
-
-    // The initial state. Please do not modify.
-    1 => array(
-        "name"        => "gameSetup",
-        "description" => "",
-        "type"        => "manager",
-        "action"      => "stGameSetup",
-        "transitions" => array( "" => STATE_BEGIN_TURN )
-    ),
-    
-    // Note: ID=2 => your first state
-
     /*
      * Beginning of a turn : stats, turn setup will be done here
      *
@@ -457,27 +445,6 @@ $machinestates = array(
           //"transitions"       => array( "poule" => 98),
         "updateGameProgression" => true, 
     ),
-    
-    //98 => array(
-    //    "name"              => "poule",
-    //    "description"       => clienttranslate("End of poule"),
-    //    "descriptionmyturn" => clienttranslate('Effects are being played'),
-    //    "type"              => "activeplayer",
-    //    "action"            => "stPoule",
-    //    "possibleactions"   => array("actExploitRessource"), 
-    //    "transitions" => array( "endGame" => STATE_END_GAME),
-    //  ),
-
-    // Final state.
-    // Please do not modify.
-    STATE_END_GAME => array(
-        "name"        => "gameEnd",
-        "description" => clienttranslate("End of game"),
-        "type"        => "manager",
-        "action"      => "stGameEnd",
-        "args"        => "argGameEnd"
-    ),
-
 );
 
 

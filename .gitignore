@@ -1,2 +1,15 @@
 /.remote-sync.json
-.vscode/sftp.json
+
+# IDE
+/.vscode/*
+!/.vscode/settings.json
+!/.vscode/extensions.json
+
+# Composer
+/vendor/
+
+# PHPUnit
+/.phpunit.result.cache
+
+# PHP-cs-fixer
+/.php-cs-fixer.cache

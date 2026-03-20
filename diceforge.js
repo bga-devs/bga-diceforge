@@ -1555,7 +1555,7 @@ function (dojo, declare) {
                     if( this.isCurrentPlayerActive() )
                     {
                         // with action buttons
-                        if (this.prefs[100].value == 1) {
+                        if (this.bga.userPreferences.get(100) == 1) {
 
                             if ( this.statesInfo[ stateName ] == undefined )
                                 this.statesInfo[ stateName ] = this.duplicateObject(args);
@@ -1567,7 +1567,7 @@ function (dojo, declare) {
                             else
                                 this.enablePlayerActionHelp();
                         }
-                        else if (this.prefs[100].value == 2) {
+                        else if (this.bga.userPreferences.get(100) == 2) {
                             if ( args.args.isForging ) {
                                 $('pagemaintitletext').innerHTML = this.translatableTexts.isForgingDescriptionMyTurn;
                                 this.selectForge.init( {
@@ -1927,7 +1927,7 @@ function (dojo, declare) {
                     this.disablePlayerActionHelp();
                     this.deactivateReinforcement();
 
-                    if (this.prefs[100].value == 2) {
+                    if (this.bga.userPreferences.get(100) == 2) {
                         this.selectForge.end();
                         this.deactivateExploits();
                     }
@@ -2022,12 +2022,12 @@ function (dojo, declare) {
                     break;
 
                 case 'playerAction':
-                    if (this.prefs[100].value == 1) {
+                    if (this.bga.userPreferences.get(100) == 1) {
                         this.addActionButton('player_action_button_forge', _('Forge'), 'onClickPlayerAction');
                         this.addActionButton('player_action_button_exploit', _('Heroic Feat'), 'onClickPlayerAction');
                         this.addActionButton( 'player_action_button_end', this.translatableTexts.endTurnButton, 'onClickPlayerAction', null, null, 'red' );
                     }
-                    else if (this.prefs[100].value == 2) {
+                    else if (this.bga.userPreferences.get(100) == 2) {
                         if ( args.isForging )
                             this.addActionButton( 'forge_action_button_end', this.translatableTexts.endForgeButton, 'onClickEndForge', null, null, 'red' );
                         else
@@ -3583,7 +3583,7 @@ function (dojo, declare) {
             if ( !this.pools[ elPool ].getSelectedItems().length ) {
                 this.selectForge.deactivateSelfSides();
 
-                if (this.prefs[100].value == 2 && this.selectForge.isForging == false)
+                if (this.bga.userPreferences.get(100) == 2 && this.selectForge.isForging == false)
                     this.activateExploits();
                 return;
             }
@@ -3595,7 +3595,7 @@ function (dojo, declare) {
             }
 
             this.selectForge.activateSelfSides();
-            if (this.prefs[100].value == 2 && this.selectForge.isForging == false)
+            if (this.bga.userPreferences.get(100) == 2 && this.selectForge.isForging == false)
                 this.deactivateExploits();
         },
 
