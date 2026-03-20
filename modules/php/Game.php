@@ -1,4 +1,5 @@
 <?php
+
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
@@ -26,22 +27,21 @@ use Bga\GameFramework\BgaVisibleSystemException;
 use Bga\GameFramework\BgaUserException;
 use Bga\GameFramework\Components\Deck;
 use Bga\GameFramework\StateType;
-
-use \DiceForge\Resources\ResourceChoice;
+use DiceForge\Resources\ResourceChoice;
 
 require_once __DIR__ . '/resource_choice.php';
 require_once __DIR__ . '/ResourceChoiceHelper.php';
 
 class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 {
-    const MAX_GOLD = 12;
-    const MAX_FIRESHARD = 6;
-    const MAX_MOONSHARD = 6;
-    const MAX_ANCIENTSHARD = 6;
-    const CHEST_GOLD = 4;
-    const CHEST_FIRESHARD = 3;
-    const CHEST_MOONSHARD = 3;
-    const HAMMER_MAX_POSITION = 30;
+    public const MAX_GOLD = 12;
+    public const MAX_FIRESHARD = 6;
+    public const MAX_MOONSHARD = 6;
+    public const MAX_ANCIENTSHARD = 6;
+    public const CHEST_GOLD = 4;
+    public const CHEST_FIRESHARD = 3;
+    public const CHEST_MOONSHARD = 3;
+    public const HAMMER_MAX_POSITION = 30;
     private $players_info;
 
     public Deck $exploits;
@@ -69,7 +69,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     public array $labyrinth_paths;
     public array $labyrinth_rewards;
 
-    function __construct()
+    public function __construct()
     {
 
         // Your global variables labels:
@@ -672,8 +672,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         ];
         // Exploit info (hand or position)
         foreach (
-            $this->exploits->countCardsInLocations()
-            as $location => $number
+            $this->exploits->countCardsInLocations() as $location => $number
         ) {
             foreach ($this->exploits->getCardsInLocation($location) as $card) {
                 $result['exploits'][$location][$card['id']] = $card;
@@ -682,8 +681,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
         // Sides information
         foreach (
-            $this->sides->countCardsInLocations()
-            as $location => $number
+            $this->sides->countCardsInLocations() as $location => $number
         ) {
             if (substr((string)$location, 0, 2) !== 'di' && $location !== 'forging') {
                 foreach ($this->sides->getCardsInLocation($location) as $card) {
@@ -700,8 +698,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                     'dice1-p' . $player_id,
                     null,
                     'card_location_arg'
-                )
-                as $card
+                ) as $card
             ) {
                 if (!isset($result['playersDice'][$player_id]['dice1'])) {
                     $result['playersDice'][$player_id]['dice1'] = [];
@@ -715,8 +712,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                     'dice2-p' . $player_id,
                     null,
                     'card_location_arg'
-                )
-                as $card
+                ) as $card
             ) {
                 if (!isset($result['playersDice'][$player_id]['dice2'])) {
                     $result['playersDice'][$player_id]['dice2'] = [];
@@ -773,7 +769,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $result;
     }
 
-    function getTableOrder()
+    public function getTableOrder()
     {
         $table = $this->getNextPlayerTable();
         $result = [];
@@ -789,7 +785,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $result;
     }
 
-    function debugTest()
+    public function debugTest()
     {
         print_r($this->getNextPlayerTable());
     }
@@ -798,7 +794,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         Get the ressources from the table
         @return : array for the counters
     */
-    function getPlayersRessources($player_id = null)
+    public function getPlayersRessources($player_id = null)
     {
         $counters = [];
         $rebellion = $this->getGameStateValue('rebellion');
@@ -882,8 +878,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
 
         foreach (
-            $this->tokens->getTokensOfTypeInLocation('scepter')
-            as $key => $token
+            $this->tokens->getTokensOfTypeInLocation('scepter') as $key => $token
         ) {
             if ($token['location'] != 'deck') {
                 $counters["count$key"] = [
@@ -899,7 +894,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     /*
      * give the number of reinforcement cards available for a player
      */
-    function getPlayerReinforcements($player_id)
+    public function getPlayerReinforcements($player_id)
     {
         $data = [];
 
@@ -923,7 +918,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
         Compute and return the current game progression.
     */
-    function getGameProgression()
+    public function getGameProgression()
     {
         $nbTurns = self::getGameStateValue('nbTurns');
         $nbPlayers = self::getGameStateValue('nbPlayers');
@@ -947,14 +942,14 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     //////////// Utility functions
     ////////////
 
-    function getSideIdFromType($side)
+    public function getSideIdFromType($side)
     {
         $sql = "SELECT card_id FROM sides WHERE card_type = '$side' LIMIT 1";
 
         return $this->getUniqueValueFromDB($sql);
     }
 
-    function hasMazeStock($player_id = null)
+    public function hasMazeStock($player_id = null)
     {
         $sql =
             "SELECT DISTINCT 1 FROM token WHERE token_state != 0 AND token_key LIKE 'mazestock_%'";
@@ -976,7 +971,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function generateActionChoiceArgs($player_id, $sides)
+    public function generateActionChoiceArgs($player_id, $sides)
     {
         $players_info = $this->getPlayersAdditionnalInfo();
 
@@ -1019,7 +1014,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $sides;
     }
 
-    function generateMazeChoiceArgs($player_id, $sides)
+    public function generateMazeChoiceArgs($player_id, $sides)
     {
         // do we manage a ressource choice?
         if (
@@ -1156,7 +1151,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $sides;
     }
 
-    function resetThrowTokens($player_id = null)
+    public function resetThrowTokens($player_id = null)
     {
         if ($player_id == null) {
             $sql = "UPDATE token SET token_state = 0 WHERE (
@@ -1190,7 +1185,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
     // Will check that the "tobe forged" die face in the correct pool (from the die face to be replaced)
     // return : nothing, exception is thrown if not possible
-    function checkUpgrade(
+    public function checkUpgrade(
         $nbUpgrade,
         $old_side_id,
         $new_side_id,
@@ -1347,7 +1342,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         //
     }
 
-    function initNotif($player_id)
+    public function initNotif($player_id)
     {
         $notifPlayerArgs = [];
         $notifPlayerArgs['player_id'] = $player_id;
@@ -1368,7 +1363,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $notifPlayerArgs;
     }
 
-    function possibilityAddText($possibilities)
+    public function possibilityAddText($possibilities)
     {
         foreach ($possibilities as $pos => $possibility) {
             $text = '';
@@ -1384,7 +1379,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // return only gold, as it is used for specific cards
-    function getGoldResource($player_id, $type = 'all')
+    public function getGoldResource($player_id, $type = 'all')
     {
         $gold = 0;
         $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
@@ -1393,7 +1388,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $gold;
     }
 
-    function getNextVPPool()
+    public function getNextVPPool()
     {
         for ($i = 1; $i <= 11; $i++) {
             $sides = $this->sides->getCardsInLocation($i);
@@ -1410,7 +1405,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // return pools that cannot be bought with cards in the game
-    function getTridentSides()
+    public function getTridentSides()
     {
         $sql = 'SELECT card_type, COUNT(*) FROM exploit GROUP BY card_type';
         $poolList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
@@ -1453,7 +1448,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $poolList;
     }
 
-    function initTokens()
+    public function initTokens()
     {
         // companion
         // scepter
@@ -1468,7 +1463,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function calculateTieBreaker()
+    public function calculateTieBreaker()
     {
         // tie breaker implementation
         $tiebreaker = $this->getGameStateValue('tieBreaker');
@@ -1538,7 +1533,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         In this space, you can put any utility methods useful for your game logic
     */
 
-    function getExploitsMaterial($nb_players)
+    public function getExploitsMaterial($nb_players)
     {
         $setup_cards = [];
 
@@ -1580,7 +1575,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $setup_cards;
     }
 
-    function getAvailableExploits($setup_cards)
+    public function getAvailableExploits($setup_cards)
     {
         $deckOption = $this->getGameStateValue('deckOption');
         $promoCards = $this->getGameStateValue('promoCards');
@@ -1682,7 +1677,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $available_cards;
     }
 
-    function draftSlot()
+    public function draftSlot()
     {
         $slot_to_draft = $this->exploit_slot;
 
@@ -1713,7 +1708,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
      * Function that roll a dice
      * @return the side that has been rolled
      */
-    function rollDice($player_id, $dice_num)
+    public function rollDice($player_id, $dice_num)
     {
         // do not use the shuffle function
         $value = bga_rand(0, 5);
@@ -1752,13 +1747,13 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return reset($result);
     }
 
-    function getCelestial()
+    public function getCelestial()
     {
         $value = $this->getGameStateValue('celestialDieSide');
         return $this->celestialDie[$value];
     }
 
-    function rollCelestial($player_id, $roll = true)
+    public function rollCelestial($player_id, $roll = true)
     {
         $notifPlayerArgs = $this->initNotif($player_id);
         if ($roll) {
@@ -1886,7 +1881,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $side;
     }
 
-    function getRessourcesToTransform()
+    public function getRessourcesToTransform()
     {
         $transform = ['ressource' => [''], 'vp' => 1];
         $card_id = $this->getGameStateValue('exploitBought');
@@ -1917,7 +1912,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
      * input = array('gold' => array(0,1,2), 'hammer' => array(1,2,3))
      * @return : array of array with the values
      */
-    function cartesian($input)
+    public function cartesian($input)
     {
         // filter out empty values
         //$input = array_filter($input);
@@ -1941,7 +1936,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $result;
     }
 
-    function filterCartesian(
+    public function filterCartesian(
         $input,
         $maxValue,
         $vpDivide = 1,
@@ -1966,7 +1961,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $retour;
     }
 
-    function formatCartesian(
+    public function formatCartesian(
         $cartesian,
         $possibilities,
         $sideNum,
@@ -2041,7 +2036,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $possibility_new;
     }
 
-    function calculatePossibilities(
+    public function calculatePossibilities(
         $player_id,
         $sideType,
         $sideNum,
@@ -2521,7 +2516,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
      * Check if the less expensive available side (not yet forged) can be bought
      * @return : true if can forge, else false
      */
-    function canForgeSides($player_id, $remainingGold, $alreadyBought)
+    public function canForgeSides($player_id, $remainingGold, $alreadyBought)
     {
         $sql =
             'SELECT MIN(card_id) FROM sides WHERE card_location BETWEEN 1 AND 10';
@@ -2556,7 +2551,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     /*
      * List the "type" of sides that can be forged only through an available exploit
      */
-    function listSidesWithExploits()
+    public function listSidesWithExploits()
     {
         $sql = 'SELECT DISTINCT card_type FROM exploit';
         $garden = ['shield', 'triple', 'mirror', 'ship', 'boar'];
@@ -2606,7 +2601,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
      * Give the next state in fonction of ressource choice field in the player table
      *
      */
-    function getNextState($ressourceChoice = null)
+    public function getNextState($ressourceChoice = null)
     {
         $stateName = $this->gamestate->getCurrentMainState()->name;
         $endMultiState = '';
@@ -2638,7 +2633,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $endMultiState;
     }
 
-    function generateNotifLoyalty($notifPlayerArgs)
+    public function generateNotifLoyalty($notifPlayerArgs)
     {
         if (isset($notifPlayerArgs['notifLoyalty'])) {
             $notifLoyalty = $notifPlayerArgs['notifLoyalty'];
@@ -2668,7 +2663,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function getTitanReward($player_id, $card_type)
+    public function getTitanReward($player_id, $card_type)
     {
         $uniqueMessage = _(
             '${player_name} gets ${ressources} from the Titans for being the first to do accomplish this exploit'
@@ -2732,7 +2727,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return;
     }
 
-    function getLoyaltyReward(
+    public function getLoyaltyReward(
         $player_id,
         $sideNum,
         $resourceType,
@@ -2890,7 +2885,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $notifPlayerArgs;
     }
 
-    function getLoyaltyArg(
+    public function getLoyaltyArg(
         $player_id,
         $sideNum,
         $resourceType,
@@ -2946,7 +2941,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
      * If a user choice is necessary, the field ressourceChoice will be put to 1
      * @return : notification array
      */
-    function affectRessource(
+    public function affectRessource(
         $player_id,
         $notifPlayerArgs,
         $sideNum,
@@ -3007,8 +3002,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 $notifPlayerArgs['choice2'] = true;
             } else {
                 foreach (
-                    $side_definition['ressource']
-                    as $element => $ressource
+                    $side_definition['ressource'] as $element => $ressource
                 ) {
                     if ($triple) {
                         $value = $ressource * 3 * $multiple;
@@ -3470,7 +3464,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
      * Resources will be affected twice
      *
      */
-    function affectTriple(
+    public function affectTriple(
         $player_id,
         $notifPlayerArgs,
         $sideNum,
@@ -3637,7 +3631,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $notifPlayerArgs;
     }
 
-    function sceptersToFill($player_id)
+    public function sceptersToFill($player_id)
     {
         $max_value = 6;
         $scepters = [];
@@ -3675,7 +3669,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
      * Increase the gold or hammer of the user
      * @return : true if everything worked :)
      */
-    function increaseGold($player_id, $quantity, $where = 'stock')
+    public function increaseGold($player_id, $quantity, $where = 'stock')
     {
         $this->players_info = null;
         $players_info = $this->getPlayersAdditionnalInfo();
@@ -3752,7 +3746,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function decreaseGold($player_id, $quantity, $action = null)
+    public function decreaseGold($player_id, $quantity, $action = null)
     {
         $players_info = $this->getPlayersAdditionnalInfo();
         $res = ['gold' => 0, 'scepter' => 0];
@@ -3808,7 +3802,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function increaseMoonShard($player_id, $quantity)
+    public function increaseMoonShard($player_id, $quantity)
     {
         $players_info = $this->getPlayersAdditionnalInfo();
         $lost = 0;
@@ -3834,7 +3828,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $this->dbSetMoonShard($player_id, $new_moon);
     }
 
-    function decreaseMoonShard($player_id, $quantity, $action = null)
+    public function decreaseMoonShard($player_id, $quantity, $action = null)
     {
         $players_info = $this->getPlayersAdditionnalInfo();
         $player_moon = $players_info[$player_id]['res_moon'];
@@ -3849,7 +3843,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $this->dbSetMoonShard($player_id, $new_moon);
     }
 
-    function increaseAncientShard($player_id, $quantity)
+    public function increaseAncientShard($player_id, $quantity)
     {
         $players_info = $this->getPlayersAdditionnalInfo();
         $lost = 0;
@@ -3874,7 +3868,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $this->dbSetAncientShard($player_id, $new_ancient);
     }
 
-    function decreaseAncientShard($player_id, $quantity, $action = null)
+    public function decreaseAncientShard($player_id, $quantity, $action = null)
     {
         $players_info = $this->getPlayersAdditionnalInfo();
         $player_ancient = $players_info[$player_id]['res_ancient'];
@@ -3890,7 +3884,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $this->dbSetAncientShard($player_id, $new_ancient);
     }
 
-    function increaseFireShard($player_id, $quantity)
+    public function increaseFireShard($player_id, $quantity)
     {
         $players_info = $this->getPlayersAdditionnalInfo();
         $lost = 0;
@@ -3938,7 +3932,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     //    return $this->dbSetFireShard( $player_id, $new_fire );
     //}
 
-    function decreaseFireShard($player_id, $quantity, $action = null)
+    public function decreaseFireShard($player_id, $quantity, $action = null)
     {
         $players_info = $this->getPlayersAdditionnalInfo();
         $player_fire = $players_info[$player_id]['res_fire'];
@@ -3953,12 +3947,12 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $this->dbSetFireShard($player_id, $new_fire);
     }
 
-    function increaseVP($player_id, $quantity)
+    public function increaseVP($player_id, $quantity)
     {
         return $this->dbIncreaseVP($player_id, $quantity);
     }
 
-    function decreaseVP($player_id, $quantity)
+    public function decreaseVP($player_id, $quantity)
     {
         return $this->dbDecreaseVP($player_id, $quantity);
     }
@@ -3968,7 +3962,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
      * if the user completes a hammer, score is added
      * @return : notification for the hammer
      */
-    function increaseHammerPosition($player_id, $quantity)
+    public function increaseHammerPosition($player_id, $quantity)
     {
         $nbHammer = $this->hasActiveHammer($player_id);
         $hammer_pos = $this->dbGetHammerPosition($player_id);
@@ -4027,7 +4021,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
      * Check if the player has a Ship side that needs to be resolved
      * @return : boolean
      */
-    function hasUnusedShip($player_id = null)
+    public function hasUnusedShip($player_id = null)
     {
         $sql =
             "SELECT distinct 1 FROM player WHERE (side_choice_1 = 'ship' OR side_choice_2 = 'ship')";
@@ -4062,7 +4056,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function processedExploit()
+    public function processedExploit()
     {
         $card_id = $this->getGameStateValue('exploitBought');
         if (
@@ -4079,7 +4073,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return false;
     }
 
-    function hasResolutionConflict()
+    public function hasResolutionConflict()
     {
         $sql =
             "SELECT player_id, card_type from sides, player where (card_id = player.throw_1 or card_id = player.throw_2) and (card_type = 'mirror' or card_type = 'ship')";
@@ -4170,7 +4164,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
      * Check if any player has a need for choice
      * @return : boolean
      */
-    function isRessourceChoice(?ResourceChoice $action = null, $player_id = null)
+    public function isRessourceChoice(?ResourceChoice $action = null, $player_id = null)
     {
         $sql = 'SELECT distinct 1 FROM player WHERE ';
 
@@ -4194,7 +4188,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function hasUnresolvedSides($player_id = null)
+    public function hasUnresolvedSides($player_id = null)
     {
         $sql =
             "SELECT distinct 1 FROM player WHERE (side_choice_1 != '0' OR side_choice_2 != '0') ";
@@ -4212,7 +4206,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function isMazeChoice($player_id = null)
+    public function isMazeChoice($player_id = null)
     {
         $sql = "SELECT distinct 1 FROM token WHERE token_location != '0' ";
 
@@ -4230,22 +4224,22 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function hasChest($player_id)
+    public function hasChest($player_id)
     {
         return $this->countExploitInLocation('chest', 'table-' . $player_id);
     }
 
-    function hasActiveHammer($player_id)
+    public function hasActiveHammer($player_id)
     {
         return $this->countExploitInLocation('hammer', 'table-' . $player_id);
     }
 
-    function hasBear($player_id)
+    public function hasBear($player_id)
     {
         return $this->countExploitInLocation('bear', 'pile2-' . $player_id);
     }
 
-    function resolveTwin($player_id, $toResolve)
+    public function resolveTwin($player_id, $toResolve)
     {
         if (
             $toResolve &&
@@ -4259,7 +4253,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return;
     }
 
-    function getBoar($boar)
+    public function getBoar($boar)
     {
         // send player_id having the boar side
         $side = $this->sides->getCardsOfType($boar);
@@ -4272,22 +4266,22 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $side['type_arg'];
     }
 
-    function hasHind($player_id)
+    public function hasHind($player_id)
     {
         return $this->countExploitInLocation('doe', 'pile3-' . $player_id);
     }
 
-    function hasElder($player_id)
+    public function hasElder($player_id)
     {
         return $this->countExploitInLocation('ancien', 'pile3-' . $player_id);
     }
 
-    function hasOwl($player_id)
+    public function hasOwl($player_id)
     {
         return $this->countExploitInLocation('owl', 'pile3-' . $player_id);
     }
 
-    function hasCerberusToken($player_id = null)
+    public function hasCerberusToken($player_id = null)
     {
         $sql =
             "SELECT max(cerberus_token) FROM player, exploit WHERE card_location = concat('pile1-', player_id) AND exploit.card_type_arg = 0 ";
@@ -4308,7 +4302,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function getGold($player_id)
+    public function getGold($player_id)
     {
         $sql = 'select sum(gold) from (';
         $sql .= "select res_gold  gold from player where player_id = $player_id ";
@@ -4318,7 +4312,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::getUniqueValueFromDB($sql);
     }
 
-    function hasCompanionToken($player_id)
+    public function hasCompanionToken($player_id)
     {
         $sql = "SELECT SUM(token_state) FROM token WHERE token_key LIKE 'companion%' AND token_location = '$player_id' AND token_state <= 5";
 
@@ -4331,14 +4325,14 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function hasTritonToken($player_id)
+    public function hasTritonToken($player_id)
     {
         $players = $this->getPlayersAdditionnalInfo();
         return $players[$player_id]['triton_token'];
     }
 
     // Will automatically affect the triton token to hammer/gold if we are on the last turn
-    function autoAffectTritonToken($player_id)
+    public function autoAffectTritonToken($player_id)
     {
         $nbToken = $this->hasTritonToken($player_id);
         $value = 6;
@@ -4400,7 +4394,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // get Non Used Reinforcements
-    function getActiveReinforcements($player_id)
+    public function getActiveReinforcements($player_id)
     {
         $sql =
             "SELECT card_id AS id, card_type AS type
@@ -4413,7 +4407,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::getCollectionFromDb($sql);
     }
 
-    function canUseTwins($player_id)
+    public function canUseTwins($player_id)
     {
         // Scepters & twins cannot be at the same time on play ==> check of only gold
         $sql = "SELECT count(card_id) FROM exploit, player WHERE card_type = 'twins' AND card_type_arg = 0 AND card_location LIKE '%-$player_id' AND res_gold >= 3 AND player_id = $player_id";
@@ -4426,7 +4420,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function updateAvailableTwin($player_id, $used = true)
+    public function updateAvailableTwin($player_id, $used = true)
     {
         $sql = "SELECT card_id FROM exploit WHERE card_type = 'twins' AND card_type_arg = 0 AND card_location LIKE '%-$player_id' LIMIT 1";
         $card_id = self::getUniqueValueFromDB($sql);
@@ -4442,7 +4436,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function resetTwins($player_id = null, $used = false)
+    public function resetTwins($player_id = null, $used = false)
     {
         if ($used == false) {
             $sql =
@@ -4459,7 +4453,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::dbQuery($sql);
     }
 
-    function checkExploitId($card_id, $card_position)
+    public function checkExploitId($card_id, $card_position)
     {
         $sql =
             "SELECT min(card_id) FROM exploit WHERE card_location = '" .
@@ -4475,7 +4469,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // get every info added to player TABLE
-    function getPlayersAdditionnalInfo()
+    public function getPlayersAdditionnalInfo()
     {
         $this->players_info = null;
 
@@ -4487,7 +4481,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $this->players_info;
     }
 
-    function dbIncBoar($player_id, $add = true)
+    public function dbIncBoar($player_id, $add = true)
     {
         //throw new feException(debug_print_backtrace());
         if ($add) {
@@ -4522,7 +4516,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
     // return player_id owning the card
     // or false
-    function isMisfortune($side)
+    public function isMisfortune($side)
     {
         if (substr($side, -10) == 'Misfortune' && $this->getBoar($side) != 0) {
             //throw new feException(debug_print_backtrace());
@@ -4532,7 +4526,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function dbIncTwins($player_id, $add = true)
+    public function dbIncTwins($player_id, $add = true)
     {
         if ($add) {
             $sql =
@@ -4551,7 +4545,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         self::dbQuery($sql);
     }
 
-    function dbUpdateThrow($player_id, $throwNum, $side_id)
+    public function dbUpdateThrow($player_id, $throwNum, $side_id)
     {
         $sql =
             'UPDATE player set throw_' .
@@ -4563,7 +4557,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         self::dbQuery($sql);
     }
 
-    function dbIncTriton($player_id, $add = true)
+    public function dbIncTriton($player_id, $add = true)
     {
         if ($add) {
             $sql =
@@ -4578,7 +4572,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         self::dbQuery($sql);
     }
 
-    function dbIncCerberus($player_id, $add = true)
+    public function dbIncCerberus($player_id, $add = true)
     {
         if ($add) {
             $sql =
@@ -4593,7 +4587,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         self::dbQuery($sql);
     }
 
-    function dbUpdateExploitPlayed($card_id, $played)
+    public function dbUpdateExploitPlayed($card_id, $played)
     {
         if ($played) {
             $sql =
@@ -4607,7 +4601,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function dbUpdateTokenPlayed($player_id, $token, $played)
+    public function dbUpdateTokenPlayed($player_id, $token, $played)
     {
         if ($played) {
             $sql =
@@ -4627,7 +4621,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function dbUpdateRolled($player_id, $rolled)
+    public function dbUpdateRolled($player_id, $rolled)
     {
         if ($rolled) {
             $sql =
@@ -4639,7 +4633,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function updateAllThrows()
+    public function updateAllThrows()
     {
         $sql = "UPDATE token SET token_state = 0 WHERE token_key like 'throw%'";
         self::DbQuery($sql);
@@ -4652,14 +4646,14 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     /*
      * Update all the players that have no choice to do (therefore no cerberus token) and not rolled
      */
-    function dbUpdateUnrolled()
+    public function dbUpdateUnrolled()
     {
         $sql =
             "UPDATE player set rolled = 0 where ressource_choice = -1 AND rolled = 1 AND side_choice_1 = '0' AND side_choice_2 = '0'";
         return self::DbQuery($sql);
     }
 
-    function hasRolled($player_id)
+    public function hasRolled($player_id)
     {
         $sql = 'SELECT rolled FROM player WHERE player_id = ' . $player_id;
         $dbres = self::getUniqueValueFromDB($sql);
@@ -4671,7 +4665,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function debugRessourcesAll()
+    public function debugRessourcesAll()
     {
         $sql = 'UPDATE player set res_gold = 12, res_fire=6, res_moon = 6';
         self::DbQuery($sql);
@@ -4682,7 +4676,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         );
     }
 
-    function setChoice($player_id, ?ResourceChoice $action, $boarAction = false, $debug = false)
+    public function setChoice($player_id, ?ResourceChoice $action, $boarAction = false, $debug = false)
     {
         $player = $this->getPlayersAdditionnalInfo()[$player_id];
         $old_value = $player['ressource_choice'];
@@ -4944,7 +4938,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function isGoldLimitReached($player_id, $res_gold)
+    public function isGoldLimitReached($player_id, $res_gold)
     {
         $player_chests = $this->hasChest($player_id);
         $max_gold =
@@ -4962,7 +4956,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function dbSetForge($player_id, $value)
+    public function dbSetForge($player_id, $value)
     {
         $sql =
             "UPDATE player SET forge = '" .
@@ -4975,7 +4969,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     // if $value == -1 : Side to choose
     // if $value == 0, nothing to choose
     // if $value == type of side, ok for ressourceChoice
-    function dbSetSideChoice($player_id, $side_num, $value)
+    public function dbSetSideChoice($player_id, $side_num, $value)
     {
         if ($side_num < 50) {
             $sql =
@@ -4998,7 +4992,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function dbSetPosition($player_id, $value)
+    public function dbSetPosition($player_id, $value)
     {
         $sql =
             "UPDATE player SET position = '" .
@@ -5008,7 +5002,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function dbSetGold($player_id, $value)
+    public function dbSetGold($player_id, $value)
     {
         $sql =
             'UPDATE player SET res_gold = ' .
@@ -5018,7 +5012,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function dbSetMoonShard($player_id, $value)
+    public function dbSetMoonShard($player_id, $value)
     {
         $sql =
             'UPDATE player SET res_moon = ' .
@@ -5028,7 +5022,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function dbSetAncientShard($player_id, $value)
+    public function dbSetAncientShard($player_id, $value)
     {
         $sql =
             'UPDATE player SET res_ancient = ' .
@@ -5038,7 +5032,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function dbSetFireShard($player_id, $value)
+    public function dbSetFireShard($player_id, $value)
     {
         $sql =
             'UPDATE player SET res_fire = ' .
@@ -5048,7 +5042,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function dbIncreaseVP($player_id, $value)
+    public function dbIncreaseVP($player_id, $value)
     {
         $sql =
             'UPDATE player SET player_score = player_score + ' .
@@ -5058,7 +5052,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function dbDecreaseVP($player_id, $value)
+    public function dbDecreaseVP($player_id, $value)
     {
         $players_info = $this->getPlayersAdditionnalInfo();
         $player_score = $players_info[$player_id]['player_score'];
@@ -5072,7 +5066,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function dbIncreaseHammer($player_id, $value)
+    public function dbIncreaseHammer($player_id, $value)
     {
         $sql =
             'UPDATE player SET hammer_position = hammer_position + ' .
@@ -5082,7 +5076,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function dbInitHammer($player_id)
+    public function dbInitHammer($player_id)
     {
         $sql =
             'UPDATE player SET hammer_position = 0 WHERE player_id = ' .
@@ -5091,13 +5085,13 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function hasAutoHammer($player_id)
+    public function hasAutoHammer($player_id)
     {
         $sql = 'SELECT hammer_auto FROM player where player_id = ' . $player_id;
         return self::getUniqueValueFromDB($sql);
     }
 
-    function setAutoHammer($player_id, $enable)
+    public function setAutoHammer($player_id, $enable)
     {
         if ($enable == 'enable') {
             $sql =
@@ -5111,7 +5105,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::DbQuery($sql);
     }
 
-    function dbGetHammerPosition($player_id)
+    public function dbGetHammerPosition($player_id)
     {
         $sql =
             'select hammer_position from player where player_id = ' .
@@ -5120,7 +5114,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return self::getUniqueValueFromDB($sql);
     }
 
-    function countExploitInLocation($type, $location, $location_arg = null)
+    public function countExploitInLocation($type, $location, $location_arg = null)
     {
         $sql =
             "SELECT COUNT(card_id) AS nb FROM exploit
@@ -5141,7 +5135,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $res['nb'];
     }
 
-    function checkValidSide($side, $player_id = null, $exclude_player_id = null)
+    public function checkValidSide($side, $player_id = null, $exclude_player_id = null)
     {
         $sql =
             "SELECT distinct card_id from sides, player where (card_id = player.throw_1 or card_id = player.throw_2) and card_type = '" .
@@ -5166,7 +5160,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function checkValidVisibleSide(
+    public function checkValidVisibleSide(
         $side,
         $player_id = null,
         $exclude_player_id = null
@@ -5207,7 +5201,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function takeRessource2(
+    public function takeRessource2(
         $player_id,
         $mode = 'blessing',
         $sideNum,
@@ -5557,8 +5551,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                         if ($mode == 'transform') {
                             $toTransform = $this->getRessourcesToTransform();
                             foreach (
-                                $this->dice_sides[$side]['ressource']
-                                as $res => $value2
+                                $this->dice_sides[$side]['ressource'] as $res => $value2
                             ) {
                                 //throw new feException(print_r(in_array($res, $toTransform['ressource'])));
                                 if (
@@ -5945,7 +5938,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return false;
     }
 
-    function affectGoldOnly(
+    public function affectGoldOnly(
         $player_id,
         $mode = 'blessing',
         $otherSideType,
@@ -6024,7 +6017,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return false;
     }
 
-    function generateNotifHammer($player_id, $notifHammer)
+    public function generateNotifHammer($player_id, $notifHammer)
     {
         if (count($notifHammer) != 0) {
             foreach ($notifHammer as $v => $notif) {
@@ -6049,7 +6042,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function maxHammer($player_id, $value)
+    public function maxHammer($player_id, $value)
     {
         $hammer_position = $this->getPlayersAdditionnalInfo()[$player_id][
             'hammer_position'
@@ -6065,7 +6058,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function remainingHammer($player_id)
+    public function remainingHammer($player_id)
     {
         $hammer_position = $this->getPlayersAdditionnalInfo()[$player_id][
             'hammer_position'
@@ -6078,7 +6071,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
      * Format the notificaiton array text from the calculation of various functions
      * @return : array for the notification function
      */
-    function buildRessourceNotif($args)
+    public function buildRessourceNotif($args)
     {
         $hasScepter = false;
         $toAdd = '';
@@ -6126,7 +6119,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return implode(' ', $notif);
     }
 
-    function canTakeSecondAction($player_id)
+    public function canTakeSecondAction($player_id)
     {
         if ($this->getGameStateValue('secondActionTaken') != 0) {
             return false;
@@ -6198,7 +6191,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return false;
     }
 
-    function haveEnoughRessource($player_id, $fireshard, $moonshard)
+    public function haveEnoughRessource($player_id, $fireshard, $moonshard)
     {
         $sql =
             "SELECT res_fire as fire, res_moon as moon, res_ancient as ancient from player WHERE player_id = '" .
@@ -6219,7 +6212,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function isIslandUsed($player_id, $island)
+    public function isIslandUsed($player_id, $island)
     {
         $sql =
             "SELECT player_id FROM `player` where position = '" .
@@ -6232,7 +6225,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $res;
     }
 
-    function canFillHammer($player_id)
+    public function canFillHammer($player_id)
     {
         if (
             $this->hasActiveHammer($player_id) * self::HAMMER_MAX_POSITION >
@@ -6246,7 +6239,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
     // Will roll the dices and affect the ressources if possible
     // return true if a choice is needed
-    function blessing(
+    public function blessing(
         $player_id,
         $dice1 = true,
         $dice2 = true,
@@ -6977,7 +6970,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     /*
      * @return true if it can continue, false if we have a choice
      */
-    function mazeManagement($player_id, $new_position = null, $onlyOne = false)
+    public function mazeManagement($player_id, $new_position = null, $onlyOne = false)
     {
         $mazestock = $this->tokens->getTokenState('mazestock_' . $player_id);
         $timeGolem = $this->getGameStateValue('timeGolem');
@@ -7165,7 +7158,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // will roll the celestial die only if no more maze & puzzle effect confirmed
-    function triggerCelestialWhenMaze0($player_id)
+    public function triggerCelestialWhenMaze0($player_id)
     {
         // trigger celestial if no more mazestock
         if (
@@ -7178,7 +7171,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return false;
     }
 
-    function mazeMove($player_id, $position, $next_position)
+    public function mazeMove($player_id, $position, $next_position)
     {
         $increase = true;
         $timeGolem = $this->getGameStateValue('timeGolem');
@@ -7251,7 +7244,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         ]);
     }
 
-    function mazeEffect($player_id)
+    public function mazeEffect($player_id)
     {
         $position = $this->tokens->getTokenState('position_' . $player_id);
         $mazeSquare = $this->maze[$position];
@@ -7645,7 +7638,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $notifPlayerArgs['choice'];
     }
 
-    function mazeHasChoice($player_id, $mazePosition, $way)
+    public function mazeHasChoice($player_id, $mazePosition, $way)
     {
         // TODO: check if choice is needed => (hammer & gold, road, treasure, celestial?, ship)
         $mazeSquare = $this->maze[$mazePosition];
@@ -7696,7 +7689,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return false;
     }
 
-    function doubleThrow($player_id)
+    public function doubleThrow($player_id)
     {
         if (
             $this->tokens->getTokenState("throw1_$player_id") &&
@@ -7708,7 +7701,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function isThrown($player_id, $side)
+    public function isThrown($player_id, $side)
     {
         if ($this->tokens->getTokenState('throw' . $side . '_' . $player_id)) {
             return true;
@@ -7718,7 +7711,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // check if puzzle is ok. If OK, get celestial Roll
-    function checkPuzzle($notifPlayerArgs)
+    public function checkPuzzle($notifPlayerArgs)
     {
         $player_id = $notifPlayerArgs['player_id'];
         $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
@@ -7782,7 +7775,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $notifPlayerArgs;
     }
 
-    function checkShield($notifPlayerArgs, $multiple, $ship, $exploit)
+    public function checkShield($notifPlayerArgs, $multiple, $ship, $exploit)
     {
         $player_id = $notifPlayerArgs['player_id'];
         $triple = $this->tokens->getTokenState("triple_$player_id");
@@ -7960,7 +7953,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $notifPlayerArgs;
     }
 
-    function scoreForgedSides($player_id, $exploit = true)
+    public function scoreForgedSides($player_id, $exploit = true)
     {
         $discardedSides = count(
             $this->sides->getCardsInLocation('discard', $player_id)
@@ -7984,7 +7977,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         );
     }
 
-    function titanMove($player_id)
+    public function titanMove($player_id)
     {
         if ($this->getGameStateValue('rebellion') == 3) {
             $titanStock = $this->tokens->getTokenState(
@@ -8063,13 +8056,13 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     ////////////
 
     // Will launch the diceRoll and notify the results to the JS
-    function actRollDice()
+    public function actRollDice()
     {
         self::checkAction('actRollDice');
         $this->gamestate->nextState('blessing');
     }
 
-    function actDraft($exploit)
+    public function actDraft($exploit)
     {
         self::checkAction('actDraft');
         $player_id = self::getActivePlayerId();
@@ -8139,7 +8132,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         $this->gamestate->nextState('draft');
     }
 
-    function actAutoHammer($todo)
+    public function actAutoHammer($todo)
     {
         $player_id = self::getCurrentPlayerId();
         $this->setAutoHammer($player_id, $todo);
@@ -8152,7 +8145,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     // $ressources : array of the choosen ressources
     //  WARNING  in the JS, only the side with choice must be managed.
     // if side with gold and FS (for example), the FS will not be sent by the JS
-    function actTakeRessource($sideNum, $side, $ressources)
+    public function actTakeRessource($sideNum, $side, $ressources)
     {
         self::checkAction('actRessourceChoice');
         $disable = false;
@@ -8187,7 +8180,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actMisfortuneChoice($sideNum, $side, $ressources)
+    public function actMisfortuneChoice($sideNum, $side, $ressources)
     {
         self::checkAction('actMisfortuneChoice');
         $disable = false;
@@ -8213,7 +8206,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // Type of the sides to choose
-    function actSideChoice($side1, $side2, $side98)
+    public function actSideChoice($side1, $side2, $side98)
     {
         self::checkAction('actSideChoice');
 
@@ -8321,17 +8314,17 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                         $this->dbUpdateRolled($player_id, true);
                     }
                     break;
-                //case 'throwCelestialDie':
-                //    $celestialSide = $this->celestialDie[$this->getGameStateValue( "celestialDieSide")];
-                //    if ( $celestialSide == 'celestialMirror') {
-                //        $celestialMirror = true;
-                //        $steal2 = true;
-                //        $doubleMirror = true;
-                //    }
-                //    elseif ( $celestialSide == 'chooseSide') {
-                //        $chooseSides = true;
-                //    }
-                //    break ;
+                    //case 'throwCelestialDie':
+                    //    $celestialSide = $this->celestialDie[$this->getGameStateValue( "celestialDieSide")];
+                    //    if ( $celestialSide == 'celestialMirror') {
+                    //        $celestialMirror = true;
+                    //        $steal2 = true;
+                    //        $doubleMirror = true;
+                    //    }
+                    //    elseif ( $celestialSide == 'chooseSide') {
+                    //        $chooseSides = true;
+                    //    }
+                    //    break ;
                 case '4ThrowsTransform':
                 case '4Throws':
                     $cycl = true;
@@ -9362,7 +9355,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function oustingMazeManagement($player_id)
+    public function oustingMazeManagement($player_id)
     {
         // trigger maze management for ousting after a choice
         $this->setGameStateValue('celestialRunning', 0);
@@ -9376,7 +9369,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actForgeNymphPass()
+    public function actForgeNymphPass()
     {
         self::checkAction('actForgeNymphPass');
         $player_id = self::getCurrentPlayerId();
@@ -9395,7 +9388,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return;
     }
 
-    function actMemoryToken($token, $island, $choice)
+    public function actMemoryToken($token, $island, $choice)
     {
         self::checkAction('actMemoryToken');
         $player_id = self::getCurrentPlayerId();
@@ -9438,7 +9431,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         $this->gamestate->nextState('exploitEffect');
     }
 
-    function actForgeShipPass($sideNum)
+    public function actForgeShipPass($sideNum)
     {
         self::checkAction('actForgeShipPass');
         $player_id = self::getCurrentPlayerId();
@@ -9518,7 +9511,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actUseScepter($scepter_id, $resource)
+    public function actUseScepter($scepter_id, $resource)
     {
         self::checkAction('actUseScepter');
         $player_id = self::getCurrentPlayerId();
@@ -9576,7 +9569,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         $this->gamestate->nextState('current');
     }
 
-    function notifyScepters($resource = '', $amount = 0)
+    public function notifyScepters($resource = '', $amount = 0)
     {
         $player_id = self::getActivePlayerId();
 
@@ -9626,7 +9619,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // return amount to reduce, if an uneven amount was used
-    function checkScepterLoss($type)
+    public function checkScepterLoss($type)
     {
         $remaining = self::getGameStateValue('scepter' . $type);
         $used = self::getGameStateValue('usedScepter' . $type);
@@ -9648,7 +9641,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function reallocateScepter($player_id, $value)
+    public function reallocateScepter($player_id, $value)
     {
         $scepters = $this->tokens->getTokensOfTypeInLocation(
             'scepter_%',
@@ -9666,7 +9659,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actCancelAllScepters($force = false)
+    public function actCancelAllScepters($force = false)
     {
         if (!$force) {
             self::checkAction('actCancelScepter');
@@ -9724,7 +9717,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actUseTritonToken($ressources)
+    public function actUseTritonToken($ressources)
     {
         self::checkAction('actUseTritonToken');
         $player_id = self::getCurrentPlayerId();
@@ -9894,7 +9887,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actUseCompanion($card_id)
+    public function actUseCompanion($card_id)
     {
         self::checkAction('actUseCompanion');
         $player_id = self::getCurrentPlayerId();
@@ -9979,7 +9972,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     /*
      * @param booelan $use  true if token is used
      */
-    function actUseCerberusToken($use)
+    public function actUseCerberusToken($use)
     {
         self::checkAction('actUseCerberusToken');
         $player_id = self::getCurrentPlayerId();
@@ -10243,7 +10236,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actActionChoice($action, $die, $goldSources = null)
+    public function actActionChoice($action, $die, $goldSources = null)
     {
         self::checkAction('actActionChoice');
         $player_id = self::getCurrentPlayerId();
@@ -10618,7 +10611,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         //}
     }
 
-    function actActionMisfortune($action, $die, $goldSources = null)
+    public function actActionMisfortune($action, $die, $goldSources = null)
     {
         self::checkAction('actActionMisfortune');
         $player_id = self::getCurrentPlayerId();
@@ -10748,7 +10741,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
      * Actions of the reinforcement
      *
      */
-    function actReinforcement(
+    public function actReinforcement(
         $card_id,
         $owl_parameters = null,
         $doe_parameters = null,
@@ -11150,8 +11143,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
                     // we must flag all merchants
                     foreach (
-                        $this->exploits->getCardsOfType('merchant')
-                        as $card
+                        $this->exploits->getCardsOfType('merchant') as $card
                     ) {
                         if ($card['location'] == 'pile3-' . $player_id) {
                             $this->dbUpdateExploitPlayed($card['id'], true);
@@ -11306,7 +11298,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // If there is a ressource to choose
-    function actDoeTakeRessource($sideNum, $side, $ressources)
+    public function actDoeTakeRessource($sideNum, $side, $ressources)
     {
         self::checkAction('actDoeTakeRessource');
 
@@ -11345,7 +11337,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
     // Called when Oracle reinforcement is played
     // all players except the player_id in parameter should move 1 slot to the left
-    function oracleMove($player_id)
+    public function oracleMove($player_id)
     {
         $players_info = $this->getPlayersAdditionnalInfo();
 
@@ -11366,7 +11358,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // If the player wish to pass his reinforcement
-    function actReinforcementPass()
+    public function actReinforcementPass()
     {
         self::checkAction('actReinforcementPass');
 
@@ -11384,7 +11376,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
     // Launched when a player buys an exploit
     // will trigger the next state
-    function actBuyExploit($card_id, $ressources = null)
+    public function actBuyExploit($card_id, $ressources = null)
     {
         self::checkAction('actBuyExploit');
 
@@ -11674,7 +11666,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
     // Triggered when new sides are bought
     // $side = array of side_id
-    function actBuyForge($toForge, $toReplace, $mode = 'classic')
+    public function actBuyForge($toForge, $toReplace, $mode = 'classic')
     {
         if ($mode == 'classic') {
             self::checkAction('actBuyForge');
@@ -12044,7 +12036,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actAncestorSelect($die_number)
+    public function actAncestorSelect($die_number)
     {
         self::checkAction('actAncestorSelect');
         $player_id = self::getCurrentPlayerId();
@@ -12054,7 +12046,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // cancel the upgrade coming from the celestial die
-    function actCancelCelestial()
+    public function actCancelCelestial()
     {
         $player_id = self::getCurrentPlayerId();
         $this->setChoice($player_id, null);
@@ -12095,7 +12087,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         );
     }
 
-    function actEndForge()
+    public function actEndForge()
     {
         $player_id = self::getCurrentPlayerId();
 
@@ -12108,7 +12100,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actChooseMazePath($new_position)
+    public function actChooseMazePath($new_position)
     {
         $player_id = self::getCurrentPlayerId();
         self::checkAction('actChooseMazePath');
@@ -12135,7 +12127,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actChooseTreasure($treasure)
+    public function actChooseTreasure($treasure)
     {
         $player_id = self::getCurrentPlayerId();
         self::checkAction('actChooseTreasure');
@@ -12227,7 +12219,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return;
     }
 
-    function actPuzzleCelestial($auto = false)
+    public function actPuzzleCelestial($auto = false)
     {
         $player_id = self::getCurrentPlayerId();
         $player_name = $this->loadPlayersBasicInfos()[$player_id][
@@ -12266,7 +12258,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actPuzzleMaze()
+    public function actPuzzleMaze()
     {
         $player_id = self::getCurrentPlayerId();
         self::checkAction('actPuzzleMaze');
@@ -12282,7 +12274,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return;
     }
 
-    function actMazePowerConfirm($willDo)
+    public function actMazePowerConfirm($willDo)
     {
         $player_id = self::getCurrentPlayerId();
         self::checkAction('actMazePowerConfirm');
@@ -12437,7 +12429,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
     // $ressources : array of the choosen ressources
     // if side with gold and FS (for example), the FS will not be sent by the JS
-    function actOustedRessources($sideNum, $side, $ressources)
+    public function actOustedRessources($sideNum, $side, $ressources)
     {
         self::checkAction('actOustedRessources');
 
@@ -12462,7 +12454,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     //----------------------------------------------- Exploit action functions begin
-    function actExploitEnigma($die_number)
+    public function actExploitEnigma($die_number)
     {
         self::checkAction('actExploitEnigma');
 
@@ -12476,7 +12468,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         $this->gamestate->nextState('exploitEffect');
     }
 
-    function actExploitBoar($forgePlayerId)
+    public function actExploitBoar($forgePlayerId)
     {
         self::checkAction('actExploitBoar');
 
@@ -12513,7 +12505,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         $this->gamestate->nextState('forgeBoar');
     }
 
-    function actCelestialUpgrade($old_side_id, $new_side_id)
+    public function actCelestialUpgrade($old_side_id, $new_side_id)
     {
         self::checkAction('actCelestialUpgrade');
 
@@ -12611,7 +12603,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
     // Choice of the ressource
     // $ressources : array of the choosen ressources for each side (key)
-    function actExploitRessource($sideNum, $side, $ressources)
+    public function actExploitRessource($sideNum, $side, $ressources)
     {
         self::checkAction('actExploitRessource');
 
@@ -12693,13 +12685,13 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                     $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
                     $disable = true;
                     break;
-                //case 'oustAll':
-                //    // mode die1
-                //    $disable = $this->takeRessource2($player_id, 'blessing', $sideNum, $side, $ressources);
-                //    // Even if player has a cerberus token, should not be asked to rethrow
-                //    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
-                //    $disable = true;
-                //    break;
+                    //case 'oustAll':
+                    //    // mode die1
+                    //    $disable = $this->takeRessource2($player_id, 'blessing', $sideNum, $side, $ressources);
+                    //    // Even if player has a cerberus token, should not be asked to rethrow
+                    //    $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
+                    //    $disable = true;
+                    //    break;
                 case 'throwCelestialDie':
                     $disable = $this->takeRessource2(
                         $player_id,
@@ -12784,8 +12776,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                             $side_info = $this->dice_sides[$side['type']];
 
                             foreach (
-                                $side_info['ressource']
-                                as $res => $value
+                                $side_info['ressource'] as $res => $value
                             ) {
                                 $check[$res] = $check[$res] + $value;
                             }
@@ -13029,7 +13020,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actSecondAction($to_play, $resources)
+    public function actSecondAction($to_play, $resources)
     {
         self::checkAction('actSecondAction');
 
@@ -13121,7 +13112,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function actEndPlayerTurn()
+    public function actEndPlayerTurn()
     {
         self::notifyAllPlayers(
             'notifMessage',
@@ -13133,7 +13124,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         $this->gamestate->nextState('endPlayerTurn');
     }
 
-    function misfortuneAllocation()
+    public function misfortuneAllocation()
     {
         // We enable the user who owns misfortune
         $tok = $this->tokens->getTokenInfo('resolveMisfortune');
@@ -13304,7 +13295,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         Information will be sent to the JS
     */
 
-    function argsReinforcement()
+    public function argsReinforcement()
     {
         $player_id = self::getActivePlayerId();
         $players_info = $this->getPlayersAdditionnalInfo();
@@ -13346,7 +13337,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $reinforcements;
     }
 
-    function argsPlayerAction()
+    public function argsPlayerAction()
     {
         // Say to JS if player is currently forging ? from global or ?
 
@@ -13377,7 +13368,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         ];
     }
 
-    function argsSecondAction()
+    public function argsSecondAction()
     {
         $companions = [];
         foreach ($this->exploits->getCardsOfType('companion') as $card) {
@@ -13397,7 +13388,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         ];
     }
 
-    function argsDraft()
+    public function argsDraft()
     {
         $draft = [];
         $promoCards = $this->getGameStateValue('promoCards');
@@ -13415,7 +13406,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $draft;
     }
 
-    function argsMisfortune()
+    public function argsMisfortune()
     {
         $msgLoyalty = clienttranslate('(including Loyalty reward)');
         $actionChoice = false;
@@ -13521,7 +13512,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $sides;
     }
 
-    function argsRessourceChoice()
+    public function argsRessourceChoice()
     {
         $msgLoyalty = clienttranslate('(including Loyalty reward)');
 
@@ -13845,7 +13836,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     //}
 
     // return info available ressource including reduction
-    function argsForgeShip()
+    public function argsForgeShip()
     {
         //$player_id = self::getCurrentPlayerId();
         $retour = [];
@@ -13922,7 +13913,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $retour;
     }
 
-    function argsForgeBoar()
+    public function argsForgeBoar()
     {
         $card_id = $this->getGameStateValue('exploitBought');
         $sideToForge = '';
@@ -13953,7 +13944,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         ];
     }
 
-    function argExploitEffect()
+    public function argExploitEffect()
     {
         $card_id = $this->getGameStateValue('exploitBought');
         $pow = '';
@@ -14026,7 +14017,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return $retour;
     }
 
-    function argExploitRessource()
+    public function argExploitRessource()
     {
         $card_id = $this->getGameStateValue('exploitBought');
         $players_info = $this->getPlayersAdditionnalInfo();
@@ -14437,8 +14428,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                         $pos = 0;
                         // take all side up
                         foreach (
-                            $players_info
-                            as $it_player_id => $player_info
+                            $players_info as $it_player_id => $player_info
                         ) {
                             for ($i = 1; $i < 3; $i++) {
                                 $side = $this->sides->getCard(
@@ -14447,8 +14437,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                                 $side_info = $this->dice_sides[$side['type']];
 
                                 foreach (
-                                    $side_info['ressource']
-                                    as $res => $value
+                                    $side_info['ressource'] as $res => $value
                                 ) {
                                     $resource[$res] = $resource[$res] + $value;
                                 }
@@ -14732,7 +14721,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         The action method of state X is called everytime the current game state is set to X.
     */
 
-    function stBeginTurn()
+    public function stBeginTurn()
     {
         $isGameSetup = $this->getGameStateValue('isGameSetup');
 
@@ -14837,7 +14826,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function stDraftGame()
+    public function stDraftGame()
     {
         $slot = $this->draftSlot();
         if ($slot == null) {
@@ -14854,7 +14843,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function stBeginPlayerTurn()
+    public function stBeginPlayerTurn()
     {
         self::setGameStateValue('secondActionTaken', 0);
 
@@ -14972,7 +14961,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     // Will handle the autoamtic resolution
     // Notify corresponsing users
     // if no choice to make 2 choices : blessing or choice
-    function stBlessing()
+    public function stBlessing()
     {
         $diceThrows = self::getGameStateValue('diceThrows');
         $nbThrows = self::getGameStateValue('nbThrows');
@@ -15261,7 +15250,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // Activation of correct players
-    function stRessourceChoice()
+    public function stRessourceChoice()
     {
         $stateName = $this->gamestate->getCurrentMainState()->name;
         $nextState = '';
@@ -15308,7 +15297,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function stMisfortuneChoice()
+    public function stMisfortuneChoice()
     {
         // if nothing to choose => we disable and send back to initial state
         $side1 = $this->tokens->getTokenLocation('misfortune_1');
@@ -15321,7 +15310,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function stRessourceChoiceAdvanced($activeplayers = null, $continue = false)
+    public function stRessourceChoiceAdvanced($activeplayers = null, $continue = false)
     {
         // there is a ressource Choice on one of the players
         if (
@@ -15496,7 +15485,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         return false;
     }
 
-    function stReinforcement()
+    public function stReinforcement()
     {
         $player_id = $this->getGameStateValue('turnPlayerId');
         $players_info = $this->getPlayersAdditionnalInfo();
@@ -15539,8 +15528,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 'pile3-' . $player_id,
                 null,
                 'card_type_arg'
-            )
-            as $card_id => $reinforcement
+            ) as $card_id => $reinforcement
         ) {
             if (
                 $reinforcement['type_arg'] == '0' &&
@@ -15581,7 +15569,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     }
 
     // for the ousted player, divine blessing
-    function stOusting()
+    public function stOusting()
     {
         $player_id = $this->getGameStateValue('oustedPlayerId');
         $this->setGameStateValue('oracleReinforcement', 0);
@@ -15717,7 +15705,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     // Generate Args for JS for forging
     // If no need for user input=> do the actions
     // else wait for action
-    function stEffectExploit()
+    public function stEffectExploit()
     {
         $player_id = self::getActivePlayerId();
         $forge = false;
@@ -15895,8 +15883,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                         );
 
                         foreach (
-                            $this->loadPlayersBasicInfos()
-                            as $all_player_id => $players
+                            $this->loadPlayersBasicInfos() as $all_player_id => $players
                         ) {
                             if ($player_id != $all_player_id) {
                                 $notifPlayerArgs['player_id'] = $all_player_id;
@@ -15992,8 +15979,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                         // all must be allocated
                         // TODO: no bonus
                         foreach (
-                            $this->loadPlayersBasicInfos()
-                            as $all_player_id => $players
+                            $this->loadPlayersBasicInfos() as $all_player_id => $players
                         ) {
                             if ($player_id != $all_player_id) {
                                 $res = $this->blessing(
@@ -16158,7 +16144,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                             );
                         }
                         break;
-                    // Rebellion
+                        // Rebellion
                     case 'initCompanion':
                         // token if put on the player and init to 0
                         $this->tokens->moveToken(
@@ -16198,8 +16184,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                         );
 
                         foreach (
-                            $this->loadPlayersBasicInfos()
-                            as $all_player_id => $players
+                            $this->loadPlayersBasicInfos() as $all_player_id => $players
                         ) {
                             $notifPlayerArgs['player_id'] = $all_player_id;
                             $side = $this->rollDice($all_player_id, 1);
@@ -16368,8 +16353,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                         $gain['fireshard'] = 0;
                         $gain['moonshard'] = 0;
                         foreach (
-                            $players_info
-                            as $aff_player_id => $player_info
+                            $players_info as $aff_player_id => $player_info
                         ) {
                             if ($player_id != $aff_player_id) {
                                 $lost = [];
@@ -16517,8 +16501,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                             foreach (
                                 $this->sides->getCardsInLocation(
                                     'dice' . $num . '-p' . $player_id
-                                )
-                                as $id => $side
+                                ) as $id => $side
                             ) {
                                 $side_info = $this->dice_sides[$side['type']];
 
@@ -16777,7 +16760,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                         );
 
                         break;
-                    // Rebellion : Titan
+                        // Rebellion : Titan
                     case 'memoryTokens':
                         $forge = true;
                         // init of tokens
@@ -16805,7 +16788,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                         }
 
                         break;
-                    // Rebellion : Goddess
+                        // Rebellion : Goddess
                     case 'greatGolem':
                         //$this->tokens->setTokenState('mazestock_' . $player_id, 2);
                         $this->tokens->incTokenState("mazestock_$player_id", 2);
@@ -16959,7 +16942,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function misfortuneState()
+    public function misfortuneState()
     {
         $token = $this->tokens->getTokenInfo('resolveMisfortune');
 
@@ -16970,7 +16953,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function debugVTO($player_id)
+    public function debugVTO($player_id)
     {
         //throw new feException($this->misfortuneState());
         $retour = $this->getPlayersAdditionnalInfo()[$player_id];
@@ -16981,12 +16964,12 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         throw new feException(print_r($retour)); //['player_name'] . " " . $this->getPlayersAdditionnalInfo()[$player_id]['ressource_choice']);
     }
 
-    function debugThib()
+    public function debugThib()
     {
         $this->gamestate->nextState('blessing');
     }
 
-    function debugSetPos($pos)
+    public function debugSetPos($pos)
     {
         $player_id = self::getCurrentPlayerId(); // !! We must only return informations visible by this player !!
         $this->tokens->setTokenState('position_' . $player_id, $pos);
@@ -17011,7 +16994,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         //]);
     }
 
-    function stEndPlayerTurn()
+    public function stEndPlayerTurn()
     {
         $currentPlayerNum = $this->getGameStateValue('currentPlayerNum');
         $player_id = self::getActivePlayerId();
@@ -17023,8 +17006,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         $this->actCancelAllScepters(true);
 
         foreach (
-            $this->exploits->getCardsInLocation('pile3-' . $player_id)
-            as $card_id => $reinforcement
+            $this->exploits->getCardsInLocation('pile3-' . $player_id) as $card_id => $reinforcement
         ) {
             if (
                 $reinforcement['type'] != 'companion' ||
@@ -17079,7 +17061,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function stEndScoring()
+    public function stEndScoring()
     {
         self::notifyAllPlayers('notifBeginScoring', '', []);
         $players = $this->loadPlayersBasicInfos();
@@ -17092,8 +17074,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             ];
             foreach ($locations as $location) {
                 foreach (
-                    $this->exploits->getCardsInLocation($location)
-                    as $card
+                    $this->exploits->getCardsInLocation($location) as $card
                 ) {
                     $card_vp = $this->exploit_types[$card['type']]['VP'];
                     $card_name = $this->exploit_types[$card['type']]['name'];
@@ -17181,7 +17162,9 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         $this->gamestate->nextState();
     }
 
-    function stPoule() {}
+    public function stPoule()
+    {
+    }
 
     //////////////////////////////////////////////////////////////////////////////
     //////////// Zombie
@@ -17195,7 +17178,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         (ex: pass).
     */
 
-    function zombieTurn($state, $active_player)
+    public function zombieTurn($state, $active_player)
     {
         $statename = $state['name'];
 
@@ -17286,7 +17269,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
     */
 
-    function upgradeTableDb($from_version)
+    public function upgradeTableDb($from_version)
     {
         // $from_version is the current version of this game database, in numerical form.
         // For example, if the game was running with a release of your game named "140430-1345",
@@ -17443,7 +17426,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
     }
 
-    function debugNextState($state)
+    public function debugNextState($state)
     {
         $this->gamestate->nextState($state);
     }

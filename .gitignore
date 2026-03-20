@@ -10,3 +10,6 @@
 
 # PHPUnit
 /.phpunit.result.cache
+
+# PHP-cs-fixer
+/.php-cs-fixer.cache

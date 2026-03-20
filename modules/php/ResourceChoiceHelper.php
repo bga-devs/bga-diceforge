@@ -22,7 +22,9 @@ interface ResourceChoiceDb
  */
 class ResourceChoiceHelper
 {
-    public function __construct(private ResourceChoiceDb $db) {}
+    public function __construct(private ResourceChoiceDb $db)
+    {
+    }
 
     public function dbSetChoice(int|string $player_id, ResourceChoice $value): void
     {
