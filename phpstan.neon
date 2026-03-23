@@ -1,0 +1,15 @@
+parameters:
+    level: 5
+    paths:
+        - modules/php
+    excludePaths:
+        - vendor
+        - modules/php/material.inc.php
+    scanFiles:
+        - _ide_helper.php
+        - tests/stubs/BgaFrameworkStubs.php
+    ignoreErrors:
+        - 
+            identifier: method.notFound
+            path: modules/php/Game.php
+            message: '*getStatTypes*'
