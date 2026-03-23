@@ -19,6 +19,8 @@
 
 namespace Bga\Games\diceforge;
 
+use Bga\GameFramework\SystemException;
+
 class Tokens extends \APP_DbObject
 {
     public $table;
@@ -93,11 +95,11 @@ class Tokens extends \APP_DbObject
                 }
                 $key = $token_info ['key'];
                 if ($key == null) {
-                    throw new feException("createTokens: key cannot be null");
+                    throw new SystemException("createTokens: key cannot be null");
                 }
                 $key = $this->varsub($key, array_merge($token_info, array('INDEX' => $i )), true);
                 if ($location == null) {
-                    throw new feException("createTokens: location cannot be null (set per token location or location_global");
+                    throw new SystemException("createTokens: location cannot be null (set per token location or location_global");
                 }
                 self::checkLocation($location);
                 self::checkKey($key);
@@ -127,7 +129,7 @@ class Tokens extends \APP_DbObject
             $iterArr = array('' );
         }
         if (! is_array($iterArr)) {
-            throw new feException("iterArr must be an array");
+            throw new SystemException("iterArr must be an array");
         }
         if (count($iterArr) == 0) {
             $iterArr = array('' );
@@ -249,7 +251,7 @@ class Tokens extends \APP_DbObject
         if (isset($this->autoreshuffle_custom [$from_location])) {
             $discard_location = $this->autoreshuffle_custom [$from_location];
         } else {
-            throw new feException("reformDeckFromDiscard: Unknown discard location for $from_location !");
+            throw new SystemException("reformDeckFromDiscard: Unknown discard location for $from_location !");
         }
         self::checkLocation($discard_location);
         self::moveAllTokensInLocation($discard_location, $from_location);
@@ -473,7 +475,7 @@ class Tokens extends \APP_DbObject
             self::error("getTokens: some cards have not been found:");
             self::error("requested: " . implode(",", $tokens_array));
             self::error("received: " . implode(",", array_keys($result)));
-            throw new feException("getTokens: Some cards have not been found !");
+            throw new SystemException("getTokens: Some cards have not been found !");
         }
         return $result;
     }
@@ -548,7 +550,7 @@ class Tokens extends \APP_DbObject
     public function varsub($line, $keymap, $usegindex = false)
     {
         if ($line === null) {
-            throw new feException("varsub: line cannot be null");
+            throw new SystemException("varsub: line cannot be null");
         }
         if (strpos($line, "{") !== false) {
             foreach ($keymap as $key => $value) {
@@ -571,34 +573,34 @@ class Tokens extends \APP_DbObject
     final public function checkLocation($location, $like = false)
     {
         if ($location === null) {
-            throw new feException("location cannot be null");
+            throw new SystemException("location cannot be null");
         }
         $extra = "";
         if ($like) {
             $extra = "%";
         }
         if (preg_match("/^[A-Za-z0-9${extra}][A-Za-z_0-9${extra}-]*$/", $location) == 0) {
-            throw new feException("location must be alphanum and underscore non empty string");
+            throw new SystemException("location must be alphanum and underscore non empty string");
         }
     }
     final public function checkState($state, $canBeNull = false)
     {
         if ($state === null && $canBeNull == false) {
-            throw new feException("state cannot be null");
+            throw new SystemException("state cannot be null");
         }
         if ($state !== null && preg_match("/^-*[0-9]+$/", $state) == 0) {
             // $bt = debug_backtrace();
             // trigger_error("bt ".print_r($bt[2],true)) ;
-            throw new feException("state must be integer number");
+            throw new SystemException("state must be integer number");
         }
     }
     final public function checkTokenKeyArray($arr)
     {
         if ($arr == null) {
-            throw new feException("tokens cannot be null");
+            throw new SystemException("tokens cannot be null");
         }
         if (! is_array($arr)) {
-            throw new feException("tokens must be an array");
+            throw new SystemException("tokens must be an array");
         }
         foreach ($arr as $key) {
             $this->checkKey($key);
@@ -607,27 +609,27 @@ class Tokens extends \APP_DbObject
     final public function checkKey($key, $like = false)
     {
         if ($key == null) {
-            throw new feException("key cannot be null");
+            throw new SystemException("key cannot be null");
         }
         $extra = "";
         if ($like) {
             $extra = "%";
         }
         if (preg_match("/^[A-Za-z_0-9${extra}]+$/", $key) == 0) {
-            throw new feException("key must be alphanum and underscore non empty string '$key'");
+            throw new SystemException("key must be alphanum and underscore non empty string '$key'");
         }
     }
     final public function checkType($key)
     {
         if ($key == null) {
-            throw new feException("type cannot be null");
+            throw new SystemException("type cannot be null");
         }
         $this->checkKey($key, true);
     }
     final public function checkPosInt($key)
     {
         if ($key && preg_match("/^[0-9]+$/", $key) == 0) {
-            throw new feException("must be integer number");
+            throw new SystemException("must be integer number");
         }
     }
     final public function getSelectQuery()
@@ -688,7 +690,7 @@ class Tokens extends \APP_DbObject
     public function commitGlobalIndex($key)
     {
         if (! array_key_exists($key, $this->g_index)) {
-            throw new feException("global index $key is not defined");
+            throw new SystemException("global index $key is not defined");
         }
         $this->setGlobalIndex($key, $this->g_index [$key]);
         return $this->g_index [$key];
