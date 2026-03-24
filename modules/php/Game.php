@@ -10960,7 +10960,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
                             if ($this->canFillHammer($player_id)) {
                                 $ressourceChoice = true;
-                                $this->resourceChoiceHelper->dbSetChoice($player_id, 1);
+                                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
                                 $this->dbSetSideChoice($player_id, 1, 'G3');
                             } else {
                                 //$this->increaseGold($player_id, 3);
@@ -11001,7 +11001,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                         $notifPlayerArgs['vp'] = 1;
                         if ($this->canFillHammer($player_id)) {
                             $ressourceChoice = true;
-                            $this->resourceChoiceHelper->dbSetChoice($player_id, 1);
+                            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
                             $this->dbSetSideChoice($player_id, 1, 'G3');
                         } else {
                             //$this->increaseGold($player_id, 3);
@@ -15938,7 +15938,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                         $this->increaseMoonShard($player_id, 3);
                         if ($this->canFillHammer($player_id)) {
                             $ressourceChoice = true;
-                            $this->resourceChoiceHelper->dbSetChoice($player_id, 1);
+                            $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
                             $this->dbSetSideChoice($player_id, 1, 'G3');
                         } else {
                             $scepter = $this->increaseGold(
@@ -16438,7 +16438,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                             // add 4G (choice hammer / scepter)
                             if ($this->canFillHammer($player_id)) {
                                 $ressourceChoice = true;
-                                $this->resourceChoiceHelper->dbSetChoice($player_id, 1);
+                                $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
                                 $this->dbSetSideChoice($player_id, 1, 'G4');
                                 $remainingThrows = 100;
                                 break;
