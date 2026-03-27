@@ -4,6 +4,7 @@
 /.vscode/*
 !/.vscode/settings.json
 !/.vscode/extensions.json
+!/.vscode/sftp.json.example
 
 # Composer
 /vendor/

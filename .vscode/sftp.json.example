@@ -1,0 +1,30 @@
+{
+    "name": "BGA Studio",
+    "host": "1.studio.boardgamearena.com",
+    "protocol": "sftp",
+    "port": 2022,
+    "username": "${SFTP_USERNAME}",
+    "remotePath": "/diceforge",
+    "password": "${SFTP_PASSWORD}",
+    "uploadOnSave": true,
+    "ignore": [
+        ".git",
+        ".prettierignore",
+        ".prettierrcold",
+        ".vscode",
+        ".gitattributes",
+        ".gitignore",
+        "docs",
+        "rebellion.todo",
+        "tests",
+        "vendor",
+        "phpunit.xml.dist",
+        "phpunit.xml",
+        "phpunit.result.cache",
+        "composer.json",
+        "composer.lock",
+        "phpunit.xml",
+        "phpstan.neon",
+        "phpstan-custom-rules.neon"
+    ]
+}
