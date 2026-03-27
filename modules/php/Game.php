@@ -28,12 +28,18 @@ use Bga\GameFramework\SystemException;
 use Bga\GameFramework\UserException;
 use Bga\GameFramework\Components\Deck;
 use Bga\GameFramework\StateType;
+use Bga\GameFramework\Table;
 use DiceForge\Resources\ResourceChoice;
+use Bga\Games\diceforge\Db\Db;
+use Bga\Games\diceforge\Db\TableDb;
+use Bga\Games\diceforge\Tokens;
 
 require_once __DIR__ . '/resource_choice.php';
 require_once __DIR__ . '/ResourceChoiceHelper.php';
+require_once __DIR__ . '/db/Db.php';
+require_once __DIR__ . '/db/TableDb.php';
 
-class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
+class Game extends Table
 {
     public const MAX_GOLD = 12;
     public const MAX_FIRESHARD = 6;
@@ -70,7 +76,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     public array $labyrinth_paths;
     public array $labyrinth_rewards;
 
-    public function __construct()
+    public function __construct(private readonly Db $db = new TableDb())
     {
 
         // Your global variables labels:
@@ -131,19 +137,8 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         $this->sides = $this->deckFactory->createDeck('sides');
 
         // Tokens
-        $this->tokens = new Tokens();
-        $this->resourceChoiceHelper = new ResourceChoiceHelper($this);
-    }
-
-    // ResourceChoiceDb interface implementation
-    public function executeQuery(string $sql): void
-    {
-        self::DbQuery($sql);
-    }
-
-    public function getUniqueValue(string $sql): mixed
-    {
-        return (int) self::getUniqueValueFromDB($sql);
+        $this->tokens = new Tokens($this->db);
+        $this->resourceChoiceHelper = new ResourceChoiceHelper($this->db);
     }
 
     /*
@@ -350,7 +345,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
 
         $sql .= implode(',', $values);
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
         self::reattributeColorsBasedOnPreferences(
             $players,
             $gameinfos['player_colors']
@@ -549,14 +544,14 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         // set of correct location arg
         $sql =
             "UPDATE sides SET card_location_arg = card_location_arg-1 WHERE card_location LIKE 'dice%'";
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
 
         // Init gold ressources for players
         // 3 for 1st, 2 for 2nd, 1 for 3rd
         $sql =
             'UPDATE player SET res_gold=3 where player_id =' .
             $players_turn['0'];
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
         $player_init = $players_turn['0'];
         for ($i = 1; $i < $nb_players; $i++) {
             $sql =
@@ -564,7 +559,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 (3 - $i) .
                 ' where player_id =' .
                 $this->getPlayerAfter($player_init);
-            self::DbQuery($sql);
+            $this->db->DbQuery($sql);
             $player_init = $this->getPlayerAfter($player_init);
         }
 
@@ -646,7 +641,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
         $sql =
             'SELECT player_id id, player_score score, hammer_position, position, player_color color, player_name name, triton_token triton, cerberus_token cerberus, hammer_auto FROM player ';
-        $result['players'] = self::getCollectionFromDb($sql);
+        $result['players'] = $this->db->getCollectionFromDB($sql);
         $result['counters'] = $this->getPlayersRessources();
         $result['secondActionTaken'] = $this->getGameStateValue(
             'secondActionTaken'
@@ -808,7 +803,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $sql .= ' WHERE player_id = ' . (int) $player_id;
         }
 
-        $query_arr = self::getNonEmptyCollectionFromDB($sql);
+        $query_arr = $this->db->getNonEmptyCollectionFromDB($sql);
 
         foreach ($query_arr as $player_id => $player) {
             $current_player = $player['id'];
@@ -947,7 +942,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     {
         $sql = "SELECT card_id FROM sides WHERE card_type = '$side' LIMIT 1";
 
-        return $this->getUniqueValueFromDB($sql);
+        return $this->db->getUniqueValueFromDB($sql);
     }
 
     public function hasMazeStock($player_id = null)
@@ -959,7 +954,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $sql .= " AND token_key = 'mazestock_" . $player_id . "'";
         }
 
-        $dbres = self::getUniqueValueFromDB($sql);
+        $dbres = $this->db->getUniqueValueFromDB($sql);
 
         if ($this->getGameStateValue('timeGolem') != 0) {
             return true;
@@ -1180,7 +1175,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             )";
         }
 
-        self::dbQuery($sql);
+        $this->db->DbQuery($sql);
         self::notifyAllPlayers('notifThrowToken', '', []);
     }
 
@@ -1411,7 +1406,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         $sql = 'SELECT card_type, COUNT(*) FROM exploit GROUP BY card_type';
         $poolList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
-        $res = self::getCollectionFromDB($sql, true);
+        $res = $this->db->getCollectionFromDB($sql, true);
 
         if (!isset($res['mirror'])) {
             $poolList[] = 11;
@@ -1456,7 +1451,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         $token_to_init = ['companion', 'scepter'];
         foreach ($token_to_init as $ind => $value) {
             $sql = "select concat(card_type, '_', card_id) AS 'key', '1' AS 'nbr', 'deck' AS 'location', '0' AS 'state' FROM exploit WHERE card_type = '$value'";
-            $res = self::getObjectListFromDB($sql);
+            $res = $this->db->getObjectListFromDB($sql);
 
             if (count($res) != 0) {
                 $this->tokens->createTokens($res, 'none');
@@ -1472,11 +1467,11 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $tiebreak = ['sides', 'exploit', 'resources', '1st'];
             $sql =
                 'SELECT player_score FROM player GROUP BY player_score HAVING COUNT(player_score) > 1';
-            $scores = self::getObjectListFromDB($sql, true);
+            $scores = $this->db->getObjectListFromDB($sql, true);
 
             foreach ($scores as $score) {
                 $sql = "SELECT player_id FROM player WHERE player_score = $score";
-                $tied_players = self::getObjectListFromDB($sql, true);
+                $tied_players = $this->db->getObjectListFromDB($sql, true);
 
                 foreach ($tiebreak as $act) {
                     $test = [];
@@ -1484,11 +1479,11 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                     $players_info = $this->getPlayersAdditionnalInfo();
 
                     $sql = "SELECT player_score_aux FROM player WHERE player_score = $score group by player_score_aux having count(player_score_aux) > 1";
-                    $aux = self::getObjectListFromDB($sql, true);
+                    $aux = $this->db->getObjectListFromDB($sql, true);
 
                     foreach ($aux as $score_aux) {
                         $sql = "SELECT player_id FROM player WHERE player_score_aux = $score_aux and player_score = $score";
-                        $players_being_tied = self::getObjectListFromDB(
+                        $players_being_tied = $this->db->getObjectListFromDB(
                             $sql,
                             true
                         );
@@ -1505,19 +1500,19 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                                             )
                                         ) .
                                         " WHERE player_id = $player_id";
-                                    self::dbQuery($sql);
+                                    $this->db->DbQuery($sql);
                                     break;
                                 case 'exploit':
                                     $sql = "UPDATE player SET player_score_aux = 200 + (SELECT count(1) FROM exploit WHERE card_location like '%-$player_id') WHERE player_id = $player_id";
-                                    self::dbQuery($sql);
+                                    $this->db->DbQuery($sql);
                                     break;
                                 case 'resources':
                                     $sql = "UPDATE player SET player_score_aux = 100 + res_fire + res_moon + res_gold WHERE player_id = $player_id";
-                                    self::dbQuery($sql);
+                                    $this->db->DbQuery($sql);
                                     break;
                                 case '1st':
                                     $sql = "UPDATE player SET player_score_aux = 100 - player_no WHERE player_id = $player_id";
-                                    self::dbQuery($sql);
+                                    $this->db->DbQuery($sql);
                                     break;
                             }
                         }
@@ -1526,7 +1521,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             }
             $sql =
                 'UPDATE player SET player_score_aux = 0 WHERE player_score_aux = 300 OR player_score_aux = 200 OR player_score_aux = 100';
-            self::dbQuery($sql);
+            $this->db->DbQuery($sql);
         }
     }
 
@@ -2529,7 +2524,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 "')";
         }
 
-        $side_id = self::getUniqueValueFromDB($sql);
+        $side_id = $this->db->getUniqueValueFromDB($sql);
 
         if ($side_id == null) {
             return false;
@@ -2556,7 +2551,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     {
         $sql = 'SELECT DISTINCT card_type FROM exploit';
         $garden = ['shield', 'triple', 'mirror', 'ship', 'boar'];
-        $exploits = self::getObjectListFromDB($sql, true);
+        $exploits = $this->db->getObjectListFromDB($sql, true);
         $info = [];
 
         foreach ($garden as $i => $gard) {
@@ -2703,10 +2698,10 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
             // get total bought by players
             $sql = "SELECT count(*) FROM exploit WHERE card_type LIKE '%$card_type%' and card_location NOT LIKE 'M%' AND card_location NOT LIKE 'F%'";
-            $totalAlreadyBought = self::getUniqueValueFromDB($sql) - 1;
+            $totalAlreadyBought = $this->db->getUniqueValueFromDB($sql) - 1;
 
             $sql = "SELECT count(*) FROM exploit WHERE card_type LIKE '%$card_type%' and card_location LIKE '%$player_id%'";
-            $playerBought = self::getUniqueValueFromDB($sql) - 1;
+            $playerBought = $this->db->getUniqueValueFromDB($sql) - 1;
 
             // if 1st to buy a card max VP
             if ($totalAlreadyBought == 0) {
@@ -4031,7 +4026,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         if ($player_id != null) {
             $sql .= ' AND player_id = ' . $player_id;
         }
-        $dbres = self::getUniqueValueFromDB($sql);
+        $dbres = $this->db->getUniqueValueFromDB($sql);
 
         if ($dbres == 0) {
             if (
@@ -4077,7 +4072,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     {
         $sql =
             "SELECT player_id, card_type from sides, player where (card_id = player.throw_1 or card_id = player.throw_2) and (card_type = 'mirror' or card_type = 'ship')";
-        $dbres = self::getObjectListFromDB($sql);
+        $dbres = $this->db->getObjectListFromDB($sql);
 
         $ship_owned = [];
         $mirror_owned = [];
@@ -4121,7 +4116,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             "(card_location in (SELECT DISTINCT CONCAT('dice1-p', SUBSTRING(card_location, 7, 99)) FROM exploit WHERE card_type = 'twins' AND card_location like 'pile%') OR ";
         $sql .=
             "card_location in (SELECT DISTINCT CONCAT('dice2-p', SUBSTRING(card_location, 7, 99)) FROM exploit WHERE card_type = 'twins' AND card_location like 'pile%')) ";
-        $dbres = self::getUniqueValueFromDB($sql);
+        $dbres = $this->db->getUniqueValueFromDB($sql);
         if ($dbres > 0) {
             return true;
         }
@@ -4129,7 +4124,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         // if we have a mirror & someone else owns a twin
         $sql =
             "SELECT DISTINCT SUBSTRING(card_location, 7, 99) FROM exploit WHERE card_type = 'twins' AND card_location LIKE 'pile%'";
-        $dbres = self::getObjectListFromDB($sql, true);
+        $dbres = $this->db->getObjectListFromDB($sql, true);
 
         foreach ($dbres as $twin) {
             // one mirror shown and not the one that have the twin
@@ -4150,7 +4145,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         // If we have two owners of misfortune triggered at the same time, mono resolution
         $sql =
             "SELECT distinct card_type_arg from sides, player where (card_id = player.throw_1 or card_id = player.throw_2) and (card_type like '%Misfortune')";
-        $dbres = self::getObjectListFromDB($sql, true);
+        $dbres = $this->db->getObjectListFromDB($sql, true);
         // if we roll a misfortune, mono resolution (test)
         //if (count($dbres) > 1)
         if (count($dbres) > 0) {
@@ -4178,7 +4173,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $sql .= " AND player_id = $player_id";
         }
 
-        $dbres = self::getUniqueValueFromDB($sql);
+        $dbres = $this->db->getUniqueValueFromDB($sql);
 
         if ($dbres == 0) {
             // no choice
@@ -4197,7 +4192,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $sql .= ' AND player_id = ' . $player_id;
         }
 
-        $dbres = self::getUniqueValueFromDB($sql);
+        $dbres = $this->db->getUniqueValueFromDB($sql);
         if ($dbres == 0) {
             // no choice
             return false;
@@ -4214,7 +4209,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $sql .= "AND player_id = $player_id";
         }
 
-        $dbres = self::getUniqueValueFromDB($sql);
+        $dbres = $this->db->getUniqueValueFromDB($sql);
 
         if ($dbres == 0) {
             // no choice
@@ -4293,7 +4288,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         //$players = $this->getPlayersAdditionnalInfo();
         //return $players[ $player_id ]['cerberus_token'];
 
-        $dbres = self::getUniqueValueFromDB($sql);
+        $dbres = $this->db->getUniqueValueFromDB($sql);
 
         if ($dbres == 0) {
             return false;
@@ -4309,14 +4304,14 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         $sql .= 'union all ';
         $sql .= "select  sum(token_state) gold  from token where token_location = $player_id AND token_key like 'scepter%') aa";
 
-        return self::getUniqueValueFromDB($sql);
+        return $this->db->getUniqueValueFromDB($sql);
     }
 
     public function hasCompanionToken($player_id)
     {
         $sql = "SELECT SUM(token_state) FROM token WHERE token_key LIKE 'companion%' AND token_location = '$player_id' AND token_state <= 5";
 
-        $dbres = self::getUniqueValueFromDB($sql);
+        $dbres = $this->db->getUniqueValueFromDB($sql);
 
         if ($dbres == 0) {
             return false;
@@ -4404,14 +4399,14 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $player_id .
             "'";
 
-        return self::getCollectionFromDb($sql);
+        return $this->db->getCollectionFromDB($sql);
     }
 
     public function canUseTwins($player_id)
     {
         // Scepters & twins cannot be at the same time on play ==> check of only gold
         $sql = "SELECT count(card_id) FROM exploit, player WHERE card_type = 'twins' AND card_type_arg = 0 AND card_location LIKE '%-$player_id' AND res_gold >= 3 AND player_id = $player_id";
-        $dbres = self::getUniqueValueFromDB($sql);
+        $dbres = $this->db->getUniqueValueFromDB($sql);
 
         if ($dbres == 0) {
             return false;
@@ -4423,7 +4418,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     public function updateAvailableTwin($player_id, $used = true)
     {
         $sql = "SELECT card_id FROM exploit WHERE card_type = 'twins' AND card_type_arg = 0 AND card_location LIKE '%-$player_id' LIMIT 1";
-        $card_id = self::getUniqueValueFromDB($sql);
+        $card_id = $this->db->getUniqueValueFromDB($sql);
 
         if ($card_id == null) {
             throw new SystemException('Error in the updateAvailableTwin function');
@@ -4431,7 +4426,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $sql =
                 "UPDATE exploit SET card_type_arg = $used WHERE card_id = " .
                 $card_id;
-            self::dbQuery($sql);
+            $this->db->DbQuery($sql);
             return $card_id;
         }
     }
@@ -4450,7 +4445,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         if ($player_id != null) {
             $sql .= " AND card_location LIKE '%-$player_id'";
         }
-        return self::dbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function checkExploitId($card_id, $card_position)
@@ -4460,7 +4455,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $card_position .
             "'";
 
-        $id = self::getUniqueValueFromDB($sql);
+        $id = $this->db->getUniqueValueFromDB($sql);
         //if ($id != $card_id)
         //    throw new VisibleSystemException ( "You are not buying the first available card");
         //else
@@ -4475,7 +4470,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
         if (empty($this->players_info)) {
             $sql = 'SELECT player_id AS id, player.* FROM player';
-            $this->players_info = self::getCollectionFromDb($sql);
+            $this->players_info = $this->db->getCollectionFromDB($sql);
         }
 
         return $this->players_info;
@@ -4498,7 +4493,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $this->incStat(1, 'nb_boar', $player_id);
         }
 
-        self::dbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     //function dbIncMisfortune($player_id, $add = true) {
@@ -4511,7 +4506,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     //    //if ($add)
     //    //    $this->incStat(1, 'nb_boar', $player_id);
     //
-    //    self::dbQuery($sql);
+    //    $this->db->DbQuery($sql);
     //}
 
     // return player_id owning the card
@@ -4542,7 +4537,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $this->incStat(1, 'nb_twins', $player_id);
         }
 
-        self::dbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbUpdateThrow($player_id, $throwNum, $side_id)
@@ -4554,7 +4549,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $side_id .
             "' WHERE player_id = " .
             $player_id;
-        self::dbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbIncTriton($player_id, $add = true)
@@ -4569,7 +4564,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 $player_id;
         }
 
-        self::dbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbIncCerberus($player_id, $add = true)
@@ -4584,7 +4579,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 $player_id;
         }
 
-        self::dbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbUpdateExploitPlayed($card_id, $played)
@@ -4598,7 +4593,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 'UPDATE exploit SET card_type_arg = 0 WHERE card_id = ' .
                 $card_id;
         }
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbUpdateTokenPlayed($player_id, $token, $played)
@@ -4618,7 +4613,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 $player_id .
                 "'";
         }
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbUpdateRolled($player_id, $rolled)
@@ -4630,17 +4625,17 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $sql =
                 'UPDATE player SET rolled = 0 where player_id = ' . $player_id;
         }
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function updateAllThrows()
     {
         $sql = "UPDATE token SET token_state = 0 WHERE token_key like 'throw%'";
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
 
         $sql =
             "UPDATE token SET token_state = 0 WHERE token_key like 'mirror%'";
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     /*
@@ -4650,13 +4645,13 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     {
         $sql =
             "UPDATE player set rolled = 0 where ressource_choice = -1 AND rolled = 1 AND side_choice_1 = '0' AND side_choice_2 = '0'";
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function hasRolled($player_id)
     {
         $sql = 'SELECT rolled FROM player WHERE player_id = ' . $player_id;
-        $dbres = self::getUniqueValueFromDB($sql);
+        $dbres = $this->db->getUniqueValueFromDB($sql);
 
         if ($dbres == 0) {
             return false;
@@ -4668,7 +4663,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     public function debugRessourcesAll()
     {
         $sql = 'UPDATE player set res_gold = 12, res_fire=6, res_moon = 6';
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
         self::notifyAllPlayers(
             'updateCounters',
             '',
@@ -4963,7 +4958,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $value .
             "' WHERE player_id = " .
             $player_id;
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     // if $value == -1 : Side to choose
@@ -4979,7 +4974,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 $value .
                 "' WHERE player_id = " .
                 $player_id;
-            return self::DbQuery($sql);
+            $this->db->DbQuery($sql);
         } elseif ($side_num == 99) {
             //if ($value == "0")
             //    $value = "none";
@@ -4999,7 +4994,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $value .
             "' WHERE player_id = " .
             $player_id;
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbSetGold($player_id, $value)
@@ -5009,7 +5004,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $value .
             ' WHERE player_id = ' .
             $player_id;
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbSetMoonShard($player_id, $value)
@@ -5019,7 +5014,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $value .
             ' WHERE player_id = ' .
             $player_id;
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbSetAncientShard($player_id, $value)
@@ -5029,7 +5024,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $value .
             ' WHERE player_id = ' .
             $player_id;
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbSetFireShard($player_id, $value)
@@ -5039,7 +5034,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $value .
             ' WHERE player_id = ' .
             $player_id;
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbIncreaseVP($player_id, $value)
@@ -5049,7 +5044,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $value .
             ' WHERE player_id = ' .
             $player_id;
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbDecreaseVP($player_id, $value)
@@ -5063,7 +5058,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $new_score .
             ' WHERE player_id = ' .
             $player_id;
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbIncreaseHammer($player_id, $value)
@@ -5073,7 +5068,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $value .
             ' WHERE player_id = ' .
             $player_id;
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbInitHammer($player_id)
@@ -5082,13 +5077,13 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             'UPDATE player SET hammer_position = 0 WHERE player_id = ' .
             $player_id .
             ' and hammer_position is NULL';
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function hasAutoHammer($player_id)
     {
         $sql = 'SELECT hammer_auto FROM player where player_id = ' . $player_id;
-        return self::getUniqueValueFromDB($sql);
+        return $this->db->getUniqueValueFromDB($sql);
     }
 
     public function setAutoHammer($player_id, $enable)
@@ -5102,7 +5097,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 'UPDATE player SET hammer_auto = 0 WHERE player_id = ' .
                 $player_id;
         }
-        return self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function dbGetHammerPosition($player_id)
@@ -5111,7 +5106,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             'select hammer_position from player where player_id = ' .
             $player_id;
 
-        return self::getUniqueValueFromDB($sql);
+        return $this->db->getUniqueValueFromDB($sql);
     }
 
     public function countExploitInLocation($type, $location, $location_arg = null)
@@ -5129,7 +5124,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $sql .= " AND card_location_arg = '" . $location_arg . "'";
         }
 
-        $dbres = self::DbQuery($sql);
+        $dbres = $this->db->DbQuery($sql);
         $res = mysql_fetch_assoc($dbres);
 
         return $res['nb'];
@@ -5150,7 +5145,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $sql .= ' AND player_id != ' . $exclude_player_id;
         }
 
-        $dbres = self::getCollectionFromDB($sql);
+        $dbres = $this->db->getCollectionFromDB($sql);
 
         if ($dbres == null) {
             // side not valid
@@ -5191,7 +5186,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         //if ($exclude_player_id != null)
         //  $sql .= ' AND player_id != ' . $exclude_player_id;
 
-        $dbres = self::getCollectionFromDB($sql);
+        $dbres = $this->db->getCollectionFromDB($sql);
 
         if ($dbres == null) {
             // side not valid
@@ -6129,14 +6124,14 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             "SELECT res_fire from player WHERE player_id = '" .
             $player_id .
             "'";
-        $res = self::getUniqueValueFromDB($sql);
+        $res = $this->db->getUniqueValueFromDB($sql);
         $firePotential = $res;
 
         $sql =
             "SELECT res_ancient from player WHERE player_id = '" .
             $player_id .
             "'";
-        $res = self::getUniqueValueFromDB($sql);
+        $res = $this->db->getUniqueValueFromDB($sql);
         $firePotential += $res;
 
         $scepterFire = $this->getGameStateValue('scepterFireshard');
@@ -6166,7 +6161,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             "SELECT triton_token from player WHERE player_id = '" .
             $player_id .
             "'";
-        $res = self::getUniqueValueFromDB($sql);
+        $res = $this->db->getUniqueValueFromDB($sql);
 
         if ($res > 0) {
             $firePotential += 2;
@@ -6197,7 +6192,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             "SELECT res_fire as fire, res_moon as moon, res_ancient as ancient from player WHERE player_id = '" .
             $player_id .
             "'";
-        $dbres = self::getObjectFromDB($sql);
+        $dbres = $this->db->getObjectFromDB($sql);
 
         $scepterFire = $this->getGameStateValue('scepterFireshard');
         $scepterMoon = $this->getGameStateValue('scepterMoonshard');
@@ -6220,7 +6215,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             "' and player_id != '" .
             $player_id .
             "'";
-        $res = self::getUniqueValueFromDB($sql);
+        $res = $this->db->getUniqueValueFromDB($sql);
 
         return $res;
     }
@@ -8653,7 +8648,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 $notifPlayerArgs['roll'] = true;
 
                 $sql = "SELECT DISTINCT card_id, card_location_arg from sides WHERE card_type = '$side1' AND card_location = 'dice1-p$player_id'";
-                $roll = self::getCollectionFromDB($sql);
+                $roll = $this->db->getCollectionFromDB($sql);
                 $roll = reset($roll);
 
                 $old_side = $this->sides->getCardsInLocation(
@@ -8683,7 +8678,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 $notifPlayerArgs['dice2'] = $side2;
                 $notifPlayerArgs['roll'] = true;
                 $sql = "SELECT DISTINCT card_id, card_location_arg from sides WHERE card_type = '$side2' AND card_location = 'dice2-p$player_id'";
-                $roll = self::getCollectionFromDB($sql);
+                $roll = $this->db->getCollectionFromDB($sql);
                 $roll = reset($roll);
 
                 $old_side = $this->sides->getCardsInLocation(
@@ -8712,7 +8707,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $notifPlayerArgs['dice' . $celestialDieNum] = $celestialChoice;
             $notifPlayerArgs['roll'] = true;
             $sql = "SELECT DISTINCT card_id, card_location_arg from sides WHERE card_type = '$celestialChoice' AND card_location = 'dice$celestialDieNum-p$player_id'";
-            $roll = self::getCollectionFromDB($sql);
+            $roll = $this->db->getCollectionFromDB($sql);
             $roll = reset($roll);
 
             $old_side = $this->sides->getCardsInLocation(
@@ -11866,26 +11861,26 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 $type_arg .
                 ' WHERE card_id = ' .
                 $toForge;
-            self::DbQuery($sql);
+            $this->db->DbQuery($sql);
         }
 
         // cleanup of card_location_arg
         $sql = 'set @i=0;';
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
         $sql =
             "set @Count=(SELECT COUNT(*) from sides where card_location = 'dice" .
             $die_number .
             '-p' .
             $player_id .
             "');";
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
         $sql =
             "UPDATE sides SET card_location_arg = @Count-(@i:=@i+1) where card_location = 'dice" .
             $die_number .
             '-p' .
             $player_id .
             "' ORDER BY card_location_arg DESC;";
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
 
         $desc = clienttranslate(
             '${player_name} has forged ${side_type} for ${ressources} on dice ${dice_number}, ${old_side_type} is discarded'
@@ -12401,11 +12396,11 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     //
     //        // cleanup of card_location_arg
     //        $sql = "set @i=0;";
-    //        self::DbQuery($sql);
+    //        $this->db->DbQuery($sql);
     //        $sql = "set @Count=(SELECT COUNT(*) from sides where card_location = 'dice" . $new_side['dice_number'] .'-p'. $player_id ."');";
-    //        self::DbQuery($sql);
+    //        $this->db->DbQuery($sql);
     //        $sql = "UPDATE sides SET card_location_arg = @Count-(@i:=@i+1) where card_location = 'dice" . $new_side['dice_number'] .'-p'. $player_id ."' ORDER BY card_location_arg DESC;";
-    //        self::DbQuery($sql);
+    //        $this->db->DbQuery($sql);
     //
     //        // notify the players that the side has been forged
     //        self::notifyAllPlayers("notifSideForged", clienttranslate('${player_name} has forged ${side_type} on their dice ${dice_number}, ${old_side_type} is discarded'),
@@ -12571,11 +12566,11 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
     //
     //        // cleanup of card_location_arg
     //        $sql = "set @i=0;";
-    //        self::DbQuery($sql);
+    //        $this->db->DbQuery($sql);
     //        $sql = "set @Count=(SELECT COUNT(*) from sides where card_location = 'dice" . $new_side['dice_number'] .'-p'. $player_id ."');";
-    //        self::DbQuery($sql);
+    //        $this->db->DbQuery($sql);
     //        $sql = "UPDATE sides SET card_location_arg = @Count-(@i:=@i+1) where card_location = 'dice" . $new_side['dice_number'] .'-p'. $player_id ."' ORDER BY card_location_arg DESC;";
-    //        self::DbQuery($sql);
+    //        $this->db->DbQuery($sql);
     //
     //        // notify the players that the side has been forged
     //        self::notifyAllPlayers("notifSideForged", clienttranslate('${player_name} has forged ${side_type} on their dice ${dice_number}, ${old_side_type} is discarded'),
@@ -14750,13 +14745,13 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 //  $table = $this->getNextPlayerTable();
                 //
                 //  $sql = "UPDATE sides set card_location = concat('zz', card_location) where card_location like 'dice%'";
-                //  self::DbQuery( $sql );
+                //  $this->db->DbQuery( $sql );
                 //
                 //  foreach($table as $player => $previous_player) {
                 //      $sql = "UPDATE sides set card_location = 'dice1-p" . $player . "' WHERE card_location = 'zzdice1-p". $previous_player . "'";
-                //      self::DbQuery( $sql );
+                //      $this->db->DbQuery( $sql );
                 //      $sql = "UPDATE sides set card_location = 'dice2-p" . $player . "' WHERE card_location = 'zzdice2-p". $previous_player . "'";
-                //      self::DbQuery( $sql );
+                //      $this->db->DbQuery( $sql );
                 //  }
                 //
                 //  self::notifyAllPlayers("notifDiceSwitch", "The dice go back to their owners",
@@ -14772,13 +14767,13 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 //  $table = $this->getPrevPlayerTable();
                 //
                 //  $sql = "UPDATE sides set card_location = concat('zz', card_location) where card_location like 'dice%'";
-                //  self::DbQuery( $sql );
+                //  $this->db->DbQuery( $sql );
                 //
                 //  foreach($table as $player => $previous_player) {
                 //      $sql = "UPDATE sides set card_location = 'dice1-p" . $player . "' WHERE card_location = 'zzdice1-p". $previous_player . "'";
-                //      self::DbQuery( $sql );
+                //      $this->db->DbQuery( $sql );
                 //      $sql = "UPDATE sides set card_location = 'dice2-p" . $player . "' WHERE card_location = 'zzdice2-p". $previous_player . "'";
-                //      self::DbQuery( $sql );
+                //      $this->db->DbQuery( $sql );
                 //  }
                 //
                 //  self::notifyAllPlayers("notifDiceSwitch", "You take the dice of the previous player",
@@ -14884,7 +14879,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
             $sql =
                 "UPDATE sides set card_location = concat('zz', card_location) where card_location like 'dice%'";
-            self::DbQuery($sql);
+            $this->db->DbQuery($sql);
 
             foreach ($table as $player => $previous_player) {
                 $sql =
@@ -14893,14 +14888,14 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                     "' WHERE card_location = 'zzdice1-p" .
                     $previous_player .
                     "'";
-                self::DbQuery($sql);
+                $this->db->DbQuery($sql);
                 $sql =
                     "UPDATE sides set card_location = 'dice2-p" .
                     $player .
                     "' WHERE card_location = 'zzdice2-p" .
                     $previous_player .
                     "'";
-                self::DbQuery($sql);
+                $this->db->DbQuery($sql);
             }
 
             self::notifyAllPlayers(
@@ -14918,7 +14913,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
 
             $sql =
                 "UPDATE sides set card_location = concat('zz', card_location) where card_location like 'dice%'";
-            self::DbQuery($sql);
+            $this->db->DbQuery($sql);
 
             foreach ($table as $player => $previous_player) {
                 $sql =
@@ -14927,14 +14922,14 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                     "' WHERE card_location = 'zzdice1-p" .
                     $previous_player .
                     "'";
-                self::DbQuery($sql);
+                $this->db->DbQuery($sql);
                 $sql =
                     "UPDATE sides set card_location = 'dice2-p" .
                     $player .
                     "' WHERE card_location = 'zzdice2-p" .
                     $previous_player .
                     "'";
-                self::DbQuery($sql);
+                $this->db->DbQuery($sql);
             }
 
             self::notifyAllPlayers(
@@ -14982,7 +14977,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             // Ship management, only one at a time
 
             // disable all players
-            self::DbQuery('UPDATE player SET player_is_multiactive = 0');
+            $this->db->DbQuery('UPDATE player SET player_is_multiactive = 0');
 
             if ($monoResolution == 0) {
                 // if action ressource to allocate or choice => ressource choice
@@ -15318,7 +15313,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             ($activeplayers == null || count($activeplayers) == 0)
         ) {
             // disable all players
-            self::DbQuery('UPDATE player SET player_is_multiactive = 0');
+            $this->db->DbQuery('UPDATE player SET player_is_multiactive = 0');
             // if action ressource to allocate or choice => ressource choice
             if (
                 $this->isRessourceChoice(ResourceChoice::RC_RESSOURCE) ||
@@ -16276,7 +16271,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                         $min_gold = -1;
                         $sql =
                             "select player_id, sum(gold) gold from ( select player_id, res_gold gold from player union all select token_location player_id, token_state gold from token where token_key like 'scepter%' and token_location != 'deck') aa  group by player_id ORDER BY sum(gold) ASC";
-                        $players = self::getObjectListFromDB($sql);
+                        $players = $this->db->getObjectListFromDB($sql);
                         foreach ($players as $aff_player_id => $player) {
                             if ($min_gold == -1) {
                                 $min_gold = $player['gold'];
@@ -16475,7 +16470,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                     case 'countFeats':
                         // goldsmith
                         $sql = "SELECT COUNT(DISTINCT card_type) FROM exploit WHERE card_location LIKE '%-$player_id'";
-                        $nbFeats = $this->getUniqueValueFromDB($sql);
+                        $nbFeats = $this->db->getUniqueValueFromDB($sql);
 
                         $this->increaseVP($player_id, $nbFeats * 2);
 
@@ -16913,7 +16908,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
             $this->resetThrowTokens();
 
             // disable all users
-            self::DbQuery('UPDATE player SET player_is_multiactive = 0');
+            $this->db->DbQuery('UPDATE player SET player_is_multiactive = 0');
         }
 
         // #35073 : add check of misfortune
@@ -17194,7 +17189,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                 SET     boar = 0
                 WHERE   player_id = $active_player";
 
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
 
         // trigger next state
         //throw new UserException($statename);
@@ -17239,7 +17234,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
                     SET     player_is_multiactive = 0
                     WHERE   player_id = $active_player
                 ";
-                self::DbQuery($sql);
+                $this->db->DbQuery($sql);
 
                 $this->gamestate->setPlayerNonMultiactive(
                     $active_player,
@@ -17278,9 +17273,9 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         //        // Please add your future database scheme changes here
         //if ( $from_version <= 1805251618 ) {
         //    $sql = "ALTER TABLE `sides` CHANGE `card_location` `card_location` VARCHAR(40) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;";
-        //    self::DbQuery( $sql );
+        //    $this->db->DbQuery( $sql );
         //    $sql = "ALTER TABLE `exploit` CHANGE `card_location` `card_location` VARCHAR(40) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;";
-        //    self::DbQuery( $sql );
+        //    $this->db->DbQuery( $sql );
         //}
 
         if ($from_version <= 1806062135) {
@@ -17390,7 +17385,7 @@ class Game extends \Bga\GameFramework\Table implements ResourceChoiceDb
         }
 
         if ($from_version <= 2012031120) {
-            $result = self::getUniqueValueFromDB(
+            $result = $this->db->getUniqueValueFromDB(
                 "SHOW COLUMNS FROM `player` LIKE 'res_ancient'"
             );
             if (is_null($result)) {

@@ -20,6 +20,7 @@
 namespace Bga\Games\diceforge;
 
 use Bga\GameFramework\SystemException;
+use Bga\Games\diceforge\Db\Db;
 
 class Tokens extends \APP_DbObject
 {
@@ -31,7 +32,7 @@ class Tokens extends \APP_DbObject
     public $autoreshuffle_custom = array();
     private $custom_fields;
     private $g_index;
-    public function __construct()
+    public function __construct(private readonly Db $db)
     {
         $this->table = 'token';
         $this->custom_fields = array();
@@ -109,7 +110,7 @@ class Tokens extends \APP_DbObject
         }
         $sql = "INSERT INTO " . $this->table . " (token_key,token_location,token_state)";
         $sql .= " VALUES " . implode(",", $values);
-        $this->DbQuery($sql);
+        $this->db->DbQuery($sql);
         return $keys;
     }
     public function createToken($key, $location, $token_state = 0)
@@ -121,7 +122,7 @@ class Tokens extends \APP_DbObject
         $values [] = "( '$key', '$location', '$token_state' )";
         $sql = "INSERT INTO " . $this->table . " (token_key,token_location,token_state)";
         $sql .= " VALUES " . implode(",", $values);
-        $this->DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
     public function createTokensPack($key, $location, $nbr = 1, $nbr_start = 1, $iterArr = null, $token_state = null)
     {
@@ -171,8 +172,8 @@ class Tokens extends \APP_DbObject
             $sql .= " AND token_key $like '$token_key' ";
         }
 
-        $dbres = self::DbQuery($sql);
-        $row = mysql_fetch_assoc($dbres);
+        $dbres = $this->db->DbQuery($sql);
+        $row = $this->db->mysql_fetch_assoc($dbres);
         if ($row) {
             return $row ['res'];
         } else {
@@ -183,11 +184,11 @@ class Tokens extends \APP_DbObject
     public function shuffle($location)
     {
         self::checkLocation($location);
-        $token_keys = self::getObjectListFromDB("SELECT token_key FROM " . $this->table . " WHERE token_location='$location'", true);
+        $token_keys = $this->db->getObjectListFromDB("SELECT token_key FROM " . $this->table . " WHERE token_location='$location'", true);
         shuffle($token_keys);
         $n = 0;
         foreach ($token_keys as $token_key) {
-            self::DbQuery("UPDATE " . $this->table . " SET token_state='$n' WHERE token_key='$token_key'");
+            $this->db->DbQuery("UPDATE " . $this->table . " SET token_state='$n' WHERE token_key='$token_key'");
             $n++;
         }
     }
@@ -204,7 +205,7 @@ class Tokens extends \APP_DbObject
         }
         $sql = "UPDATE " . $this->table . " SET token_location='" . addslashes($to_location) . "', token_state='$state' ";
         $sql .= "WHERE token_key IN ('" . implode("','", $tokens_ids) . "') ";
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
         if (isset($this->autoreshuffle_custom [$from_location]) && count($tokens) < $nbr && $this->autoreshuffle && ! $no_deck_reform) {
             // No more cards in deck & reshuffle is active => form another deck
             $nbr_token_missing = $nbr - count($tokens);
@@ -239,8 +240,8 @@ class Tokens extends \APP_DbObject
         $sql .= " WHERE token_location='$location'";
         $sql .= " ORDER BY token_state DESC";
         $sql .= " LIMIT $nbr";
-        $dbres = self::DbQuery($sql);
-        while ($row = mysql_fetch_assoc($dbres)) {
+        $dbres = $this->db->DbQuery($sql);
+        while ($row = $this->db->mysql_fetch_assoc($dbres)) {
             $result [] = $row;
         }
         return $result;
@@ -270,7 +271,7 @@ class Tokens extends \APP_DbObject
         $sql = "UPDATE " . $this->table;
         $sql .= " SET token_state='$state'";
         $sql .= " WHERE token_key='$token_key'";
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
         return $state;
     }
     // Increment token state
@@ -281,7 +282,7 @@ class Tokens extends \APP_DbObject
         $sql = "UPDATE " . $this->table;
         $sql .= " SET token_state= token_state + $state";
         $sql .= " WHERE token_key='$token_key'";
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
         return $state;
     }
     // Move a card to specific location
@@ -293,7 +294,7 @@ class Tokens extends \APP_DbObject
         $sql = "UPDATE " . $this->table;
         $sql .= " SET token_location='$location', token_state='$state'";
         $sql .= " WHERE token_key='$token_key'";
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
     // Move cards to specific location
     public function moveTokens($tokens, $location, $state = 0)
@@ -304,7 +305,7 @@ class Tokens extends \APP_DbObject
         $sql = "UPDATE " . $this->table;
         $sql .= " SET token_location='$location', token_state='$state'";
         $sql .= " WHERE token_key IN ('" . implode("','", $tokens) . "')";
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
     // Move a card to a specific location where card are ordered. If location_arg place is already taken, increment
     // all tokens after location_arg in order to insert new card at this precise location
@@ -316,7 +317,7 @@ class Tokens extends \APP_DbObject
         $sql .= " SET token_state=token_state+1";
         $sql .= " WHERE token_location='$location' ";
         $sql .= " AND token_state>=$state";
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
         self::moveToken($token_key, $location, $state);
     }
     public function insertTokenOnExtremePosition($token_key, $location, $bOnTop)
@@ -345,7 +346,7 @@ class Tokens extends \APP_DbObject
                 $sql .= "AND token_state='$from_state' ";
             }
         }
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
     /**
      * Move all tokens from a location to another location arg stays with the same value
@@ -357,7 +358,7 @@ class Tokens extends \APP_DbObject
         $sql = "UPDATE " . $this->table;
         $sql .= " SET token_location='$to_location'";
         $sql .= " WHERE token_location='$from_location'";
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
     }
     /**
      * Return all tokens in specific location
@@ -415,10 +416,10 @@ class Tokens extends \APP_DbObject
             }
         }
 
-        $dbres = self::DbQuery($sql);
+        $dbres = $this->db->DbQuery($sql);
         $result = array();
         $i = 0;
-        while ($row = mysql_fetch_assoc($dbres)) {
+        while ($row = $this->db->mysql_fetch_assoc($dbres)) {
             if ($order_by !== null) {
                 $result [$i] = $row;
             } else {
@@ -452,8 +453,8 @@ class Tokens extends \APP_DbObject
         self::checkKey($token_key);
         $sql = $this->getSelectQuery();
         $sql .= " WHERE token_key='$token_key' ";
-        $dbres = self::DbQuery($sql);
-        return mysql_fetch_assoc($dbres);
+        $dbres = $this->db->DbQuery($sql);
+        return $this->db->mysql_fetch_assoc($dbres);
     }
     /**
      * Get specific tokens info
@@ -466,9 +467,9 @@ class Tokens extends \APP_DbObject
         }
         $sql = $this->getSelectQuery();
         $sql .= " WHERE token_key IN ('" . implode("','", $tokens_array) . "') ";
-        $dbres = self::DbQuery($sql);
+        $dbres = $this->db->DbQuery($sql);
         $result = array();
-        while ($row = mysql_fetch_assoc($dbres)) {
+        while ($row = $this->db->mysql_fetch_assoc($dbres)) {
             $result [$row ['key']] = $row;
         }
         if (count($result) != count($tokens_array)) {
@@ -492,8 +493,8 @@ class Tokens extends \APP_DbObject
         if ($state !== null) {
             $sql .= "AND token_state='$state' ";
         }
-        $dbres = self::DbQuery($sql);
-        if ($row = mysql_fetch_assoc($dbres)) {
+        $dbres = $this->db->DbQuery($sql);
+        if ($row = $this->db->mysql_fetch_assoc($dbres)) {
             return $row ['cnt'];
         } else {
             return 0;
@@ -514,8 +515,8 @@ class Tokens extends \APP_DbObject
         if ($state !== null) {
             $sql .= "AND token_state='$state' ";
         }
-        $dbres = self::DbQuery($sql);
-        if ($row = mysql_fetch_assoc($dbres)) {
+        $dbres = $this->db->DbQuery($sql);
+        if ($row = $this->db->mysql_fetch_assoc($dbres)) {
             return $row ['cnt'];
         } else {
             return 0;
@@ -527,8 +528,8 @@ class Tokens extends \APP_DbObject
     {
         $result = array();
         $sql = "SELECT token_location, COUNT( token_key ) cnt FROM " . $this->table . " GROUP BY token_location ";
-        $dbres = self::DbQuery($sql);
-        while ($row = mysql_fetch_assoc($dbres)) {
+        $dbres = $this->db->DbQuery($sql);
+        while ($row = $this->db->mysql_fetch_assoc($dbres)) {
             $result [$row ['token_location']] = $row ['cnt'];
         }
         return $result;
@@ -541,8 +542,8 @@ class Tokens extends \APP_DbObject
         $sql = "SELECT token_state, COUNT( token_key ) cnt FROM " . $this->table . " ";
         $sql .= "WHERE token_location='$location' ";
         $sql .= "GROUP BY token_state ";
-        $dbres = self::DbQuery($sql);
-        while ($row = mysql_fetch_assoc($dbres)) {
+        $dbres = $this->db->DbQuery($sql);
+        while ($row = $this->db->mysql_fetch_assoc($dbres)) {
             $result [$row ['token_state']] = $row ['cnt'];
         }
         return $result;
@@ -666,7 +667,7 @@ class Tokens extends \APP_DbObject
         $sql = "UPDATE " . $this->table;
         $sql .= " SET token_state='$value'";
         $sql .= " WHERE token_key='$key'";
-        self::DbQuery($sql);
+        $this->db->DbQuery($sql);
         $this->g_index [$key] = $value;
         return $value;
     }
@@ -676,8 +677,8 @@ class Tokens extends \APP_DbObject
         $sql = "SELECT token_state";
         $sql .= " FROM " . $this->table;
         $sql .= " WHERE token_key='$key'";
-        $dbres = self::DbQuery($sql);
-        $row = mysql_fetch_assoc($dbres);
+        $dbres = $this->db->DbQuery($sql);
+        $row = $this->db->mysql_fetch_assoc($dbres);
         if ($row) {
             $value = $row ['token_state'];
         } else {
