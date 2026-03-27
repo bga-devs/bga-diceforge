@@ -24,8 +24,8 @@ jobs:
       - name: Run tests
         run: ./vendor/bin/phpunit
 
-  format:
-    name: PHP CS Fixer
+  lint:
+    name: Lint & Check
     runs-on: ubuntu-latest
 
     steps:
@@ -41,3 +41,6 @@ jobs:
 
       - name: Check formatting
         run: ./vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      - name: Run custom PHPStan rules
+        run: ./vendor/bin/phpstan analyse --configuration=phpstan-custom-rules.neon --no-progress

@@ -2,18 +2,18 @@
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Bga\Games\diceforge\ResourceChoiceDb;
+use Bga\Games\diceforge\Db\Db;
 use Bga\Games\diceforge\ResourceChoiceHelper;
 use DiceForge\Resources\ResourceChoice;
 
 class ResourceChoiceHelperTest extends TestCase
 {
-    private ResourceChoiceDb&\PHPUnit\Framework\MockObject\MockObject $db;
+    private Db&\PHPUnit\Framework\MockObject\MockObject $db;
     private ResourceChoiceHelper $helper;
 
     protected function setUp(): void
     {
-        $this->db = $this->createMock(ResourceChoiceDb::class);
+        $this->db = $this->createMock(Db::class);
         $this->helper = new ResourceChoiceHelper($this->db);
     }
 
@@ -21,7 +21,7 @@ class ResourceChoiceHelperTest extends TestCase
     public function testDbSetChoice(ResourceChoice $choice, int $expectedInt, int|string $playerId): void
     {
         $this->db->expects($this->once())
-            ->method('executeQuery')
+            ->method('DBquery')
             ->with("UPDATE player SET ressource_choice = $expectedInt WHERE player_id = $playerId");
 
         $this->helper->dbSetChoice($playerId, $choice);
@@ -40,7 +40,7 @@ class ResourceChoiceHelperTest extends TestCase
     public function testGetRessourceChoice(int $dbValue, ResourceChoice $expected, int|string $playerId): void
     {
         $this->db->expects($this->once())
-            ->method('getUniqueValue')
+            ->method('getUniqueValueFromDB')
             ->with("SELECT ressource_choice FROM player WHERE player_id = $playerId")
             ->willReturn($dbValue);
 
@@ -60,7 +60,7 @@ class ResourceChoiceHelperTest extends TestCase
 
     public function testGetRessourceChoiceInvalidIntThrows(): void
     {
-        $this->db->method('getUniqueValue')->willReturn(99);
+        $this->db->method('getUniqueValueFromDB')->willReturn(99);
 
         $this->expectException(\ValueError::class);
         $this->helper->getRessourceChoice(1);

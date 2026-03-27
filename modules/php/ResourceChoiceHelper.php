@@ -3,26 +3,16 @@
 namespace Bga\Games\diceforge;
 
 use DiceForge\Resources\ResourceChoice;
+use Bga\Games\diceforge\Db\Db;
 
-/**
- * Abstraction over the two Table DB methods needed by ResourceChoiceHelper.
- *
- * Why this interface exists: BGA's Table methods (DbQuery, getUniqueValueFromDB)
- * are declared `final public static`, so they cannot directly satisfy an interface.
- * This interface allows ResourceChoiceHelper to be fully testable via PHPUnit mocks.
- */
-interface ResourceChoiceDb
-{
-    public function executeQuery(string $sql): void;
-    public function getUniqueValue(string $sql): mixed;
-}
+require_once __DIR__ . '/db/Db.php';
 
 /**
  * Handles reading and writing the `ressource_choice` column on the `player` table.
  */
 class ResourceChoiceHelper
 {
-    public function __construct(private ResourceChoiceDb $db)
+    public function __construct(private readonly Db $db)
     {
     }
 
@@ -33,7 +23,7 @@ class ResourceChoiceHelper
             $value->value .
             ' WHERE player_id = ' .
             $player_id;
-        $this->db->executeQuery($sql);
+        $this->db->DbQuery($sql);
     }
 
     public function getRessourceChoice(int|string $player_id): ResourceChoice
@@ -44,6 +34,6 @@ class ResourceChoiceHelper
             $sql .= ' WHERE player_id = ' . $player_id;
         }
 
-        return ResourceChoice::from((int) $this->db->getUniqueValue($sql));
+        return ResourceChoice::from((int) $this->db->getUniqueValueFromDB($sql));
     }
 }
