@@ -3,10 +3,10 @@ name: CI
 on:
   push:
   pull_request:
-      
+
 jobs:
-  phpunit:
-    name: PHPUnit
+  ci:
+    name: CI
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -18,23 +18,12 @@ jobs:
         with:
           php-version: '8.3'
 
-      - name: Install dependencies
-        run: composer install --no-progress --prefer-dist
-
-      - name: Run tests
-        run: ./vendor/bin/phpunit
-
-  lint:
-    name: Lint & Check
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
         with:
-          php-version: '8.3'
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
 
       - name: Install dependencies
         run: composer install --no-progress --prefer-dist
@@ -44,3 +33,6 @@ jobs:
 
       - name: Run custom PHPStan rules
         run: ./vendor/bin/phpstan analyse --configuration=phpstan-custom-rules.neon --no-progress
+
+      - name: Run tests
+        run: ./vendor/bin/phpunit
