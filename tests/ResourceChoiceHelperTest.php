@@ -2,29 +2,43 @@
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Bga\Games\diceforge\Db\Db;
+use Bga\Games\diceforge\Db\MysqliDb;
+use Bga\Games\diceforge\Tests\DbFixture;
 use Bga\Games\diceforge\ResourceChoiceHelper;
 use DiceForge\Resources\ResourceChoice;
 
 class ResourceChoiceHelperTest extends TestCase
 {
-    private Db&\PHPUnit\Framework\MockObject\MockObject $db;
+    private MysqliDb $db;
     private ResourceChoiceHelper $helper;
 
     protected function setUp(): void
     {
-        $this->db = $this->createMock(Db::class);
+        $this->db = DbFixture::createDb();
+        DbFixture::setUp($this->db);
+
+        foreach ([7, 42, 99, 77, 100, 1] as $id) {
+            DbFixture::insertPlayer($this->db, $id);
+        }
+
         $this->helper = new ResourceChoiceHelper($this->db);
+    }
+
+    protected function tearDown(): void
+    {
+        DbFixture::tearDown($this->db);
     }
 
     #[DataProvider('dbSetChoiceProvider')]
     public function testDbSetChoice(ResourceChoice $choice, int $expectedInt, int|string $playerId): void
     {
-        $this->db->expects($this->once())
-            ->method('DBquery')
-            ->with("UPDATE player SET ressource_choice = $expectedInt WHERE player_id = $playerId");
-
         $this->helper->dbSetChoice($playerId, $choice);
+
+        $result = $this->db->getMysqli()->query(
+            "SELECT ressource_choice FROM player WHERE player_id = $playerId"
+        );
+        $row = $result->fetch_assoc();
+        $this->assertSame($expectedInt, (int) $row['ressource_choice']);
     }
 
     public static function dbSetChoiceProvider(): array
@@ -39,10 +53,9 @@ class ResourceChoiceHelperTest extends TestCase
     #[DataProvider('getRessourceChoiceProvider')]
     public function testGetRessourceChoice(int $dbValue, ResourceChoice $expected, int|string $playerId): void
     {
-        $this->db->expects($this->once())
-            ->method('getUniqueValueFromDB')
-            ->with("SELECT ressource_choice FROM player WHERE player_id = $playerId")
-            ->willReturn($dbValue);
+        $this->db->getMysqli()->query(
+            "UPDATE player SET ressource_choice = $dbValue WHERE player_id = $playerId"
+        );
 
         $result = $this->helper->getRessourceChoice($playerId);
 
@@ -60,7 +73,9 @@ class ResourceChoiceHelperTest extends TestCase
 
     public function testGetRessourceChoiceInvalidIntThrows(): void
     {
-        $this->db->method('getUniqueValueFromDB')->willReturn(99);
+        $this->db->getMysqli()->query(
+            "UPDATE player SET ressource_choice = 99 WHERE player_id = 1"
+        );
 
         $this->expectException(\ValueError::class);
         $this->helper->getRessourceChoice(1);

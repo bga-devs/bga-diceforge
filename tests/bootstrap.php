@@ -23,3 +23,18 @@ spl_autoload_register(static function (string $class): void {
         require_once $path;
     }
 });
+
+spl_autoload_register(static function (string $class): void {
+    $prefix = 'Bga\\Games\\diceforge\\Tests\\';
+
+    if (!str_starts_with($class, $prefix)) {
+        return;
+    }
+
+    $relativeClass = substr($class, strlen($prefix));
+    $path = __DIR__ . '/' . str_replace('\\', '/', $relativeClass) . '.php';
+
+    if (file_exists($path)) {
+        require_once $path;
+    }
+});
