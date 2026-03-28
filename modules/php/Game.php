@@ -33,11 +33,15 @@ use DiceForge\Resources\ResourceChoice;
 use Bga\Games\diceforge\Db\Db;
 use Bga\Games\diceforge\Db\TableDb;
 use Bga\Games\diceforge\Tokens;
+use Bga\Games\diceforge\Random\RandomProvider;
+use Bga\Games\diceforge\Random\BgaRandomProvider;
 
 require_once __DIR__ . '/resource_choice.php';
 require_once __DIR__ . '/ResourceChoiceHelper.php';
 require_once __DIR__ . '/db/Db.php';
 require_once __DIR__ . '/db/TableDb.php';
+require_once __DIR__ . '/random/RandomProvider.php';
+require_once __DIR__ . '/random/BgaRandomProvider.php';
 
 class Game extends Table
 {
@@ -76,8 +80,10 @@ class Game extends Table
     public array $labyrinth_paths;
     public array $labyrinth_rewards;
 
-    public function __construct(private readonly Db $db = new TableDb())
-    {
+    public function __construct(
+        private readonly Db $db = new TableDb(),
+        private readonly RandomProvider $randomProvider = new BgaRandomProvider()
+    ) {
 
         // Your global variables labels:
         //  Here, you can assign labels to global variables you are using for this game.
@@ -418,7 +424,7 @@ class Game extends Table
                 }
                 // random
                 if ($deckOption == 2) {
-                    $toPick = bga_rand(0, count($cards) - 1);
+                    $toPick = $this->randomProvider->rand(0, count($cards) - 1);
                 } else {
                     $toPick = 0;
                 }
@@ -572,13 +578,13 @@ class Game extends Table
             for ($i = 1; $i <= 10; $i++) {
                 $del = $this->sides->getCardsInLocation((string)$i, null, 'card_id');
                 if (count($del) == 4) {
-                    $throw = bga_rand(0, count($del) - 1);
+                    $throw = $this->randomProvider->rand(0, count($del) - 1);
                     $this->sides->moveCard($del[$throw]['id'], 'discard');
                 }
 
                 $del = $this->sides->getCardsInLocation((string)$i, null, 'card_id');
                 if (count($del) == 3) {
-                    $throw = bga_rand(0, count($del) - 1);
+                    $throw = $this->randomProvider->rand(0, count($del) - 1);
                     $this->sides->moveCard($del[$throw]['id'], 'discard');
                 }
             }
@@ -1707,7 +1713,7 @@ class Game extends Table
     public function rollDice($player_id, $dice_num)
     {
         // do not use the shuffle function
-        $value = bga_rand(0, 5);
+        $value = $this->randomProvider->rand(0, 5);
         if ($value != 0) {
             $old_side = $this->sides->getCardsInLocation(
                 'dice' . $dice_num . '-p' . $player_id,
@@ -1753,7 +1759,7 @@ class Game extends Table
     {
         $notifPlayerArgs = $this->initNotif($player_id);
         if ($roll) {
-            $value = bga_rand(0, 5);
+            $value = $this->randomProvider->rand(0, 5);
             $this->setGameStateValue('celestialDieSide', $value);
             $this->setGameStateValue('celestialRunning', 1);
 
