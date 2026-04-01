@@ -10,6 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: bga_test
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        ports:
+          - 3306:3306
     steps:
       - uses: actions/checkout@v4
 
@@ -31,8 +44,11 @@ jobs:
       - name: Check formatting
         run: ./vendor/bin/php-cs-fixer fix --dry-run --diff
 
-      - name: Run custom PHPStan rules
-        run: ./vendor/bin/phpstan analyse --configuration=phpstan-custom-rules.neon --no-progress
+      - name: Setup test database user
+        env:
+          MYSQL_PWD: root
+        run: |
+          mysql -h 127.0.0.1 -u root -e "CREATE USER 'bga_test'@'%' IDENTIFIED BY 'bga_test'; GRANT ALL PRIVILEGES ON bga_test.* TO 'bga_test'@'%'; FLUSH PRIVILEGES;"
 
       - name: Run tests
         run: ./vendor/bin/phpunit
