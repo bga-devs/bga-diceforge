@@ -2,7 +2,8 @@
 
 namespace Bga\Games\diceforge\Tests;
 
-use Bga\Games\diceforge\Db\MysqliDb;
+use Bga\Games\diceforge\Framework\Db\MysqliDb;
+use Bga\Games\diceforge\Entities\Player;
 
 /**
  * Bootstraps a fresh copy of the full game schema in the bga_test database.
@@ -17,7 +18,7 @@ use Bga\Games\diceforge\Db\MysqliDb;
  */
 class DbFixture
 {
-    private const DBMODEL = __DIR__ . '/../dbmodel.sql';
+    private const DBMODEL = __DIR__ . '/../../dbmodel.sql';
 
     public static function createDb(): MysqliDb
     {
@@ -50,6 +51,8 @@ class DbFixture
                 `player_score_aux`  int(10)          NOT NULL DEFAULT 0,
                 `player_no`         int(10) unsigned NOT NULL DEFAULT 0,
                 `player_name`       varchar(32)      NOT NULL DEFAULT \'\',
+                `player_canal`      varchar(32)      NOT NULL DEFAULT \'\',
+                `player_avatar`     varchar(32)      NOT NULL DEFAULT \'\',
                 `player_color`      varchar(6)       NOT NULL DEFAULT \'000000\',
                 `player_zombie`     tinyint(1)       NOT NULL DEFAULT 0,
                 `player_ai`         tinyint(1)       NOT NULL DEFAULT 0,
@@ -109,19 +112,18 @@ class DbFixture
     }
 
     /**
-     * Insert a minimal player row. Only player_id is required; all game
-     * columns fall back to their schema defaults.
+     * Insert a minimal player row using a Player object.
      */
-    public static function insertPlayer(MysqliDb $db, int $playerId, array $overrides = []): void
+    public static function insertPlayer(MysqliDb $db, int $playerId, Player $player): void
     {
         $defaults = [
             'player_score'    => 0,
             'player_score_aux' => 0,
             'player_no'       => $playerId,
-            'player_name'     => "Player $playerId",
-            'player_color'    => '000000',
+            'player_name'     => $player->name,
+            'player_color'    => $player->color,
         ];
-        $cols = array_merge($defaults, $overrides);
+        $cols = $defaults;
 
         $setCols = implode(', ', array_map(fn ($k) => "`$k`", array_keys($cols)));
         $setVals = implode(', ', array_map(fn ($v) => "'" . $db->getMysqli()->real_escape_string((string) $v) . "'", array_values($cols)));
@@ -143,6 +145,9 @@ class DbFixture
      */
     private static function parseStatements(string $file): array
     {
+        if (!file_exists($file)) {
+            throw new \RuntimeException("DbFixture: file not found: $file\nCheck that the path constant is correct after any reorganization.");
+        }
         $raw = file_get_contents($file);
 
         // Strip single-line comments (-- ...) but preserve the newline
@@ -166,6 +171,9 @@ class DbFixture
      */
     private static function parseTableNames(string $file): array
     {
+        if (!file_exists($file)) {
+            throw new \RuntimeException("DbFixture: file not found: $file\nCheck that the path constant is correct after any reorganization.");
+        }
         $raw = file_get_contents($file);
         preg_match_all('/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?(\w+)`?/ui', $raw, $matches);
         return array_unique($matches[1]);

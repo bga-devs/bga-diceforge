@@ -20,7 +20,7 @@
 namespace Bga\Games\diceforge;
 
 use Bga\GameFramework\SystemException;
-use Bga\Games\diceforge\Db\Db;
+use Bga\Games\diceforge\Framework\Db\Db;
 
 class Tokens extends \APP_DbObject
 {

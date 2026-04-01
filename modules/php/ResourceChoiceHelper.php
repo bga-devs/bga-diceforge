@@ -3,9 +3,7 @@
 namespace Bga\Games\diceforge;
 
 use DiceForge\Resources\ResourceChoice;
-use Bga\Games\diceforge\Db\Db;
-
-require_once __DIR__ . '/db/Db.php';
+use Bga\Games\diceforge\Framework\Db\Db;
 
 /**
  * Handles reading and writing the `ressource_choice` column on the `player` table.
