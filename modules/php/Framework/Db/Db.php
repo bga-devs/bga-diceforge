@@ -1,6 +1,6 @@
 <?php
 
-namespace Bga\Games\diceforge\Db;
+namespace Bga\Games\diceforge\Framework\Db;
 
 /**
  * Thin wrapper over BGA's Table static database methods.
@@ -27,4 +27,6 @@ interface Db
     public function getObjectFromDB(string $sql): array;
 
     public function mysql_fetch_assoc(\mysqli_result $result): array|false|null;
+
+    public function escape(string $value): string;
 }

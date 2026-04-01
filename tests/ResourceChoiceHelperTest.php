@@ -2,8 +2,9 @@
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Bga\Games\diceforge\Db\MysqliDb;
+use Bga\Games\diceforge\Framework\Db\MysqliDb;
 use Bga\Games\diceforge\Tests\DbFixture;
+use Bga\Games\diceforge\Entities\Player;
 use Bga\Games\diceforge\ResourceChoiceHelper;
 use DiceForge\Resources\ResourceChoice;
 
@@ -18,7 +19,7 @@ class ResourceChoiceHelperTest extends TestCase
         DbFixture::setUp($this->db);
 
         foreach ([7, 42, 99, 77, 100, 1] as $id) {
-            DbFixture::insertPlayer($this->db, $id);
+            DbFixture::insertPlayer($this->db, $id, new Player("Player $id", "000000"));
         }
 
         $this->helper = new ResourceChoiceHelper($this->db);

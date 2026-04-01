@@ -1,6 +1,6 @@
 <?php
 
-namespace Bga\Games\diceforge\Db;
+namespace Bga\Games\diceforge\Framework\Db;
 
 use Bga\GameFramework\Table;
 
@@ -39,5 +39,10 @@ class TableDb implements Db
     public function mysql_fetch_assoc(\mysqli_result $result): array|false|null
     {
         return \mysql_fetch_assoc($result);
+    }
+
+    public function escape(string $value): string
+    {
+        return Table::escapeStringForDB($value);
     }
 }

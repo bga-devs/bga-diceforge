@@ -8,7 +8,7 @@ parameters:
         - modules/php/PHPStan
     scanFiles:
         - _ide_helper.php
-        - tests/stubs/BgaFrameworkStubs.php
+        - tests/Stubs/BgaFrameworkStubs.php
     ignoreErrors:
         - 
             identifier: method.notFound

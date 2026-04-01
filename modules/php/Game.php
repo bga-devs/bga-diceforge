@@ -30,18 +30,14 @@ use Bga\GameFramework\Components\Deck;
 use Bga\GameFramework\StateType;
 use Bga\GameFramework\Table;
 use DiceForge\Resources\ResourceChoice;
-use Bga\Games\diceforge\Db\Db;
-use Bga\Games\diceforge\Db\TableDb;
+use Bga\Games\diceforge\Framework\Db\Db;
+use Bga\Games\diceforge\Framework\Db\TableDb;
 use Bga\Games\diceforge\Tokens;
 use Bga\Games\diceforge\Random\RandomProvider;
 use Bga\Games\diceforge\Random\BgaRandomProvider;
 
 require_once __DIR__ . '/resource_choice.php';
 require_once __DIR__ . '/ResourceChoiceHelper.php';
-require_once __DIR__ . '/db/Db.php';
-require_once __DIR__ . '/db/TableDb.php';
-require_once __DIR__ . '/random/RandomProvider.php';
-require_once __DIR__ . '/random/BgaRandomProvider.php';
 
 class Game extends Table
 {

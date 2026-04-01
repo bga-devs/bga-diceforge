@@ -1,6 +1,6 @@
 <?php
 
-namespace Bga\Games\diceforge\Db;
+namespace Bga\Games\diceforge\Framework\Db;
 
 /**
  * mysqli-backed implementation of Db for local testing.
@@ -123,5 +123,10 @@ class MysqliDb implements Db
     public function mysql_fetch_assoc(\mysqli_result $result): array|false|null
     {
         return $result->fetch_assoc();
+    }
+
+    public function escape(string $value): string
+    {
+        return $this->mysqli->real_escape_string($value);
     }
 }
