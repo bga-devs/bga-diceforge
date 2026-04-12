@@ -42,12 +42,20 @@ class GameBeginnerTest extends TestCase
         $game = new TestGame($this->db);
 
         // Convert sequential player list to ID-keyed format expected by setupNewGame (starting from ID 1)
-        $setupPlayers = array_combine(
-            range(1, count($players)),
-            array_map(fn (Player $p): array => $p->toSetupArray(), $players)
-        );
+        $setupPlayers = [];
+        foreach ($players as $player) {
+            $setupPlayers[$player->id] = $player->toSetupArray();
+        }
         $game->setupNewGame($setupPlayers);
+        $playerNo = 1;
+        foreach ($players as $player) {
+            $player->playerNo = $playerNo;
+            $playerNo++;
+        }
+
         $this->assertPlayersInserted($players);
+        $this->assertSame(1, $game->getMethodCallCount('reloadPlayersBasicInfos'));
+        $this->assertSame($game->getGameStateValue('firstPlayerId'), $players[0]->id);
     }
 
     /**
@@ -58,12 +66,8 @@ class GameBeginnerTest extends TestCase
         $inserted = $this->playerRepository->findAll();
         $this->assertCount(count($players), $inserted, 'Player count mismatch');
 
-        // Verify player IDs are incremental starting from 1 and names match
-        for ($id = 1; $id <= count($players); $id++) {
-            $player = $players[$id - 1];
-            $player->id = $id; // Expect ID to be assigned by DB starting from 1
-            $found = $inserted[$id - 1];
-            $this->assertSamePlayer($found, $player);
+        foreach ($players as $i => $player) {
+            $this->assertSamePlayer($inserted[$i], $player);
         }
     }
 
@@ -73,6 +77,7 @@ class GameBeginnerTest extends TestCase
     private function assertSamePlayer(Player $actual, Player $expected): void
     {
         $this->assertSame($actual->id, $expected->id, "Player {$expected->id} ID mismatch");
+        $this->assertSame($actual->player_no, $expected->player_no, "Player {$expected->id} player_no mismatch");
         $this->assertSame($actual->name, $expected->name, "Player {$expected->id} name mismatch");
         $this->assertSame($actual->score, $expected->score, "Player {$expected->id} score mismatch");
         $this->assertSame($actual->color, $expected->color, "Player {$expected->id} color mismatch");

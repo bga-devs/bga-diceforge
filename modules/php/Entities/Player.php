@@ -11,7 +11,10 @@ class Player
 {
     #[Id]
     #[Column('player_id')]
-    public int $id = 0;
+    public int $id;
+
+    #[Column('player_no')]
+    public int | null $playerNo = null;
 
     #[Column('player_score')]
     public int $score = 0;
@@ -22,8 +25,9 @@ class Player
     #[Column('player_color')]
     public string $color;
 
-    public function __construct(string $name, string $color)
+    public function __construct(int $id, string $name, string $color)
     {
+        $this->id    = $id;
         $this->name  = $name;
         $this->color = $color;
     }

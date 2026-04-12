@@ -77,7 +77,7 @@ class Game extends Table
     public array $labyrinth_rewards;
 
     public function __construct(
-        private readonly Db $db = new TableDb(),
+        protected readonly Db $db = new TableDb(),
         private readonly RandomProvider $randomProvider = new BgaRandomProvider()
     ) {
 

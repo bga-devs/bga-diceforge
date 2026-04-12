@@ -19,7 +19,7 @@ class ResourceChoiceHelperTest extends TestCase
         DbFixture::setUp($this->db);
 
         foreach ([7, 42, 99, 77, 100, 1] as $id) {
-            DbFixture::insertPlayer($this->db, $id, new Player("Player $id", "000000"));
+            DbFixture::insertPlayer($this->db, $id, new Player($id, "Player $id", "000000"));
         }
 
         $this->helper = new ResourceChoiceHelper($this->db);

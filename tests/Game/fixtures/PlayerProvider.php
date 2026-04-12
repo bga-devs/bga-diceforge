@@ -9,8 +9,8 @@ class PlayerProvider
         return [
             '2 players' => [
                 [
-                    new Player('Alice', 'D56F12'),
-                    new Player('Bob', 'B6B525'),
+                    new Player(42, 'Alice', 'D56F12'),
+                    new Player(1337, 'Bob', 'B6B525'),
                 ],
             ],
         ];
