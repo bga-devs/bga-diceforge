@@ -89,7 +89,7 @@ class Game extends Table
         // Note: afterwards, you can get/set the global variables with getGameStateValue/setGameStateInitialValue/setGameStateValue
         parent::__construct();
         require 'material.inc.php';
-        self::initGameStateLabels([
+        $this->initGameStateLabels([
             'firstPlayerId' => 10,
             'diceThrows' => 11,
             'nbPlayers' => 12,
@@ -155,7 +155,7 @@ class Game extends Table
         // Set the colors of the players with HTML color code
         // The default below is red/green/blue/orange/brown
         // The number of colors defined here must correspond to the maximum number of players allowed for the gams
-        $gameinfos = self::getGameinfos();
+        $gameinfos = $this->getGameinfos();
         $default_colors = $gameinfos['player_colors'];
         $tokensToInit = [];
 
@@ -348,11 +348,11 @@ class Game extends Table
 
         $sql .= implode(',', $values);
         $this->db->DbQuery($sql);
-        self::reattributeColorsBasedOnPreferences(
+        $this->reattributeColorsBasedOnPreferences(
             $players,
             $gameinfos['player_colors']
         );
-        self::reloadPlayersBasicInfos();
+        $this->reloadPlayersBasicInfos();
 
         $this->tokens->createTokens($tokensToInit, 'none');
 
@@ -637,7 +637,7 @@ class Game extends Table
     {
         $result = ['players' => [], 'counters' => []];
 
-        $current_player_id = self::getCurrentPlayerId(); // !! We must only return informations visible by this player !!
+        $current_player_id = $this->getCurrentPlayerId(); // !! We must only return informations visible by this player !!
 
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
@@ -651,11 +651,11 @@ class Game extends Table
         $result['turnPlayerId'] = $this->getGameStateValue('turnPlayerId');
         $result['exploitTypes'] = $this->exploit_types;
         $result['dice_sides'] = $this->dice_sides;
-        $result['nbTurns'] = self::getGameStateValue('nbTurns');
-        $result['turnCount'] = self::getGameStateValue('turnCount');
+        $result['nbTurns'] = $this->getGameStateValue('nbTurns');
+        $result['turnCount'] = $this->getGameStateValue('turnCount');
         $result['remainingTurns'] =
-            self::getGameStateValue('nbTurns') -
-            self::getGameStateValue('turnCount') +
+            $this->getGameStateValue('nbTurns') -
+            $this->getGameStateValue('turnCount') +
             1;
         $result['turnOrder'] = $this->getTableOrder();
         $result['exploits'] = [];
@@ -665,8 +665,8 @@ class Game extends Table
         $result['celestial'] = $this->getCelestial();
         $result['celestialInfo'] = $this->celestialInfo;
         $result['convertedScepter'] = [
-            'fire' => self::getGameStateValue('scepterFireshard'),
-            'moon' => self::getGameStateValue('scepterMoonshard'),
+            'fire' => $this->getGameStateValue('scepterFireshard'),
+            'moon' => $this->getGameStateValue('scepterMoonshard'),
         ];
         // Exploit info (hand or position)
         foreach (
@@ -918,14 +918,14 @@ class Game extends Table
     */
     public function getGameProgression()
     {
-        $nbTurns = self::getGameStateValue('nbTurns');
-        $nbPlayers = self::getGameStateValue('nbPlayers');
-        $turnCount = self::getGameStateValue('turnCount');
+        $nbTurns = $this->getGameStateValue('nbTurns');
+        $nbPlayers = $this->getGameStateValue('nbPlayers');
+        $turnCount = $this->getGameStateValue('turnCount');
         // condition is required, for draft
         $currentPlayerNum =
-            self::getGameStateValue('currentPlayerNum') == 0
+            $this->getGameStateValue('currentPlayerNum') == 0
             ? 1
-            : self::getGameStateValue('currentPlayerNum');
+            : $this->getGameStateValue('currentPlayerNum');
         $progressionTurn = 100 / $nbTurns;
         $progressionPlayer = $progressionTurn / $nbPlayers;
         $currentProgression =
@@ -1178,7 +1178,7 @@ class Game extends Table
         }
 
         $this->db->DbQuery($sql);
-        self::notifyAllPlayers('notifThrowToken', '', []);
+        $this->notifyAllPlayers('notifThrowToken', '', []);
     }
 
     // Will check that the "tobe forged" die face in the correct pool (from the die face to be replaced)
@@ -1767,7 +1767,7 @@ class Game extends Table
             $side = $this->celestialDie[$value];
             $side_info = $this->dice_sides[$side];
 
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifCelestialRoll',
                 clienttranslate(
                     '${player_name} rolls the Celestial Die → ${side_type}'
@@ -1852,13 +1852,13 @@ class Game extends Table
             $notifPlayerArgs['ressources'] = $this->buildRessourceNotif(
                 $notifPlayerArgs
             );
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifBlessing',
                 clienttranslate('${player_name} gets ${ressources}'),
                 $notifPlayerArgs
             );
         } else {
-            self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
+            $this->notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
         }
 
         if (
@@ -2650,7 +2650,7 @@ class Game extends Table
                 $notifLoyalty['ressources'] = $this->buildRessourceNotif(
                     $notifLoyalty
                 );
-                self::notifyAllPlayers(
+                $this->notifyAllPlayers(
                     'notifMessage',
                     clienttranslate(
                         '${player_name} gets ${ressources} (Loyalty effect)'
@@ -2719,7 +2719,7 @@ class Game extends Table
             }
 
             $notif['ressources'] = $this->buildRessourceNotif($notif);
-            self::notifyAllPlayers('notifBlessing', $message, $notif);
+            $this->notifyAllPlayers('notifBlessing', $message, $notif);
         }
 
         return;
@@ -4368,7 +4368,7 @@ class Game extends Table
             $notifPlayerArgs['ressources'] = $this->buildRessourceNotif(
                 $notifPlayerArgs
             );
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifUseTritonToken',
                 clienttranslate(
                     '${player_name} uses a Triton token and gets ${ressources}'
@@ -4438,7 +4438,7 @@ class Game extends Table
         if ($used == false) {
             $sql =
                 "UPDATE exploit SET card_type_arg = 0 WHERE card_type = 'twins'";
-            self::notifyAllPlayers('notifResetTwins', '', []);
+            $this->notifyAllPlayers('notifResetTwins', '', []);
         } else {
             $sql =
                 "UPDATE exploit SET card_type_arg = 1 WHERE card_type = 'twins'";
@@ -4666,7 +4666,7 @@ class Game extends Table
     {
         $sql = 'UPDATE player set res_gold = 12, res_fire=6, res_moon = 6';
         $this->db->DbQuery($sql);
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
@@ -5265,7 +5265,7 @@ class Game extends Table
                 !$misfortune
             ) {
                 throw new UserException(
-                    self::_('This side cannot be choosen')
+                    $this->_('This side cannot be choosen')
                 );
             } elseif (
                 $misfortune &&
@@ -5273,7 +5273,7 @@ class Game extends Table
                 $side
             ) {
                 throw new UserException(
-                    self::_('This side cannot be choosen')
+                    $this->_('This side cannot be choosen')
                 );
             }
 
@@ -5306,7 +5306,7 @@ class Game extends Table
             ) {
                 //throw new SystemException($this->tokens->getTokenLocation("mazechoice_" . $player_id) . " " . $side);
                 throw new UserException(
-                    self::_('This side cannot be choosen')
+                    $this->_('This side cannot be choosen')
                 );
             }
         } elseif ($celestial) {
@@ -5315,7 +5315,7 @@ class Game extends Table
             );
             if ($celestialSide != $side) {
                 throw new UserException(
-                    self::_('This side cannot be choosen')
+                    $this->_('This side cannot be choosen')
                 );
             }
         }
@@ -5403,7 +5403,7 @@ class Game extends Table
                         } elseif ($this->canFillHammer($player_id)) {
                             if ($mode == 'loose') {
                                 throw new UserException(
-                                    self::_('You cannot allocate a hammer')
+                                    $this->_('You cannot allocate a hammer')
                                 );
                             }
 
@@ -5651,7 +5651,7 @@ class Game extends Table
             $mode != 'steal2' &&
             $mode != 'transform'
         ) {
-            throw new UserException(self::_('You can only allocate gold'));
+            throw new UserException($this->_('You can only allocate gold'));
         }
 
         if ($mode != 'loose' && $mode != 'transform') {
@@ -5808,20 +5808,20 @@ class Game extends Table
                 $notifPlayerArgs
             );
             if ($mode == 'loose') {
-                self::notifyAllPlayers(
+                $this->notifyAllPlayers(
                     'notifBlessing',
                     '${player_name} looses ${ressources}',
                     $notifPlayerArgs
                 );
             } else {
-                self::notifyAllPlayers(
+                $this->notifyAllPlayers(
                     'notifBlessing',
                     '${player_name} gets ${ressources}',
                     $notifPlayerArgs
                 );
             }
         } else {
-            self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
+            $this->notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
         }
 
         $this->generateNotifLoyalty($notifPlayerArgs);
@@ -5830,7 +5830,7 @@ class Game extends Table
 
         $this->titanMove($player_id);
         //throw new SystemException(debug_print_backtrace ());
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
@@ -5994,13 +5994,13 @@ class Game extends Table
                     $notifPlayerArgs
                 );
                 if ($mode == 'loose') {
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifBlessing',
                         '${player_name} looses ${ressources}',
                         $notifPlayerArgs
                     );
                 } else {
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifBlessing',
                         '${player_name} gets ${ressources}',
                         $notifPlayerArgs
@@ -6020,7 +6020,7 @@ class Game extends Table
             foreach ($notifHammer as $v => $notif) {
                 foreach ($notif as $v2 => $notifDef) {
                     if (count($notifDef) != 0) {
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifHammerVP',
                             clienttranslate(
                                 '${player_name} completes the hammer (phase ${hammer_phase}) and scores ${ressources}'
@@ -6032,7 +6032,7 @@ class Game extends Table
             }
 
             if (!$this->canFillHammer($player_id)) {
-                self::notifyAllPlayers('notifRemoveHammer', '', [
+                $this->notifyAllPlayers('notifRemoveHammer', '', [
                     'player_id' => $player_id,
                 ]);
             }
@@ -6425,7 +6425,7 @@ class Game extends Table
                 $displaySides .= $notifPlayerArgs['dice2'];
             }
 
-            self::notifyAllPlayers('notifMessage', $text, [
+            $this->notifyAllPlayers('notifMessage', $text, [
                 'player_name' => $notifPlayerArgs['player_name'],
                 'sides_rolled' => $displaySides,
             ]);
@@ -6441,7 +6441,7 @@ class Game extends Table
                     $notifPlayerArgs['dice1'] == 'triple' &&
                     $notifPlayerArgs['dice2'] == 'triple'))
         ) {
-            self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
+            $this->notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
             $this->tokens->setTokenState("triple_$player_id", 1);
             if ($dice1) {
                 $this->dbSetSideChoice($player_id, '1', 0);
@@ -6472,7 +6472,7 @@ class Game extends Table
                 );
             }
             $this->setChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
-            self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
+            $this->notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
             return true;
         }
 
@@ -6533,7 +6533,7 @@ class Game extends Table
                 );
             }
 
-            self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
+            $this->notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
             return true;
         }
 
@@ -6583,7 +6583,7 @@ class Game extends Table
                 if ($this->setChoice($player_id, null) != ResourceChoice::RC_MISFORTUNE) {
                     $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
                 }
-                self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
+                $this->notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
                 return true;
             }
         }
@@ -6619,8 +6619,8 @@ class Game extends Table
                 $maze = true;
             }
             // Misfortune
-            elseif (self::isMisfortune($side['type']) != false) {
-                $mis_player_id = self::isMisfortune($side['type']);
+            elseif ($this->isMisfortune($side['type']) != false) {
+                $mis_player_id = $this->isMisfortune($side['type']);
                 $this->tokens->moveToken(
                     'resolveMisfortune',
                     $side['type'],
@@ -6706,7 +6706,7 @@ class Game extends Table
 
                     // $this->setChoice($player_id, null);
                     $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifBlessing',
                         '',
                         $notifPlayerArgs
@@ -6901,7 +6901,7 @@ class Game extends Table
                 $notifPlayerArgs
             );
             if ($multiple == -1) {
-                self::notifyAllPlayers(
+                $this->notifyAllPlayers(
                     'notifBlessing',
                     clienttranslate('${player_name} looses ${ressources}'),
                     $notifPlayerArgs
@@ -6909,7 +6909,7 @@ class Game extends Table
             } else {
                 if ($additionalResource) {
                     $notifPlayerArgs['side_type'] = 'triple';
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifBlessing',
                         clienttranslate(
                             '${player_name} gets additional ${ressources} due to ${side_type} selection'
@@ -6917,18 +6917,18 @@ class Game extends Table
                         $notifPlayerArgs
                     );
                 } else {
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifBlessing',
                         clienttranslate('${player_name} gets ${ressources}'),
                         $notifPlayerArgs
                     );
                 }
                 if ($exploit) {
-                    self::notifyAllPlayers('notifPauseDice', '', []);
+                    $this->notifyAllPlayers('notifPauseDice', '', []);
                 }
             }
         } else {
-            self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
+            $this->notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
         }
 
         $this->generateNotifLoyalty($notifPlayerArgs);
@@ -7229,7 +7229,7 @@ class Game extends Table
             );
         }
 
-        self::notifyAllPlayers('notifMazeMove', $msg, [
+        $this->notifyAllPlayers('notifMazeMove', $msg, [
             'player_name' => $this->loadPlayersBasicInfos()[$player_id][
                 'player_name'
             ],
@@ -7290,7 +7290,7 @@ class Game extends Table
                         }
 
                         if (count($lost) != 0) {
-                            self::notifyAllPlayers(
+                            $this->notifyAllPlayers(
                                 'notifEffect',
                                 clienttranslate(
                                     '${player_name} looses ${ressources} due to the maze square'
@@ -7309,7 +7309,7 @@ class Game extends Table
 
                 if ($gain['vp'] != 0) {
                     $this->increaseVP($player_id, $gain['vp']);
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifEffect',
                         clienttranslate(
                             '${player_name} gains ${ressources} due to the maze square'
@@ -7556,7 +7556,7 @@ class Game extends Table
                     $firstFinish = true;
                     $this->setGameStateValue('firstFinish', $player_id);
 
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifMessage',
                         clienttranslate(
                             '${player_name} is the first to complete the maze. ${player_name} chooses the visible face of each die'
@@ -7595,7 +7595,7 @@ class Game extends Table
             $notifPlayerArgs['ressources'] = $this->buildRessourceNotif(
                 $notifPlayerArgs
             );
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifBlessing',
                 clienttranslate('${player_name} gets ${ressources}'),
                 $notifPlayerArgs
@@ -7614,7 +7614,7 @@ class Game extends Table
             );
         }
 
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
@@ -7799,8 +7799,8 @@ class Game extends Table
         ) {
             // bug Misfortune trigerred twice
             if (
-                self::isMisfortune($player_info['side_choice_1']) != 0 ||
-                self::isMisfortune($player_info['side_choice_2']) != 0 ||
+                $this->isMisfortune($player_info['side_choice_1']) != 0 ||
+                $this->isMisfortune($player_info['side_choice_2']) != 0 ||
                 ($choice && $multiple == -1)
             ) {
                 $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
@@ -7959,7 +7959,7 @@ class Game extends Table
         if ($exploit) {
             $this->incStat($discardedSides, 'nb_vp_typhon', $player_id);
         }
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifMessage',
             clienttranslate(
                 '${player_name} has forged ${discardedSides} sides therefore gains ${ressources}'
@@ -8026,7 +8026,7 @@ class Game extends Table
 
             if ($lastPosition != $initialPosition) {
                 // notif move
-                self::notifyAllPlayers(
+                $this->notifyAllPlayers(
                     'notifTitanMove',
                     clienttranslate(
                         '${player_name} moves in the Titan path to ${position}'
@@ -8055,14 +8055,14 @@ class Game extends Table
     // Will launch the diceRoll and notify the results to the JS
     public function actRollDice()
     {
-        self::checkAction('actRollDice');
+        $this->checkAction('actRollDice');
         $this->gamestate->nextState('blessing');
     }
 
     public function actDraft($exploit)
     {
-        self::checkAction('actDraft');
-        $player_id = self::getActivePlayerId();
+        $this->checkAction('actDraft');
+        $player_id = $this->getActivePlayerId();
         $nb_players = $this->getGameStateValue('nbPlayers');
         $boars = ['redBoar', 'yellowBoar', 'blueBoar', 'greenBoar'];
         $hydraPromo = ['hydra', 'harpy', 'chimera', 'monsterMother'];
@@ -8113,7 +8113,7 @@ class Game extends Table
         }
 
         // notify
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifDraft',
             clienttranslate('${player_name} has choosen ${exploit_type}'),
             [
@@ -8122,7 +8122,7 @@ class Game extends Table
                 'exploit' => $this->exploits->getCardsInLocation($slot),
                 'slot' => $slot,
                 'exploitName' => $exploit,
-                'player_name' => self::getActivePlayerName(),
+                'player_name' => $this->getActivePlayerName(),
             ]
         );
         // if no more available slot => start game
@@ -8131,9 +8131,9 @@ class Game extends Table
 
     public function actAutoHammer($todo)
     {
-        $player_id = self::getCurrentPlayerId();
+        $player_id = $this->getCurrentPlayerId();
         $this->setAutoHammer($player_id, $todo);
-        self::notifyPlayer((int)$player_id, 'notifAutoHammer', '', [
+        $this->notifyPlayer((int)$player_id, 'notifAutoHammer', '', [
             'done' => $todo,
         ]);
         return;
@@ -8144,9 +8144,9 @@ class Game extends Table
     // if side with gold and FS (for example), the FS will not be sent by the JS
     public function actTakeRessource($sideNum, $side, $ressources)
     {
-        self::checkAction('actRessourceChoice');
+        $this->checkAction('actRessourceChoice');
         $disable = false;
-        $player_id = self::getCurrentPlayerId();
+        $player_id = $this->getCurrentPlayerId();
         $twins = false;
 
         if ($this->getPlayersAdditionnalInfo()[$player_id]['twins'] != 0) {
@@ -8179,9 +8179,9 @@ class Game extends Table
 
     public function actMisfortuneChoice($sideNum, $side, $ressources)
     {
-        self::checkAction('actMisfortuneChoice');
+        $this->checkAction('actMisfortuneChoice');
         $disable = false;
-        $player_id = self::getCurrentPlayerId();
+        $player_id = $this->getCurrentPlayerId();
 
         $disable = $this->takeRessource2(
             $player_id,
@@ -8205,9 +8205,9 @@ class Game extends Table
     // Type of the sides to choose
     public function actSideChoice($side1, $side2, $side98)
     {
-        self::checkAction('actSideChoice');
+        $this->checkAction('actSideChoice');
 
-        $player_id = self::getCurrentPlayerId();
+        $player_id = $this->getCurrentPlayerId();
         $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
 
         $notifPlayerArgs = $this->initNotif($player_id);
@@ -8368,8 +8368,8 @@ class Game extends Table
                     }
                 }
                 // Misfortune
-                elseif (self::isMisfortune($side1) != false) {
-                    $mis_player_id = self::isMisfortune($side1);
+                elseif ($this->isMisfortune($side1) != false) {
+                    $mis_player_id = $this->isMisfortune($side1);
                     //$this->dbIncMisfortune($mis_player_id, true);
                     $this->tokens->moveToken(
                         'resolveMisfortune',
@@ -8425,8 +8425,8 @@ class Game extends Table
                     }
                 }
                 // Misfortune
-                elseif (self::isMisfortune($side2) != false) {
-                    $mis_player_id = self::isMisfortune($side2);
+                elseif ($this->isMisfortune($side2) != false) {
+                    $mis_player_id = $this->isMisfortune($side2);
                     //$this->dbIncMisfortune($mis_player_id, true);
                     $this->tokens->moveToken(
                         'resolveMisfortune',
@@ -8478,8 +8478,8 @@ class Game extends Table
                 }
             }
             // Misfortune
-            elseif (self::isMisfortune($side98) != false) {
-                $mis_player_id = self::isMisfortune($side98);
+            elseif ($this->isMisfortune($side98) != false) {
+                $mis_player_id = $this->isMisfortune($side98);
                 //$this->dbIncMisfortune($mis_player_id, true);
                 $this->tokens->moveToken(
                     'resolveMisfortune',
@@ -8758,18 +8758,18 @@ class Game extends Table
 
             $displaySides = substr($displaySides, 0, strlen($displaySides) - 1);
 
-            self::notifyAllPlayers('notifMessage', $text, [
+            $this->notifyAllPlayers('notifMessage', $text, [
                 'player_name' => $notifPlayerArgs['player_name'],
                 'sides_rolled' => $displaySides,
             ]);
 
-            self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
+            $this->notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
         } else {
             $text = clienttranslate(
                 '${player_name} selects ${old_side_type} → ${side_type}'
             );
             if ($checkMirror_1) {
-                self::notifyAllPlayers('notifMessage', $text, [
+                $this->notifyAllPlayers('notifMessage', $text, [
                     'player_name' => $notifPlayerArgs['player_name'],
                     'old_side_type' => 'mirror',
                     'side_type' => $side1,
@@ -8777,7 +8777,7 @@ class Game extends Table
             }
 
             if ($checkMirror_2) {
-                self::notifyAllPlayers('notifMessage', $text, [
+                $this->notifyAllPlayers('notifMessage', $text, [
                     'player_name' => $notifPlayerArgs['player_name'],
                     'old_side_type' => 'mirror',
                     'side_type' => $side2,
@@ -9001,7 +9001,7 @@ class Game extends Table
             if ($goldLimitReached) {
                 //$this->setChoice($player_id, null);
                 $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_ACTION_CHOICE);
-                self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
+                $this->notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
                 $this->gamestate->nextState('choice');
                 //$this->setGameStateValue("firstFinish", 0);
                 //throw new SystemException('chose');
@@ -9227,13 +9227,13 @@ class Game extends Table
                 $notifPlayerArgs
             );
             if ($multiple == -1) {
-                self::notifyAllPlayers(
+                $this->notifyAllPlayers(
                     'notifBlessing',
                     clienttranslate('${player_name} looses ${ressources}'),
                     $notifPlayerArgs
                 );
             } else {
-                self::notifyAllPlayers(
+                $this->notifyAllPlayers(
                     'notifBlessing',
                     clienttranslate('${player_name} gets ${ressources}'),
                     $notifPlayerArgs
@@ -9241,7 +9241,7 @@ class Game extends Table
             }
         }
 
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
@@ -9368,14 +9368,14 @@ class Game extends Table
 
     public function actForgeNymphPass()
     {
-        self::checkAction('actForgeNymphPass');
-        $player_id = self::getCurrentPlayerId();
+        $this->checkAction('actForgeNymphPass');
+        $player_id = $this->getCurrentPlayerId();
 
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifMessage',
             clienttranslate('${player_name} does not forge a side'),
             [
-                'player_name' => self::getCurrentPlayerName(),
+                'player_name' => $this->getCurrentPlayerName(),
             ]
         );
 
@@ -9387,8 +9387,8 @@ class Game extends Table
 
     public function actMemoryToken($token, $island, $choice)
     {
-        self::checkAction('actMemoryToken');
-        $player_id = self::getCurrentPlayerId();
+        $this->checkAction('actMemoryToken');
+        $player_id = $this->getCurrentPlayerId();
 
         if ($choice == 'memorySun') {
             $side = 1;
@@ -9411,13 +9411,13 @@ class Game extends Table
         }
 
         $this->tokens->moveToken($token, $island, $side);
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifMemorySetup',
             clienttranslate(
                 '${player_name} places a Memory token on an island'
             ),
             [
-                'player_name' => self::getCurrentPlayerName(),
+                'player_name' => $this->getCurrentPlayerName(),
                 'player_id' => $player_id,
                 'token' => $token,
                 'side' => $side,
@@ -9430,8 +9430,8 @@ class Game extends Table
 
     public function actForgeShipPass($sideNum)
     {
-        self::checkAction('actForgeShipPass');
-        $player_id = self::getCurrentPlayerId();
+        $this->checkAction('actForgeShipPass');
+        $player_id = $this->getCurrentPlayerId();
         $exploit = false;
 
         // Disable of the side
@@ -9457,13 +9457,13 @@ class Game extends Table
             $this->tokens->setTokenState("triple_$player_id", 0);
         }
 
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifMessage',
             clienttranslate(
                 '${player_name} does not forge a side with ${side_type}'
             ),
             [
-                'player_name' => self::getCurrentPlayerName(),
+                'player_name' => $this->getCurrentPlayerName(),
                 'side_type' => 'ship',
             ]
         );
@@ -9510,8 +9510,8 @@ class Game extends Table
 
     public function actUseScepter($scepter_id, $resource)
     {
-        self::checkAction('actUseScepter');
-        $player_id = self::getCurrentPlayerId();
+        $this->checkAction('actUseScepter');
+        $player_id = $this->getCurrentPlayerId();
         $tokenId = "scepter_$scepter_id";
 
         // check scepter is own
@@ -9523,7 +9523,7 @@ class Game extends Table
         $state = $this->tokens->getTokenState($tokenId);
         if ($state < 4) {
             throw new UserException(
-                self::_(
+                $this->_(
                     "The Blacksmith's Scepter cannot be used if the value is less than 4"
                 )
             );
@@ -9535,9 +9535,9 @@ class Game extends Table
 
         // update variable
         if ($resource == 'fireshard') {
-            self::incGameStateValue('scepterFireshard', $amount);
+            $this->incGameStateValue('scepterFireshard', $amount);
         } elseif ($resource == 'moonshard') {
-            self::incGameStateValue('scepterMoonshard', $amount);
+            $this->incGameStateValue('scepterMoonshard', $amount);
         } else {
             throw new SystemException('invalid parameter');
         }
@@ -9545,21 +9545,21 @@ class Game extends Table
         // reduce state of token
         $this->tokens->setTokenState($tokenId, 0);
         // notify
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
         );
 
         // add notif somewhere
-        self::notifyScepters($resource, $amount);
-        //self::notifyAllPlayers("notifUseScepter", clienttranslate('${player_name} converts its Blacksmith\'s scepter reserve in ${ressources}'),
+        $this->notifyScepters($resource, $amount);
+        //$this->notifyAllPlayers("notifUseScepter", clienttranslate('${player_name} converts its Blacksmith\'s scepter reserve in ${ressources}'),
         //    array(
         //        'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
         //        'player_id'     => $player_id,
         //        'ressources' => $this->buildRessourceNotif(array ($resource => $amount)),
-        //        'moonshard' => self::getGameStateValue('scepterMoonshard'),
-        //        'fireshard' => self::getGameStateValue('scepterFireshard'),
+        //        'moonshard' => $this->getGameStateValue('scepterMoonshard'),
+        //        'fireshard' => $this->getGameStateValue('scepterFireshard'),
         //        )
         //    );
 
@@ -9568,19 +9568,19 @@ class Game extends Table
 
     public function notifyScepters($resource = '', $amount = 0)
     {
-        $player_id = self::getActivePlayerId();
+        $player_id = $this->getActivePlayerId();
 
         if ($resource == '') {
-            self::notifyAllPlayers('notifUseScepter', '', [
+            $this->notifyAllPlayers('notifUseScepter', '', [
                 'player_name' => $this->loadPlayersBasicInfos()[$player_id][
                     'player_name'
                 ],
                 'player_id' => $player_id,
-                'moonshard' => self::getGameStateValue('scepterMoonshard'),
-                'fireshard' => self::getGameStateValue('scepterFireshard'),
+                'moonshard' => $this->getGameStateValue('scepterMoonshard'),
+                'fireshard' => $this->getGameStateValue('scepterFireshard'),
             ]);
         } elseif ($resource == 'reset') {
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifUseScepter',
                 clienttranslate(
                     '${player_name} resets its Blacksmith\'s scepter(s) position'
@@ -9590,12 +9590,12 @@ class Game extends Table
                         'player_name'
                     ],
                     'player_id' => $player_id,
-                    'moonshard' => self::getGameStateValue('scepterMoonshard'),
-                    'fireshard' => self::getGameStateValue('scepterFireshard'),
+                    'moonshard' => $this->getGameStateValue('scepterMoonshard'),
+                    'fireshard' => $this->getGameStateValue('scepterFireshard'),
                 ]
             );
         } else {
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifUseScepter',
                 clienttranslate(
                     '${player_name} converts its Blacksmith\'s scepter reserve in ${ressources}'
@@ -9608,8 +9608,8 @@ class Game extends Table
                     'ressources' => $this->buildRessourceNotif([
                         $resource => $amount,
                     ]),
-                    'moonshard' => self::getGameStateValue('scepterMoonshard'),
-                    'fireshard' => self::getGameStateValue('scepterFireshard'),
+                    'moonshard' => $this->getGameStateValue('scepterMoonshard'),
+                    'fireshard' => $this->getGameStateValue('scepterFireshard'),
                 ]
             );
         }
@@ -9618,8 +9618,8 @@ class Game extends Table
     // return amount to reduce, if an uneven amount was used
     public function checkScepterLoss($type)
     {
-        $remaining = self::getGameStateValue('scepter' . $type);
-        $used = self::getGameStateValue('usedScepter' . $type);
+        $remaining = $this->getGameStateValue('scepter' . $type);
+        $used = $this->getGameStateValue('usedScepter' . $type);
         $initial = $remaining + $used;
 
         //throw new SystemException($remaining . " " . $used . " " . $initial);
@@ -9659,16 +9659,16 @@ class Game extends Table
     public function actCancelAllScepters($force = false)
     {
         if (!$force) {
-            self::checkAction('actCancelScepter');
+            $this->checkAction('actCancelScepter');
         }
-        $player_id = self::getCurrentPlayerId();
-        $fireLoss = self::checkScepterLoss('Fireshard');
-        $moonLoss = self::checkScepterLoss('Moonshard');
+        $player_id = $this->getCurrentPlayerId();
+        $fireLoss = $this->checkScepterLoss('Fireshard');
+        $moonLoss = $this->checkScepterLoss('Moonshard');
 
         // read variable
         $resource =
-            self::getGameStateValue('scepterFireshard') +
-            self::getGameStateValue('scepterMoonshard');
+            $this->getGameStateValue('scepterFireshard') +
+            $this->getGameStateValue('scepterMoonshard');
 
         // nothing to do
         if ($resource == 0) {
@@ -9677,33 +9677,33 @@ class Game extends Table
 
         // fireshard usage
         $fireToConvert =
-            self::getGameStateValue('scepterFireshard') + $fireLoss;
-        self::reallocateScepter($player_id, $fireToConvert);
+            $this->getGameStateValue('scepterFireshard') + $fireLoss;
+        $this->reallocateScepter($player_id, $fireToConvert);
 
         // moonshard usage
         $moonToConvert =
-            self::getGameStateValue('scepterMoonshard') + $moonLoss;
-        self::reallocateScepter($player_id, $moonToConvert);
+            $this->getGameStateValue('scepterMoonshard') + $moonLoss;
+        $this->reallocateScepter($player_id, $moonToConvert);
 
         if ($force) {
-            self::setGameStateValue('scepterFireshard', 0);
-            self::setGameStateValue('scepterMoonshard', 0);
-            self::getGameStateValue('usedScepterFireshard', 0);
-            self::getGameStateValue('usedScepterMoonshard', 0);
+            $this->setGameStateValue('scepterFireshard', 0);
+            $this->setGameStateValue('scepterMoonshard', 0);
+            $this->getGameStateValue('usedScepterFireshard', 0);
+            $this->getGameStateValue('usedScepterMoonshard', 0);
         } else {
-            self::setGameStateValue('scepterFireshard', -$fireLoss);
-            self::setGameStateValue('scepterMoonshard', -$moonLoss);
+            $this->setGameStateValue('scepterFireshard', -$fireLoss);
+            $this->setGameStateValue('scepterMoonshard', -$moonLoss);
         }
 
         //notify
-        self::notifyScepters('reset');
-        //self::notifyAllPlayers("notifResetScepter", clienttranslate('${player_name} resets its Blacksmith\'s scepter(s) position'),
+        $this->notifyScepters('reset');
+        //$this->notifyAllPlayers("notifResetScepter", clienttranslate('${player_name} resets its Blacksmith\'s scepter(s) position'),
         //    array(
         //        'player_name' => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
         //        'player_id'     => $player_id
         //        )
         //    );
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
@@ -9716,8 +9716,8 @@ class Game extends Table
 
     public function actUseTritonToken($ressources)
     {
-        self::checkAction('actUseTritonToken');
-        $player_id = self::getCurrentPlayerId();
+        $this->checkAction('actUseTritonToken');
+        $player_id = $this->getCurrentPlayerId();
         $player_name = $this->loadPlayersBasicInfos()[$player_id][
             'player_name'
         ];
@@ -9855,7 +9855,7 @@ class Game extends Table
         $notifPlayerArgs['ressources'] = $this->buildRessourceNotif(
             $notifPlayerArgs
         );
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifUseTritonToken',
             clienttranslate(
                 '${player_name} uses a Triton token and gets ${ressources}'
@@ -9865,7 +9865,7 @@ class Game extends Table
 
         $this->generateNotifHammer($player_id, $notifHammer);
 
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
@@ -9886,8 +9886,8 @@ class Game extends Table
 
     public function actUseCompanion($card_id)
     {
-        self::checkAction('actUseCompanion');
-        $player_id = self::getCurrentPlayerId();
+        $this->checkAction('actUseCompanion');
+        $player_id = $this->getCurrentPlayerId();
         $player_name = $this->loadPlayersBasicInfos()[$player_id][
             'player_name'
         ];
@@ -9909,7 +9909,7 @@ class Game extends Table
             );
         } elseif ($companion_info['state'] == 0) {
             throw new UserException(
-                self::_("Companion's token is 0. No advantage to use it")
+                $this->_("Companion's token is 0. No advantage to use it")
             );
         }
 
@@ -9941,7 +9941,7 @@ class Game extends Table
         $notifPlayerArgs['ressources'] = $this->buildRessourceNotif(
             $notifPlayerArgs
         );
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifUseCompanion',
             clienttranslate(
                 '${player_name} uses its Companion and gets ${ressources}'
@@ -9949,7 +9949,7 @@ class Game extends Table
             $notifPlayerArgs
         );
 
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
@@ -9971,8 +9971,8 @@ class Game extends Table
      */
     public function actUseCerberusToken($use)
     {
-        self::checkAction('actUseCerberusToken');
-        $player_id = self::getCurrentPlayerId();
+        $this->checkAction('actUseCerberusToken');
+        $player_id = $this->getCurrentPlayerId();
         $player_name = $this->loadPlayersBasicInfos()[$player_id][
             'player_name'
         ];
@@ -9982,7 +9982,7 @@ class Game extends Table
             // flag card as "used"
             $this->dbUpdateTokenPlayed($player_id, 'cerberus', true);
             // notify no use of the token
-            //          self::notifyAllPlayers("doNothing", clienttranslate('${player_name} does not use a Cerberus token'),
+            //          $this->notifyAllPlayers("doNothing", clienttranslate('${player_name} does not use a Cerberus token'),
             //                        array(
             //                            'player_name' => $player_name,
             //                          )
@@ -10054,7 +10054,7 @@ class Game extends Table
             //$displaySides = $this->sides->getCard($player_info['throw_1'])['type'] . "," .  $this->sides->getCard($player_info['throw_2'])['type'];
 
             // notify deletion of token
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifUseCerberusToken',
                 clienttranslate(
                     '${player_name} uses a Cerberus token. Throw is replayed → ${sides_rolled}'
@@ -10211,7 +10211,7 @@ class Game extends Table
 
             $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
 
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'updateCounters',
                 '',
                 $this->getPlayersRessources()
@@ -10235,8 +10235,8 @@ class Game extends Table
 
     public function actActionChoice($action, $die, $goldSources = null)
     {
-        self::checkAction('actActionChoice');
-        $player_id = self::getCurrentPlayerId();
+        $this->checkAction('actActionChoice');
+        $player_id = $this->getCurrentPlayerId();
         $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
         $multiple = 1;
 
@@ -10281,7 +10281,7 @@ class Game extends Table
             $card_info = $this->exploit_types[$card['type']];
             // TODO: notif, pour maj icone + i118n
 
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'twinUpdate',
                 clienttranslate(
                     '${player_name} rerolls Celestial die using ${card_name}\' power'
@@ -10367,8 +10367,8 @@ class Game extends Table
                             );
                         }
                         //// Misfortune : do not do as it will be assign though blessing
-                        //elseif (self::isMisfortune($side) != false) {
-                        //    $mis_player_id = self::isMisfortune($side);
+                        //elseif ($this->isMisfortune($side) != false) {
+                        //    $mis_player_id = $this->isMisfortune($side);
                         //    $this->dbIncMisfortune($mis_player_id, true);
                         //    $this->setChoice($mis_player_id, ResourceChoice::RC_RESSOURCE);
                         //}
@@ -10472,7 +10472,7 @@ class Game extends Table
                     $card = $this->exploits->getCard($card_id);
                     $card_info = $this->exploit_types[$card['type']];
 
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'twinUpdate',
                         clienttranslate(
                             '${player_name} rerolls die #${die_num} using ${card_name}\' power'
@@ -10494,7 +10494,7 @@ class Game extends Table
                         $choice = $this->blessing($player_id, false, true);
                     }
 
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'updateCounters',
                         '',
                         $this->getPlayersRessources()
@@ -10568,7 +10568,7 @@ class Game extends Table
             }
             // do the next thing
         }
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
@@ -10580,7 +10580,7 @@ class Game extends Table
         //    // depends on the state name
         //    $next_state = $this->getNextState(ResourceChoice::RC_FORGESHIP);
         //    $this->gamestate->setPlayerNonMultiactive($player_id, $next_state);
-        //    //$this->gamestate->setPlayersMultiactive(self::getCurrentPlayerId(), $next_state );
+        //    //$this->gamestate->setPlayersMultiactive($this->getCurrentPlayerId(), $next_state );
         //}
         //else {
         //    //$this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_RESSOURCE);
@@ -10610,8 +10610,8 @@ class Game extends Table
 
     public function actActionMisfortune($action, $die, $goldSources = null)
     {
-        self::checkAction('actActionMisfortune');
-        $player_id = self::getCurrentPlayerId();
+        $this->checkAction('actActionMisfortune');
+        $player_id = $this->getCurrentPlayerId();
         $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
         $notifPlayerArgs = $this->initNotif($player_id);
 
@@ -10694,7 +10694,7 @@ class Game extends Table
                         $notifPlayerArgs[
                             'ressources'
                         ] = $this->buildRessourceNotif($notifPlayerArgs);
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifBlessing',
                             clienttranslate(
                                 '${player_name} gets ${ressources} from the Mirror of Misfortune '
@@ -10702,7 +10702,7 @@ class Game extends Table
                             $notifPlayerArgs
                         );
                     } else {
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifBlessing',
                             '',
                             $notifPlayerArgs
@@ -10725,7 +10725,7 @@ class Game extends Table
                     break;
             }
         }
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
@@ -10746,11 +10746,11 @@ class Game extends Table
         $force = false
     ) {
         if (!$force) {
-            self::checkAction('actReinforcement');
+            $this->checkAction('actReinforcement');
         }
 
         $current_player_id = $this->getGameStateValue('turnPlayerId');
-        $player_id = self::getActivePlayerId();
+        $player_id = $this->getActivePlayerId();
         $notifHammer = [];
         $dice1 = false;
         $dice2 = false;
@@ -10797,13 +10797,13 @@ class Game extends Table
                         $dice2 = true;
                         $this->setGameStateValue('enigmaDieNumber', 2);
                     }
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'doNothing',
                         clienttranslate(
                             '${player_name} use the Silver Hind (die ${die_num})'
                         ),
                         [
-                            'player_name' => self::getActivePlayerName(),
+                            'player_name' => $this->getActivePlayerName(),
                             'die_num' => $doe_parameters,
                         ]
                     );
@@ -10861,13 +10861,13 @@ class Game extends Table
                             );
                             break;
                     }
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifRessource',
                         clienttranslate(
                             '${player_name} uses the Owl and gets ${ressources}'
                         ),
                         [
-                            'player_name' => self::getActivePlayerName(),
+                            'player_name' => $this->getActivePlayerName(),
                             'ressources' => $this->buildRessourceNotif(
                                 $notifArgs
                             ),
@@ -10886,14 +10886,14 @@ class Game extends Table
                     $this->decreaseGold($player_id, 3);
                     $this->increaseVP($player_id, 4);
                     $this->incStat(4, 'nb_vp_ancient', (int)$player_id);
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifAncient',
                         clienttranslate(
                             '${player_name} use the ${card_name_trans} and gets ${ressources}'
                         ),
                         [
                             'i18n' => ['card_name_trans'],
-                            'player_name' => self::getActivePlayerName(),
+                            'player_name' => $this->getActivePlayerName(),
                             'card_name_trans' => $card['name'],
                             'ressources' => $this->buildRessourceNotif([
                                 'vp' => 4,
@@ -10911,14 +10911,14 @@ class Game extends Table
                     $this->increaseVP($player_id, $vp);
                     $this->incStat($vp, 'nb_vp_nymph', (int)$player_id);
 
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifAncient',
                         clienttranslate(
                             '${player_name} use the ${card_name_trans} and gets ${ressources}'
                         ),
                         [
                             'i18n' => ['card_name_trans'],
-                            'player_name' => self::getActivePlayerName(),
+                            'player_name' => $this->getActivePlayerName(),
                             'card_name_trans' => $card['name'],
                             'ressources' => $this->buildRessourceNotif([
                                 'vp' => $vp,
@@ -10932,14 +10932,14 @@ class Game extends Table
                     $val = $this->tokens->getTokenState($token_key);
                     if ($val < 5) {
                         $this->tokens->setTokenState($token_key, ++$val);
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifCompanion',
                             clienttranslate(
                                 '${player_name} moves ${card_name_trans}\'s token to ${val}'
                             ),
                             [
                                 'i18n' => ['card_name_trans'],
-                                'player_name' => self::getActivePlayerName(),
+                                'player_name' => $this->getActivePlayerName(),
                                 'card_name_trans' => $card['name'],
                                 'card_id' => 'power-' . $card_id,
                                 'val' => $val,
@@ -11032,14 +11032,14 @@ class Game extends Table
                         $notifPlayerArgs
                     );
 
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifAncient',
                         clienttranslate(
                             '${player_name} uses ${card_name_trans} and gets ${ressources}'
                         ),
                         [
                             'i18n' => ['card_name_trans'],
-                            'player_name' => self::getActivePlayerName(),
+                            'player_name' => $this->getActivePlayerName(),
                             'card_name_trans' => $card['name'],
                             'ressources' => $notifPlayerArgs['ressources'],
                         ]
@@ -11124,14 +11124,14 @@ class Game extends Table
                         ] = $this->buildRessourceNotif($notifPlayerArgs);
                         $this->increaseVP($player_id, $notifPlayerArgs['vp']);
 
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifAncient',
                             clienttranslate(
                                 '${player_name} uses ${card_name_trans} and gets ${ressources}'
                             ),
                             [
                                 'i18n' => ['card_name_trans'],
-                                'player_name' => self::getActivePlayerName(),
+                                'player_name' => $this->getActivePlayerName(),
                                 'card_name_trans' => $card['name'],
                                 'ressources' => $notifPlayerArgs['ressources'],
                             ]
@@ -11175,8 +11175,8 @@ class Game extends Table
                         );
                     }
                     // Misfortune
-                    elseif (self::isMisfortune($side['type']) != false) {
-                        $mis_player_id = self::isMisfortune($side['type']);
+                    elseif ($this->isMisfortune($side['type']) != false) {
+                        $mis_player_id = $this->isMisfortune($side['type']);
                         //$this->dbIncMisfortune($mis_player_id, true);
                         $this->tokens->moveToken(
                             'resolveMisfortune',
@@ -11186,13 +11186,13 @@ class Game extends Table
                         $this->setChoice($mis_player_id, ResourceChoice::RC_RESSOURCE);
                     }
 
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifMessage',
                         clienttranslate(
                             '${player_name} use the Light and copy the side ${side_type}'
                         ),
                         [
-                            'player_name' => self::getActivePlayerName(),
+                            'player_name' => $this->getActivePlayerName(),
                             'side_type' => $side['type'],
                         ]
                     );
@@ -11243,13 +11243,13 @@ class Game extends Table
                             break;
                     }
 
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifRessource',
                         clienttranslate(
                             '${player_name} uses the Guardian and gets ${ressources}'
                         ),
                         [
-                            'player_name' => self::getActivePlayerName(),
+                            'player_name' => $this->getActivePlayerName(),
                             'ressources' => $this->buildRessourceNotif(
                                 $notifArgs
                             ),
@@ -11268,13 +11268,13 @@ class Game extends Table
                         $dice2 = true;
                         $this->setGameStateValue('enigmaDieNumber', 2);
                     }
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'doNothing',
                         clienttranslate(
                             '${player_name} use the Oracle (die ${die_num})'
                         ),
                         [
-                            'player_name' => self::getActivePlayerName(),
+                            'player_name' => $this->getActivePlayerName(),
                             'die_num' => $doe_parameters,
                         ]
                     );
@@ -11283,7 +11283,7 @@ class Game extends Table
                     break;
             }
             $this->dbUpdateExploitPlayed($card_id, true);
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'updateCounters',
                 '',
                 $this->getPlayersRessources()
@@ -11297,11 +11297,11 @@ class Game extends Table
     // If there is a ressource to choose
     public function actDoeTakeRessource($sideNum, $side, $ressources)
     {
-        self::checkAction('actDoeTakeRessource');
+        $this->checkAction('actDoeTakeRessource');
 
         $current_player_id = $this->getGameStateValue('turnPlayerId');
-        //$player_id = self::getActivePlayerId();
-        $player_id = self::getCurrentPlayerId();
+        //$player_id = $this->getActivePlayerId();
+        $player_id = $this->getCurrentPlayerId();
         $dice_number = $this->getGameStateValue('enigmaDieNumber');
         $disable = $this->takeRessource2(
             $player_id,
@@ -11338,7 +11338,7 @@ class Game extends Table
     {
         $players_info = $this->getPlayersAdditionnalInfo();
 
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifMessage',
             clienttranslate(
                 "Oracle effect: All other players move one step to Titan's side "
@@ -11357,15 +11357,15 @@ class Game extends Table
     // If the player wish to pass his reinforcement
     public function actReinforcementPass()
     {
-        self::checkAction('actReinforcementPass');
+        $this->checkAction('actReinforcementPass');
 
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifReinforcementPass',
             clienttranslate(
                 '${player_name} has decided to not play reinforcement cards'
             ),
             [
-                'player_name' => self::getActivePlayerName(),
+                'player_name' => $this->getActivePlayerName(),
             ]
         );
         $this->gamestate->nextState('playerAction');
@@ -11375,9 +11375,9 @@ class Game extends Table
     // will trigger the next state
     public function actBuyExploit($card_id, $ressources = null)
     {
-        self::checkAction('actBuyExploit');
+        $this->checkAction('actBuyExploit');
 
-        $player_id = self::getActivePlayerId();
+        $player_id = $this->getActivePlayerId();
         $card = $this->exploits->getCard($card_id);
         $card_info = $this->exploit_types[$card['type']];
         $hasPreviousExploit = false;
@@ -11402,7 +11402,7 @@ class Game extends Table
                     !in_array($card_info['position'], ['F1', 'F2', 'M1', 'M2'])
                 ) {
                     throw new UserException(
-                        self::_(
+                        $this->_(
                             'Please select an exploit that costs 1 sunshard or 1 moonshard'
                         )
                     );
@@ -11439,7 +11439,7 @@ class Game extends Table
                 )
             ) {
                 throw new UserException(
-                    self::_('You do not have enough resources to buy this card')
+                    $this->_('You do not have enough resources to buy this card')
                 );
             }
 
@@ -11505,7 +11505,7 @@ class Game extends Table
                 $vp = $this->hasBear($player_id) * 3;
                 $this->increaseVP($player_id, $vp);
                 $this->incStat($vp, 'nb_vp_bear', (int)$player_id);
-                self::notifyAllPlayers(
+                $this->notifyAllPlayers(
                     'notifBlessing',
                     clienttranslate(
                         '${player_name} gets ${ressources} from the Great Bear'
@@ -11525,7 +11525,7 @@ class Game extends Table
                 $vp = $this->hasBear($ousted_player) * 3;
                 $this->increaseVP($ousted_player, $vp);
                 $this->incStat($vp, 'nb_vp_bear', $ousted_player);
-                self::notifyAllPlayers(
+                $this->notifyAllPlayers(
                     'notifBlessing',
                     clienttranslate(
                         '${player_name} gets ${ressources} from the Great Bear'
@@ -11543,13 +11543,13 @@ class Game extends Table
                 // move ousted player
                 $this->dbSetPosition($ousted_player, 'begin');
                 $this->setGameStateValue('oustedPlayerId', $ousted_player);
-                self::notifyAllPlayers(
+                $this->notifyAllPlayers(
                     'notifOusting',
                     clienttranslate(
                         '${player_name} has ousted ${ousted_player_name} who gains a divine blessing'
                     ),
                     [
-                        'player_name' => self::getActivePlayerName(),
+                        'player_name' => $this->getActivePlayerName(),
                         'ousted_player' => $this->loadPlayersBasicInfos()[
                             $ousted_player
                         ]['player_color'],
@@ -11565,7 +11565,7 @@ class Game extends Table
             // move current player pawn
             $this->dbSetPosition($player_id, $card_info['island']);
 
-            self::notifyAllPlayers('notifMovePawn', '', [
+            $this->notifyAllPlayers('notifMovePawn', '', [
                 'player_color' => $this->loadPlayersBasicInfos()[$player_id][
                     'player_color'
                 ],
@@ -11588,12 +11588,12 @@ class Game extends Table
         $this->exploits->insertCardOnExtremePosition($card_id, $pile, true);
 
         if ($scepterFire + $scepterMoon > 0) {
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifMessage',
                 clienttranslate(
                     '${player_name} uses its Blacksmith\'s scepter'
                 ),
-                ['player_name' => self::getActivePlayerName()]
+                ['player_name' => $this->getActivePlayerName()]
             );
         }
 
@@ -11607,9 +11607,9 @@ class Game extends Table
             );
         }
 
-        self::notifyAllPlayers('notifExploitBuy', $msg, [
+        $this->notifyAllPlayers('notifExploitBuy', $msg, [
             'i18n' => ['card_name_trans'],
-            'player_name' => self::getActivePlayerName(),
+            'player_name' => $this->getActivePlayerName(),
             'card_name' => $card_info['name'],
             'card_name_trans' => $card_info['name'],
             'card_id' => $card_id,
@@ -11621,7 +11621,7 @@ class Game extends Table
         ]);
 
         if ($card_info['actionType'] == 'recurrent') {
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifAddReinforcement',
                 clienttranslate(
                     '${player_name} gains the reinforcement of ${card_name_trans}'
@@ -11630,7 +11630,7 @@ class Game extends Table
                     'i18n' => ['card_name_trans'],
                     'player_id' => $player_id,
                     'card_id' => $card_id,
-                    'player_name' => self::getActivePlayerName(),
+                    'player_name' => $this->getActivePlayerName(),
                     'card_name' => $card_info['name'],
                     'card_name_trans' => $card_info['name'],
                     'power' => $card['type'],
@@ -11639,12 +11639,12 @@ class Game extends Table
         }
 
         // notify
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
         );
-        self::notifyScepters();
+        $this->notifyScepters();
 
         $this->getTitanReward($player_id, $card['type']);
 
@@ -11666,10 +11666,10 @@ class Game extends Table
     public function actBuyForge($toForge, $toReplace, $mode = 'classic')
     {
         if ($mode == 'classic') {
-            self::checkAction('actBuyForge');
+            $this->checkAction('actBuyForge');
         }
 
-        $player_id = self::getCurrentPlayerId();
+        $player_id = $this->getCurrentPlayerId();
         $sides_bought = [];
         $sides_id = [];
         $player_info = $this->getPlayersAdditionnalInfo()[$player_id];
@@ -11701,7 +11701,7 @@ class Game extends Table
         // User cannot by twice the same side on the same action
         if (in_array($side_type, $sides_bought)) {
             throw new UserException(
-                self::_('You cannot buy twice the same side!')
+                $this->_('You cannot buy twice the same side!')
             );
         }
 
@@ -11784,7 +11784,7 @@ class Game extends Table
                         !isset($this->dice_sides[$side_type]['ressource']['vp'])
                     ) {
                         throw new UserException(
-                            self::_(
+                            $this->_(
                                 'You must select a die face with the Victory Point symbol'
                             )
                         );
@@ -11796,7 +11796,7 @@ class Game extends Table
                     // check that side can be bought (not linked to an existing card)
                     if (in_array($side_type, $this->listSidesWithExploits())) {
                         throw new UserException(
-                            self::_(
+                            $this->_(
                                 'This die face cannot be bought as it can be forged through an exploit'
                             )
                         );
@@ -11824,14 +11824,14 @@ class Game extends Table
             $this->hasTritonToken($player_id)
         ) {
             throw new UserException(
-                self::_(
+                $this->_(
                     'You do not have enough gold. You need to use your Triton token for more gold.'
                 )
             );
         }
         //elseif ($player_info['res_gold'] < $cost)
         elseif ($this->getGold($player_id) < $cost) {
-            throw new UserException(self::_('You do not have enough gold!'));
+            throw new UserException($this->_('You do not have enough gold!'));
         }
 
         // reduce ressource
@@ -11844,7 +11844,7 @@ class Game extends Table
         // if side previously forged as boar
         if ($old_side['type_arg'] != 0) {
             throw new UserException(
-                self::_('You cannot remove this side from your die')
+                $this->_('You cannot remove this side from your die')
             );
         }
 
@@ -11894,9 +11894,9 @@ class Game extends Table
         }
 
         // notify the players that the side has been forged
-        self::notifyAllPlayers('notifSideForged', $desc, [
+        $this->notifyAllPlayers('notifSideForged', $desc, [
             'player_id' => $player_id,
-            'player_name' => $player_info['player_name'], //self::getActivePlayerName(),
+            'player_name' => $player_info['player_name'], //$this->getActivePlayerName(),
             'side_type' => $side_type,
             'side_type_name' => $side_type,
             'side' => $toForge,
@@ -11906,7 +11906,7 @@ class Game extends Table
             'ressources' => $this->buildRessourceNotif($aff),
         ]);
 
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
@@ -12035,8 +12035,8 @@ class Game extends Table
 
     public function actAncestorSelect($die_number)
     {
-        self::checkAction('actAncestorSelect');
-        $player_id = self::getCurrentPlayerId();
+        $this->checkAction('actAncestorSelect');
+        $player_id = $this->getCurrentPlayerId();
         $this->setGameStateValue('enigmaDieNumber', $die_number);
 
         $this->gamestate->nextState($this->getNextState());
@@ -12045,14 +12045,14 @@ class Game extends Table
     // cancel the upgrade coming from the celestial die
     public function actCancelCelestial()
     {
-        $player_id = self::getCurrentPlayerId();
+        $player_id = $this->getCurrentPlayerId();
         $this->setChoice($player_id, null);
         if ($this->getGameStateValue('doubleCelestialRoll') == 0) {
             $this->setGameStateValue('celestialRunning', 0);
         }
 
         //notify
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'doNothing',
             '${player_name} does not upgrade a side',
             [
@@ -12086,7 +12086,7 @@ class Game extends Table
 
     public function actEndForge()
     {
-        $player_id = self::getCurrentPlayerId();
+        $player_id = $this->getCurrentPlayerId();
 
         if ($this->canTakeSecondAction($player_id)) {
             $this->dbSetForge($player_id, '');
@@ -12099,8 +12099,8 @@ class Game extends Table
 
     public function actChooseMazePath($new_position)
     {
-        $player_id = self::getCurrentPlayerId();
-        self::checkAction('actChooseMazePath');
+        $player_id = $this->getCurrentPlayerId();
+        $this->checkAction('actChooseMazePath');
 
         if (
             $this->tokens->getTokenLocation('mazechoice_' . $player_id) != '0'
@@ -12126,8 +12126,8 @@ class Game extends Table
 
     public function actChooseTreasure($treasure)
     {
-        $player_id = self::getCurrentPlayerId();
-        self::checkAction('actChooseTreasure');
+        $player_id = $this->getCurrentPlayerId();
+        $this->checkAction('actChooseTreasure');
         $notifPlayerArgs = $this->initNotif($player_id);
 
         if (
@@ -12155,7 +12155,7 @@ class Game extends Table
                 break;
         }
 
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifMazeTreasure',
             clienttranslate(
                 '${player_name} selects the ${ressources} treasure'
@@ -12199,12 +12199,12 @@ class Game extends Table
         $notifPlayerArgs['ressources'] = $this->buildRessourceNotif(
             $notifPlayerArgs
         );
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifBlessing',
             clienttranslate('${player_name} gets ${ressources}'),
             $notifPlayerArgs
         );
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
@@ -12218,7 +12218,7 @@ class Game extends Table
 
     public function actPuzzleCelestial($auto = false)
     {
-        $player_id = self::getCurrentPlayerId();
+        $player_id = $this->getCurrentPlayerId();
         $player_name = $this->loadPlayersBasicInfos()[$player_id][
             'player_name'
         ];
@@ -12226,12 +12226,12 @@ class Game extends Table
         $this->resetTwins($player_id, false);
 
         if ($this->gamestate->getCurrentMainState()->type != StateType::GAME) {
-            self::checkAction('actPuzzleCelestial');
+            $this->checkAction('actPuzzleCelestial');
         }
 
         $notifPlayerArgs = $this->initNotif($player_id);
 
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifMessage',
             clienttranslate('${player_name} triggers the Puzzle effect'),
             [
@@ -12257,8 +12257,8 @@ class Game extends Table
 
     public function actPuzzleMaze()
     {
-        $player_id = self::getCurrentPlayerId();
-        self::checkAction('actPuzzleMaze');
+        $player_id = $this->getCurrentPlayerId();
+        $this->checkAction('actPuzzleMaze');
         $notifPlayerArgs = $this->initNotif($player_id);
 
         $continue = $this->mazeManagement($player_id, null, true);
@@ -12273,8 +12273,8 @@ class Game extends Table
 
     public function actMazePowerConfirm($willDo)
     {
-        $player_id = self::getCurrentPlayerId();
-        self::checkAction('actMazePowerConfirm');
+        $player_id = $this->getCurrentPlayerId();
+        $this->checkAction('actMazePowerConfirm');
         $notifPlayerArgs = $this->initNotif($player_id);
 
         $position = $this->tokens->getTokenState('position_' . $player_id);
@@ -12298,7 +12298,7 @@ class Game extends Table
                     $this->decreaseGold($player_id, 6);
                     $this->increaseVP($player_id, 6);
 
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifEffect',
                         clienttranslate(
                             '${player_name} converts ${gold} in ${vp}'
@@ -12350,7 +12350,7 @@ class Game extends Table
                     $this->decreaseMoonShard($player_id, 2 - $scepterMoon);
                     $this->increaseVP($player_id, 8);
 
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifEffect',
                         clienttranslate(
                             '${player_name} converts ${moonshard} in ${vp}'
@@ -12366,7 +12366,7 @@ class Game extends Table
 
             $this->setChoice($player_id, null);
             $this->triggerCelestialWhenMaze0($player_id);
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'updateCounters',
                 '',
                 $this->getPlayersRessources()
@@ -12378,18 +12378,18 @@ class Game extends Table
     // $sides structures
     // Array : new_side_id => [old_side, dice_number]
     //function actForgeDice ($sides){
-    //    self::checkAction( "actForgeDice" );
-    //    $player_id = self::getActivePlayerId();
+    //    $this->checkAction( "actForgeDice" );
+    //    $player_id = $this->getActivePlayerId();
     //
     //    $sides_to_forge = $this->sides->getCardsInLocation('forging');
     //
     //    foreach ($sides as $new_side_id => $new_side) {
     //        if (!array_key_exists($new_side_id, $sides_to_forge))
-    //            throw new UserException(self::_("You did not buy this side!"));
+    //            throw new UserException($this->_("You did not buy this side!"));
     //
     //        $old_sides = $this->sides->getCardsInLocation('dice'. $new_side['dice_number'] .'-p'. $player_id);
     //        if (!array_key_exists($new_side['old_side'], $old_sides))
-    //            throw new UserException(self::_("This side is not on your die!"));
+    //            throw new UserException($this->_("This side is not on your die!"));
     //
     //        // Discard old side
     //        $this->sides->moveCard($new_side['old_side'], 'discard', $player_id);
@@ -12405,9 +12405,9 @@ class Game extends Table
     //        $this->db->DbQuery($sql);
     //
     //        // notify the players that the side has been forged
-    //        self::notifyAllPlayers("notifSideForged", clienttranslate('${player_name} has forged ${side_type} on their dice ${dice_number}, ${old_side_type} is discarded'),
+    //        $this->notifyAllPlayers("notifSideForged", clienttranslate('${player_name} has forged ${side_type} on their dice ${dice_number}, ${old_side_type} is discarded'),
     //            array(
-    //                'player_name'   => self::getActivePlayerName(),
+    //                'player_name'   => $this->getActivePlayerName(),
     //                'side_type'     => $sides_to_forge[$new_side_id]['type'],
     //                'side'          => $sides_to_forge[$new_side_id]['id'],
     //                'dice_number'   => $new_side['dice_number'],
@@ -12428,10 +12428,10 @@ class Game extends Table
     // if side with gold and FS (for example), the FS will not be sent by the JS
     public function actOustedRessources($sideNum, $side, $ressources)
     {
-        self::checkAction('actOustedRessources');
+        $this->checkAction('actOustedRessources');
 
         $disable = false;
-        $player_id = self::getCurrentPlayerId();
+        $player_id = $this->getCurrentPlayerId();
         //throw new SystemException($sideNum . " " . $side);
         $disable = $this->takeRessource2(
             $player_id,
@@ -12453,7 +12453,7 @@ class Game extends Table
     //----------------------------------------------- Exploit action functions begin
     public function actExploitEnigma($die_number)
     {
-        self::checkAction('actExploitEnigma');
+        $this->checkAction('actExploitEnigma');
 
         $enigma = $this->getGameStateValue('enigmaDieNumber');
 
@@ -12467,21 +12467,21 @@ class Game extends Table
 
     public function actExploitBoar($forgePlayerId)
     {
-        self::checkAction('actExploitBoar');
+        $this->checkAction('actExploitBoar');
 
-        $player_id = self::getCurrentPlayerId();
+        $player_id = $this->getCurrentPlayerId();
 
         $card_id = $this->getGameStateValue('exploitBought');
         $card = $this->exploits->getCard($card_id);
 
         // notify the choice
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifBoarChoice',
             clienttranslate(
                 '${player_name} has choosen ${ousted_player_name} to forge ${side_type}'
             ),
             [
-                'player_name' => self::getActivePlayerName(),
+                'player_name' => $this->getActivePlayerName(),
                 'ousted_player' => $this->loadPlayersBasicInfos()[
                     $forgePlayerId
                 ]['player_color'],
@@ -12494,7 +12494,7 @@ class Game extends Table
 
         // activation of correct player that needs to forge the side
         $this->gamestate->setPlayersMultiactive([$forgePlayerId], '');
-        self::giveExtraTime($forgePlayerId, 60);
+        $this->giveExtraTime($forgePlayerId, 60);
 
         // disable active user
         $this->gamestate->setPlayerNonMultiactive((int)$player_id, '');
@@ -12504,9 +12504,9 @@ class Game extends Table
 
     public function actCelestialUpgrade($old_side_id, $new_side_id)
     {
-        self::checkAction('actCelestialUpgrade');
+        $this->checkAction('actCelestialUpgrade');
 
-        $player_id = self::getCurrentPlayerId();
+        $player_id = $this->getCurrentPlayerId();
 
         if ($this->getGameStateValue('celestialRunning') != 1) {
             throw new SystemException('Celestial die has not been rolled');
@@ -12527,8 +12527,8 @@ class Game extends Table
     // $side contains old_side, die_number
     //function actExploitForging($sides)
     //{
-    //    self::checkAction( "actExploitForging" );
-    //    $player_id = self::getActivePlayerId();
+    //    $this->checkAction( "actExploitForging" );
+    //    $player_id = $this->getActivePlayerId();
     //    $side_type = "";
     //
     //    $card_id = $this->getGameStateValue( "exploitBought");
@@ -12546,20 +12546,20 @@ class Game extends Table
     //    }
     //
     //    if (count($sides) != 1)
-    //        throw new UserException(self::_("Invalid number of sides"));
+    //        throw new UserException($this->_("Invalid number of sides"));
     //
     //    foreach ($sides as $new_side_id => $new_side) {
     //        $new_side_db = $this->sides->getCard($new_side_id);
     //
     //        if ($new_side_db['type'] != $side_type)
-    //            throw new UserException(self::_("This side is not linked to the exploit bought"));
+    //            throw new UserException($this->_("This side is not linked to the exploit bought"));
     //
     //        if (strstr($new_side_db['location'], 'di'))
-    //            throw new UserException(self::_("This side is not available to be forged!"));
+    //            throw new UserException($this->_("This side is not available to be forged!"));
     //
     //        $old_sides = $this->sides->getCardsInLocation('dice'. $new_side['dice_number'] .'-p'. $player_id);
     //        if (!array_key_exists($new_side['old_side'], $old_sides))
-    //            throw new UserException(self::_("This side is not on your die!"));
+    //            throw new UserException($this->_("This side is not on your die!"));
     //
     //        // Discard old side
     //        $this->sides->moveCard($new_side['old_side'], 'discard', $player_id);
@@ -12575,9 +12575,9 @@ class Game extends Table
     //        $this->db->DbQuery($sql);
     //
     //        // notify the players that the side has been forged
-    //        self::notifyAllPlayers("notifSideForged", clienttranslate('${player_name} has forged ${side_type} on their dice ${dice_number}, ${old_side_type} is discarded'),
+    //        $this->notifyAllPlayers("notifSideForged", clienttranslate('${player_name} has forged ${side_type} on their dice ${dice_number}, ${old_side_type} is discarded'),
     //            array(
-    //                'player_name'   => self::getActivePlayerName(),
+    //                'player_name'   => $this->getActivePlayerName(),
     //                'side_type'     => $new_side_db['type'],
     //                'side'          => $new_side_id,
     //                'dice_number'   => $new_side['dice_number'],
@@ -12602,9 +12602,9 @@ class Game extends Table
     // $ressources : array of the choosen ressources for each side (key)
     public function actExploitRessource($sideNum, $side, $ressources)
     {
-        self::checkAction('actExploitRessource');
+        $this->checkAction('actExploitRessource');
 
-        $player_id = self::getCurrentPlayerId();
+        $player_id = $this->getCurrentPlayerId();
 
         $card_id = $this->getGameStateValue('exploitBought');
         $card = $this->exploits->getCard($card_id);
@@ -12926,7 +12926,7 @@ class Game extends Table
                         $notifPlayerArgs[
                             'ressources'
                         ] = $this->buildRessourceNotif($notifPlayerArgs);
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifBlessing',
                             '${player_name} gets ${ressources}',
                             $notifPlayerArgs
@@ -12937,7 +12937,7 @@ class Game extends Table
 
                     $this->titanMove($player_id);
 
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'updateCounters',
                         '',
                         $this->getPlayersRessources()
@@ -12991,14 +12991,14 @@ class Game extends Table
                     $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_NOTHING_TODO);
                     $disable = true;
 
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifBlessing',
                         clienttranslate(
                             '${player_name} converts ${gold} into ${vp}'
                         ),
                         $notifPlayerArgs
                     );
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'updateCounters',
                         '',
                         $this->getPlayersRessources()
@@ -13019,9 +13019,9 @@ class Game extends Table
 
     public function actSecondAction($to_play, $resources)
     {
-        self::checkAction('actSecondAction');
+        $this->checkAction('actSecondAction');
 
-        $player_id = self::getActivePlayerId();
+        $player_id = $this->getActivePlayerId();
 
         if ($to_play) {
             $fireToPay = $resources['fireshard'];
@@ -13040,7 +13040,7 @@ class Game extends Table
                 !$this->haveEnoughRessource($player_id, 2, 0)
             ) {
                 throw new UserException(
-                    self::_(
+                    $this->_(
                         "You do not have enough resources. Please look at the various cards that provide fireshard (Blacksmith's Scepter, Companion)."
                     )
                 );
@@ -13049,13 +13049,13 @@ class Game extends Table
                 !$this->haveEnoughRessource($player_id, 2, 0)
             ) {
                 throw new UserException(
-                    self::_(
+                    $this->_(
                         'You do not have enough resources. You need to use your Triton token.'
                     )
                 );
             } elseif (!$this->haveEnoughRessource($player_id, 2, 0)) {
                 throw new UserException(
-                    self::_(
+                    $this->_(
                         'You do not have enough resources to play a second action'
                     )
                 );
@@ -13074,35 +13074,35 @@ class Game extends Table
 
             $this->decreaseAncientShard($player_id, $ancientToPay);
             $this->decreaseFireShard($player_id, $fireToPay - $scepterFire);
-            self::setGameStateValue('secondActionTaken', 1);
-            self::notifyAllPlayers(
+            $this->setGameStateValue('secondActionTaken', 1);
+            $this->notifyAllPlayers(
                 'notifSecondAction',
                 clienttranslate(
                     '${player_name} uses ${ressources} to play a second action'
                 ),
                 [
-                    'player_name' => self::getActivePlayerName(),
+                    'player_name' => $this->getActivePlayerName(),
                     'ressources' => $this->buildRessourceNotif([
                         'fireshard' => $fireToPay,
                         'ancientshard' => $ancientToPay,
                     ]),
                 ]
             );
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'updateCounters',
                 '',
                 $this->getPlayersRessources()
             );
-            self::notifyScepters();
+            $this->notifyScepters();
             $this->incStat(1, 'nb_second_action', (int)$player_id);
 
             $this->gamestate->nextState('playerAction');
         } else {
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifSecondActionPass',
                 clienttranslate('${player_name} does not play a second action'),
                 [
-                    'player_name' => self::getActivePlayerName(),
+                    'player_name' => $this->getActivePlayerName(),
                 ]
             );
             $this->gamestate->nextState('endPlayerTurn');
@@ -13111,11 +13111,11 @@ class Game extends Table
 
     public function actEndPlayerTurn()
     {
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'notifMessage',
             clienttranslate('${player_name} does not play an action'),
             [
-                'player_name' => self::getActivePlayerName(),
+                'player_name' => $this->getActivePlayerName(),
             ]
         );
         $this->gamestate->nextState('endPlayerTurn');
@@ -13230,7 +13230,7 @@ class Game extends Table
             $notifPlayerArgs['ressources'] = $this->buildRessourceNotif(
                 $notifPlayerArgs
             );
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifBlessing',
                 clienttranslate(
                     '${player_name} gets ${ressources} from the Mirror of Misfortune '
@@ -13238,7 +13238,7 @@ class Game extends Table
                 $notifPlayerArgs
             );
         } else {
-            self::notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
+            $this->notifyAllPlayers('notifBlessing', '', $notifPlayerArgs);
         }
 
         $this->generateNotifLoyalty($notifPlayerArgs);
@@ -13294,7 +13294,7 @@ class Game extends Table
 
     public function argsReinforcement()
     {
-        $player_id = self::getActivePlayerId();
+        $player_id = $this->getActivePlayerId();
         $players_info = $this->getPlayersAdditionnalInfo();
 
         // if ancient, check if player has enough gold
@@ -13356,11 +13356,11 @@ class Game extends Table
                 ] == ''
                 ? false
                 : true,
-            'currentTurn' => self::getGameStateValue('turnCount'),
-            'maxTurn' => self::getGameStateValue('nbTurns'),
+            'currentTurn' => $this->getGameStateValue('turnCount'),
+            'maxTurn' => $this->getGameStateValue('nbTurns'),
             'scepters' =>
-            self::getGameStateValue('scepterFireshard') +
-                self::getGameStateValue('scepterMoonshard'),
+            $this->getGameStateValue('scepterFireshard') +
+                $this->getGameStateValue('scepterMoonshard'),
             'companion' => $companions,
         ];
     }
@@ -13379,8 +13379,8 @@ class Game extends Table
         // Say to JS if player is currently forging ? from global or ?
         return [
             'scepters' =>
-            self::getGameStateValue('scepterFireshard') +
-                self::getGameStateValue('scepterMoonshard'),
+            $this->getGameStateValue('scepterFireshard') +
+                $this->getGameStateValue('scepterMoonshard'),
             'companion' => $companions,
         ];
     }
@@ -13827,7 +13827,7 @@ class Game extends Table
     }
 
     //function argsForgeDice() {
-    //    $player_id = self::getActivePlayerId();
+    //    $player_id = $this->getActivePlayerId();
     //
     //    return $sides_to_forge = $this->sides->getCardsInLocation('forging');
     //}
@@ -13835,7 +13835,7 @@ class Game extends Table
     // return info available ressource including reduction
     public function argsForgeShip()
     {
-        //$player_id = self::getCurrentPlayerId();
+        //$player_id = $this->getCurrentPlayerId();
         $retour = [];
         $retour['ship'] = 'ship';
 
@@ -13986,7 +13986,7 @@ class Game extends Table
                     $retour[
                         'memory'
                     ] = $this->tokens->getTokensOfTypeInLocation(
-                        $card['type'] . '%_' . self::getActivePlayerId(),
+                        $card['type'] . '%_' . $this->getActivePlayerId(),
                         'none'
                     );
                     break;
@@ -13996,7 +13996,7 @@ class Game extends Table
             }
 
             $retour['info'] = [
-                'player' => self::getActivePlayerName(),
+                'player' => $this->getActivePlayerName(),
                 'power_desc' => $pow,
                 'power_you' => $pow_you,
             ];
@@ -14035,7 +14035,7 @@ class Game extends Table
         }
 
         $retour['info'] = [
-            'player' => self::getActivePlayerName(),
+            'player' => $this->getActivePlayerName(),
             'power_desc' => $pow,
             'power_you' => $pow_you,
         ];
@@ -14723,19 +14723,19 @@ class Game extends Table
         $isGameSetup = $this->getGameStateValue('isGameSetup');
 
         if ($isGameSetup) {
-            $player_id = self::getGameStateValue('firstPlayerId');
-            //$magicSeagull = self::getGameStateValue( 'magicSeagullCount' );
-            //$magicSeagullActive = self::getGameStateValue( 'magicSeagullActive' );
+            $player_id = $this->getGameStateValue('firstPlayerId');
+            //$magicSeagull = $this->getGameStateValue( 'magicSeagullCount' );
+            //$magicSeagullActive = $this->getGameStateValue( 'magicSeagullActive' );
 
             $this->gamestate->changeActivePlayer($player_id);
 
             $this->setGameStateValue('currentPlayerNum', 1);
 
             // Calculation of remaining turns
-            $turnCount = self::getGameStateValue('turnCount');
+            $turnCount = $this->getGameStateValue('turnCount');
             $remainingTurns =
-                self::getGameStateValue('nbTurns') -
-                self::getGameStateValue('turnCount') +
+                $this->getGameStateValue('nbTurns') -
+                $this->getGameStateValue('turnCount') +
                 1;
 
             if ($remainingTurns == 0) {
@@ -14756,14 +14756,14 @@ class Game extends Table
                 //      $this->db->DbQuery( $sql );
                 //  }
                 //
-                //  self::notifyAllPlayers("notifDiceSwitch", "The dice go back to their owners",
+                //  $this->notifyAllPlayers("notifDiceSwitch", "The dice go back to their owners",
                 //      array(
                 //          'switch' => $table,
                 //      )
                 //  );
                 //
                 //  // flag magicSeagullActive
-                //  self::setGameStateValue( 'magicSeagullActive', 0);
+                //  $this->setGameStateValue( 'magicSeagullActive', 0);
                 //}
                 //elseif ($magicSeagullActive == 0 && $magicSeagull > 0) {
                 //  $table = $this->getPrevPlayerTable();
@@ -14778,37 +14778,37 @@ class Game extends Table
                 //      $this->db->DbQuery( $sql );
                 //  }
                 //
-                //  self::notifyAllPlayers("notifDiceSwitch", "You take the dice of the previous player",
+                //  $this->notifyAllPlayers("notifDiceSwitch", "You take the dice of the previous player",
                 //      array(
                 //          'switch' => $table,
                 //      )
                 //  );
                 //
                 //  // flag magicSeagullActive
-                //  self::setGameStateValue( 'magicSeagullActive', 1);
+                //  $this->setGameStateValue( 'magicSeagullActive', 1);
                 //}
                 //
                 //if ($magicSeagull > 0) {
                 //  $magicSeagull--;
-                //  self::setGameStateValue( 'magicSeagullCount', $magicSeagull);
+                //  $this->setGameStateValue( 'magicSeagullCount', $magicSeagull);
                 //}
 
                 if ($remainingTurns == 1) {
-                    self::notifyAllPlayers('notifBeginTurn', '', [
+                    $this->notifyAllPlayers('notifBeginTurn', '', [
                         'turn' => $turnCount,
                     ]);
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifLastTurn',
                         clienttranslate('This is the last turn'),
                         []
                     );
                 } else {
                     // Notify beggining of turn
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifBeginTurn',
                         clienttranslate('Turn ${turn}/${totalTurns} begins'),
                         [
-                            'totalTurns' => self::getGameStateValue('nbTurns'),
+                            'totalTurns' => $this->getGameStateValue('nbTurns'),
                             'turn' => $turnCount,
                         ]
                     );
@@ -14835,34 +14835,34 @@ class Game extends Table
                 'slotBeingDrafted',
                 array_search($slot, $this->exploit_slot)
             );
-            self::activeNextPlayer();
+            $this->activeNextPlayer();
             $this->gamestate->nextState('draft');
         }
     }
 
     public function stBeginPlayerTurn()
     {
-        self::setGameStateValue('secondActionTaken', 0);
+        $this->setGameStateValue('secondActionTaken', 0);
 
         // Eternal Fire
         $eternalFire = $this->getGameStateValue('eternalFire');
 
         // Extra time to the player
-        $player_id = self::getActivePlayerId();
-        self::giveExtraTime((int)$player_id);
+        $player_id = $this->getActivePlayerId();
+        $this->giveExtraTime((int)$player_id);
 
-        self::setGameStateValue('turnPlayerId', (int)$player_id);
-        self::setGameStateValue('nbThrows', 0);
-        self::setGameStateValue('scepterFireshard', 0);
-        self::setGameStateValue('scepterMoonshard', 0);
+        $this->setGameStateValue('turnPlayerId', (int)$player_id);
+        $this->setGameStateValue('nbThrows', 0);
+        $this->setGameStateValue('scepterFireshard', 0);
+        $this->setGameStateValue('scepterMoonshard', 0);
 
         if (!$eternalFire) {
             // Notify everyone whose turn it is
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifBeginPlayerTurn',
                 clienttranslate('It is ${player_name}\'s  turn'),
                 [
-                    'player_name' => self::getActivePlayerName(),
+                    'player_name' => $this->getActivePlayerName(),
                     'player_id' => $player_id,
                 ]
             );
@@ -14872,8 +14872,8 @@ class Game extends Table
         // TODO : Eternal fire doit déclencher le swap?
 
         // Seagull management
-        $magicSeagull = self::getGameStateValue('magicSeagullCount');
-        $magicSeagullActive = self::getGameStateValue('magicSeagullActive');
+        $magicSeagull = $this->getGameStateValue('magicSeagullCount');
+        $magicSeagullActive = $this->getGameStateValue('magicSeagullActive');
 
         if ($magicSeagullActive == 1 && $magicSeagull == 0) {
             // We must switch back the dices
@@ -14900,7 +14900,7 @@ class Game extends Table
                 $this->db->DbQuery($sql);
             }
 
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifDiceSwitch',
                 clienttranslate('The dice go back to their owners'),
                 [
@@ -14909,7 +14909,7 @@ class Game extends Table
             );
 
             // flag magicSeagullActive
-            self::setGameStateValue('magicSeagullActive', 0);
+            $this->setGameStateValue('magicSeagullActive', 0);
         } elseif ($magicSeagullActive == 0 && $magicSeagull > 0) {
             $table = $this->getPrevPlayerTable();
 
@@ -14934,7 +14934,7 @@ class Game extends Table
                 $this->db->DbQuery($sql);
             }
 
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'notifDiceSwitch',
                 clienttranslate('You take the dice of the previous player'),
                 [
@@ -14943,12 +14943,12 @@ class Game extends Table
             );
 
             // flag magicSeagullActive
-            self::setGameStateValue('magicSeagullActive', 1);
+            $this->setGameStateValue('magicSeagullActive', 1);
         }
 
         if ($magicSeagull > 0) {
             $magicSeagull--;
-            self::setGameStateValue('magicSeagullCount', $magicSeagull);
+            $this->setGameStateValue('magicSeagullCount', $magicSeagull);
         }
 
         $this->gamestate->nextState('blessing');
@@ -14960,8 +14960,8 @@ class Game extends Table
     // if no choice to make 2 choices : blessing or choice
     public function stBlessing()
     {
-        $diceThrows = self::getGameStateValue('diceThrows');
-        $nbThrows = self::getGameStateValue('nbThrows');
+        $diceThrows = $this->getGameStateValue('diceThrows');
+        $nbThrows = $this->getGameStateValue('nbThrows');
         $monoResolution = $this->getGameStateValue('monoRessourceChoice');
         // Eternal Fire
         $eternalFire = $this->getGameStateValue('eternalFire');
@@ -15008,7 +15008,7 @@ class Game extends Table
                             $players['ressource_choice'] == ResourceChoice::RC_MISFORTUNE->value
                         ) {
                             $multi[$i++] = $player_id;
-                            self::giveExtraTime($player_id, 60);
+                            $this->giveExtraTime($player_id, 60);
                         }
                     }
                     $this->gamestate->setPlayersMultiactive($multi, 'blessing');
@@ -15018,11 +15018,11 @@ class Game extends Table
                 // If ship needs to be managed
                 elseif ($this->isRessourceChoice(ResourceChoice::RC_FORGESHIP)) {
                     //if ($this->hasUnusedShip()) {
-                    $player_id = self::getActivePlayerId();
+                    $player_id = $this->getActivePlayerId();
                     for ($i = 1; $i <= $this->getPlayersNumber(); $i++) {
                         // if player has a ship => enable only this user
                         if ($this->hasUnusedShip($player_id)) {
-                            self::giveExtraTime($player_id, 45);
+                            $this->giveExtraTime($player_id, 45);
                             $this->gamestate->setPlayersMultiactive(
                                 [$player_id],
                                 'blessing'
@@ -15033,7 +15033,7 @@ class Game extends Table
                         $player_id = $this->getNextPlayerTable()[$player_id];
                     }
                 } elseif ($this->hasUnresolvedSides()) {
-                    $player_id = self::getActivePlayerId();
+                    $player_id = $this->getActivePlayerId();
                     $players_info = $this->getPlayersAdditionnalInfo();
                     for ($i = 1; $i <= $this->getPlayersNumber(); $i++) {
                         if ($players_info[$player_id]['side_choice_1'] != '0') {
@@ -15060,7 +15060,7 @@ class Game extends Table
                         }
                         $player_id = $this->getNextPlayerTable()[$player_id];
                     }
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'updateCounters',
                         '',
                         $this->getPlayersRessources()
@@ -15071,7 +15071,7 @@ class Game extends Table
 
                     // allocate if choice ==> token
 
-                    self::giveExtraTime($toEnable, 45);
+                    $this->giveExtraTime($toEnable, 45);
                     $this->gamestate->setPlayersMultiactive(
                         [$toEnable],
                         'blessing'
@@ -15083,7 +15083,7 @@ class Game extends Table
             } else {
                 // Only one active player at a time. full resolution must happen before activating next player
                 $players_info = $this->getPlayersAdditionnalInfo();
-                $player_id = self::getActivePlayerId();
+                $player_id = $this->getActivePlayerId();
 
                 for ($i = 1; $i <= $this->getPlayersNumber(); $i++) {
                     $res_choice = $players_info[$player_id]['ressource_choice'];
@@ -15096,7 +15096,7 @@ class Game extends Table
                         $res_choice == ResourceChoice::RC_MAZE->value
                     ) {
                         // || $res_choice == ResourceChoice::RC_MISFORTUNE) {
-                        self::giveExtraTime($player_id, 60);
+                        $this->giveExtraTime($player_id, 60);
                         $this->gamestate->setPlayersMultiactive(
                             [$player_id],
                             'blessing'
@@ -15109,7 +15109,7 @@ class Game extends Table
                     elseif (
                         $this->isRessourceChoice(ResourceChoice::RC_FORGESHIP, $player_id)
                     ) {
-                        self::giveExtraTime($player_id, 45);
+                        $this->giveExtraTime($player_id, 45);
                         $this->gamestate->setPlayersMultiactive(
                             [$player_id],
                             'blessing'
@@ -15149,7 +15149,7 @@ class Game extends Table
                         }
                         $this->setChoice($player_id, ResourceChoice::RC_RESSOURCE);
                         //throw new SystemException(print_r($this->getPlayersAdditionnalInfo()[$player_id]));
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'updateCounters',
                             '',
                             $this->getPlayersRessources()
@@ -15161,7 +15161,7 @@ class Game extends Table
 
                         // allocate if choice ==> token
 
-                        self::giveExtraTime($toEnable, 45);
+                        $this->giveExtraTime($toEnable, 45);
                         $this->gamestate->setPlayersMultiactive(
                             [$toEnable],
                             'blessing'
@@ -15181,7 +15181,7 @@ class Game extends Table
         }
         //elseif ($this->hasMazeStock()) {
         //    // Maze movement
-        //    $player_id = self::getActivePlayerId();
+        //    $player_id = $this->getActivePlayerId();
         //
         //    for($i=1; $i<=$this->getPlayersNumber(); $i++) {
         //        if (!$this->mazeManagement($player_id)) {
@@ -15205,7 +15205,7 @@ class Game extends Table
             $this->resetTwins();
             $this->gamestate->nextState('reinforcement');
         } else {
-            self::setGameStateValue('nbThrows', ++$nbThrows);
+            $this->setGameStateValue('nbThrows', ++$nbThrows);
             $this->resetTwins();
             $this->resetThrowTokens();
             $this->setGameStateValue('celestialRunning', 0);
@@ -15215,17 +15215,17 @@ class Game extends Table
             if (!$eternalFire) {
                 // roll of dice for each player, in turn order
                 //foreach($this->loadPlayersBasicInfos() as $player_id => $players) {
-                $player_id = self::getActivePlayerId();
+                $player_id = $this->getActivePlayerId();
 
                 for ($i = 1; $i <= $this->getPlayersNumber(); $i++) {
                     $choice2 = $this->blessing($player_id);
                     $player_id = $this->getNextPlayerTable()[$player_id];
                 }
             } else {
-                $choice2 = $this->blessing(self::getActivePlayerId());
+                $choice2 = $this->blessing($this->getActivePlayerId());
             }
 
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'updateCounters',
                 '',
                 $this->getPlayersRessources()
@@ -15233,7 +15233,7 @@ class Game extends Table
 
             // 2 players specific and first throw only
             if ($diceThrows == 2 && $nbThrows == 1) {
-                self::notifyAllPlayers('notifPauseDice', '', []);
+                $this->notifyAllPlayers('notifPauseDice', '', []);
             }
 
             // test if there is a conflict - ship && mirror - on two different players
@@ -15340,7 +15340,7 @@ class Game extends Table
                         $players['ressource_choice'] == ResourceChoice::RC_MISFORTUNE->value
                     ) {
                         $multi[$i++] = $player_id;
-                        self::giveExtraTime($player_id, 60);
+                        $this->giveExtraTime($player_id, 60);
                     }
                 }
                 $this->gamestate->setPlayersMultiactive($multi, 'choice');
@@ -15350,7 +15350,7 @@ class Game extends Table
             // If ship needs to be managed
             elseif ($this->isRessourceChoice(ResourceChoice::RC_FORGESHIP)) {
                 //if ($this->hasUnusedShip()) {
-                $player_id = self::getActivePlayerId();
+                $player_id = $this->getActivePlayerId();
                 for ($i = 1; $i <= $this->getPlayersNumber(); $i++) {
                     // if player has a ship => enable only this user
                     //if ($this->hasUnusedShip($player_id)) {
@@ -15359,7 +15359,7 @@ class Game extends Table
                             'ressource_choice'
                         ] == ResourceChoice::RC_FORGESHIP->value
                     ) {
-                        self::giveExtraTime($player_id, 45);
+                        $this->giveExtraTime($player_id, 45);
                         $this->gamestate->setPlayersMultiactive(
                             [$player_id],
                             $this->getNextState()
@@ -15370,7 +15370,7 @@ class Game extends Table
                     $player_id = $this->getNextPlayerTable()[$player_id];
                 }
             } elseif ($this->hasMazeStock()) {
-                $player_id = self::getActivePlayerId();
+                $player_id = $this->getActivePlayerId();
                 for ($i = 1; $i <= $this->getPlayersNumber(); $i++) {
                     if (
                         $this->tokens->getTokenState(
@@ -15385,7 +15385,7 @@ class Game extends Table
                     $player_id = $this->getNextPlayerTable()[$player_id];
                 }
             } elseif ($this->hasUnresolvedSides()) {
-                $player_id = self::getActivePlayerId();
+                $player_id = $this->getActivePlayerId();
                 $players_info = $this->getPlayersAdditionnalInfo();
                 for ($i = 1; $i <= $this->getPlayersNumber(); $i++) {
                     if ($players_info[$player_id]['side_choice_1'] != '0') {
@@ -15413,7 +15413,7 @@ class Game extends Table
 
                     $player_id = $this->getNextPlayerTable()[$player_id];
                 }
-                self::notifyAllPlayers(
+                $this->notifyAllPlayers(
                     'updateCounters',
                     '',
                     $this->getPlayersRessources()
@@ -15426,7 +15426,7 @@ class Game extends Table
             }
         } elseif ($continue) {
             if ($this->hasMazeStock()) {
-                $player_id = self::getActivePlayerId();
+                $player_id = $this->getActivePlayerId();
                 for ($i = 1; $i <= $this->getPlayersNumber(); $i++) {
                     if (
                         $this->tokens->getTokenState(
@@ -15441,7 +15441,7 @@ class Game extends Table
                     $player_id = $this->getNextPlayerTable()[$player_id];
                 }
             } elseif ($this->hasUnresolvedSides()) {
-                $player_id = self::getActivePlayerId();
+                $player_id = $this->getActivePlayerId();
                 $players_info = $this->getPlayersAdditionnalInfo();
                 for ($i = 1; $i <= $this->getPlayersNumber(); $i++) {
                     if ($players_info[$player_id]['side_choice_1'] != '0') {
@@ -15468,7 +15468,7 @@ class Game extends Table
                     }
                     $player_id = $this->getNextPlayerTable()[$player_id];
                 }
-                self::notifyAllPlayers(
+                $this->notifyAllPlayers(
                     'updateCounters',
                     '',
                     $this->getPlayersRessources()
@@ -15504,7 +15504,7 @@ class Game extends Table
 
             // allocate if choice ==> token
 
-            self::giveExtraTime($toEnable, 45);
+            $this->giveExtraTime($toEnable, 45);
             $this->gamestate->setPlayersMultiactive([$toEnable], 'blessing');
             $this->tokens->moveToken('resolveMisfortune', 'none', 0);
             $this->gamestate->nextState('misfortune');
@@ -15576,7 +15576,7 @@ class Game extends Table
 
             // allocate if choice ==> token
 
-            self::giveExtraTime($toEnable, 45);
+            $this->giveExtraTime($toEnable, 45);
             $this->gamestate->setPlayersMultiactive([$toEnable], 'blessing');
             $this->tokens->moveToken('resolveMisfortune', 'none', 0);
             $this->gamestate->nextState('misfortune');
@@ -15636,7 +15636,7 @@ class Game extends Table
                 }
             }
 
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'updateCounters',
                 '',
                 $this->getPlayersRessources()
@@ -15660,7 +15660,7 @@ class Game extends Table
 
                 // only one player should be set as multiactive
                 $multi[0] = $player_id;
-                self::giveExtraTime($player_id, 60);
+                $this->giveExtraTime($player_id, 60);
 
                 $this->gamestate->setPlayersMultiactive(
                     $multi,
@@ -15673,7 +15673,7 @@ class Game extends Table
 
                 // only one player should be set as multiactive
                 $multi[0] = $player_id;
-                self::giveExtraTime($player_id, 60);
+                $this->giveExtraTime($player_id, 60);
 
                 $this->gamestate->setPlayersMultiactive(
                     $multi,
@@ -15690,7 +15690,7 @@ class Game extends Table
 
     //function stExploitRessource() {
     //    $celestialRunning = $this->getGameStateValue( "celestialRunning");
-    //    $player_id = self::getActivePlayerId();
+    //    $player_id = $this->getActivePlayerId();
     //
     //    if ($celestialRunning) {
     //        if ($this->getCelestial() == "doubleUpgrade")
@@ -15704,7 +15704,7 @@ class Game extends Table
     // else wait for action
     public function stEffectExploit()
     {
-        $player_id = self::getActivePlayerId();
+        $player_id = $this->getActivePlayerId();
         $forge = false;
         $ressourceChoice = false;
         $notifPlayerArgs = [];
@@ -15828,7 +15828,7 @@ class Game extends Table
 
             // allocate if choice ==> token
 
-            self::giveExtraTime($toEnable, 45);
+            $this->giveExtraTime($toEnable, 45);
             $this->gamestate->setPlayersMultiactive([$toEnable], 'nextState');
             $this->tokens->moveToken('resolveMisfortune', 'none', 0);
             $this->gamestate->nextState('misfortune');
@@ -15855,7 +15855,7 @@ class Game extends Table
                         // Addition of the hamer
                         $this->dbInitHammer($player_id);
                         // if ($this->hasActiveHammer($player_id) == 1)
-                        //     self::notifyAllPlayers("notifInitHammer", '',  array('player_id' => $player_id));
+                        //     $this->notifyAllPlayers("notifInitHammer", '',  array('player_id' => $player_id));
                         break;
 
                     case 'increaseResLimit':
@@ -15866,14 +15866,14 @@ class Game extends Table
                         // All the other players throw
                         // The player select 2 sides + ressource (if choice)
                         // roll of all the dice (except active player)
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifEffectSatyres',
                             clienttranslate(
                                 '${player_name} uses the ${card_name_trans} effect'
                             ),
                             [
                                 'i18n' => ['card_name_trans'],
-                                'player_name' => self::getActivePlayerName(),
+                                'player_name' => $this->getActivePlayerName(),
                                 'card_name' => $card_info['name'],
                                 'card_name_trans' => $card_info['name'],
                             ]
@@ -15890,7 +15890,7 @@ class Game extends Table
                                 $notifPlayerArgs['dice2'] = $side['type'];
                                 $notifPlayerArgs['roll'] = true;
 
-                                self::notifyAllPlayers(
+                                $this->notifyAllPlayers(
                                     'notifBlessing',
                                     '',
                                     $notifPlayerArgs
@@ -15962,7 +15962,7 @@ class Game extends Table
                         $notifPlayerArgs[
                             'ressources'
                         ] = $this->buildRessourceNotif($notifPlayerArgs);
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifBlessing',
                             '${player_name} gets ${ressources}',
                             $notifPlayerArgs
@@ -16026,9 +16026,9 @@ class Game extends Table
                         //$discardedSides = count($this->sides->getCardsInLocation('discard', $player_id));
                         //$this->increaseVP($player_id, $discardedSides);
                         //$this->incStat($discardedSides, 'nb_vp_typhon', $player_id);
-                        //self::notifyAllPlayers("notifEffectSatyres", clienttranslate('${player_name} has forged ${discardedSides} sides therefore gains ${ressources}'),
+                        //$this->notifyAllPlayers("notifEffectSatyres", clienttranslate('${player_name} has forged ${discardedSides} sides therefore gains ${ressources}'),
                         //    array(
-                        //        'player_name' => self::getActivePlayerName(),
+                        //        'player_name' => $this->getActivePlayerName(),
                         //        'discardedSides'   => $discardedSides,
                         //        'ressources'    => $discardedSides . ' [VP]'
                         //    )
@@ -16071,13 +16071,13 @@ class Game extends Table
                     case 'tokenTriton':
                         $this->dbIncTriton($player_id);
 
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifAddToken',
                             clienttranslate(
                                 '${player_name} gains a Triton token'
                             ),
                             [
-                                'player_name' => self::getActivePlayerName(),
+                                'player_name' => $this->getActivePlayerName(),
                                 'player_id' => $player_id,
                                 'token' => 'triton',
                                 'card_id' => $card_id,
@@ -16103,13 +16103,13 @@ class Game extends Table
                     case 'tokenCerberus':
                         $this->dbIncCerberus($player_id);
 
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifAddToken',
                             clienttranslate(
                                 '${player_name} gains a Cerberus token'
                             ),
                             [
-                                'player_name' => self::getActivePlayerName(),
+                                'player_name' => $this->getActivePlayerName(),
                                 'player_id' => $player_id,
                                 'token' => 'cerberus',
                                 'card_id' => $card_id,
@@ -16119,12 +16119,12 @@ class Game extends Table
                         break;
 
                     case 'diceSwap':
-                        self::incGameStateValue('magicSeagullCount', 1);
-                        $magicActive = self::getGameStateValue(
+                        $this->incGameStateValue('magicSeagullCount', 1);
+                        $magicActive = $this->getGameStateValue(
                             'magicSeagullActive'
                         );
                         if ($magicActive == 0) {
-                            self::notifyAllPlayers(
+                            $this->notifyAllPlayers(
                                 'notifMessage',
                                 clienttranslate(
                                     'On the next turn, dice will be swapped!'
@@ -16132,7 +16132,7 @@ class Game extends Table
                                 []
                             );
                         } else {
-                            self::notifyAllPlayers(
+                            $this->notifyAllPlayers(
                                 'notifMessage',
                                 clienttranslate(
                                     'Dice will stay on this position for one more turn'
@@ -16157,8 +16157,8 @@ class Game extends Table
                             $player_id,
                             0
                         );
-                        self::notifyAllPlayers('notifAddTokenScepter', '', [
-                            'player_name' => self::getActivePlayerName(),
+                        $this->notifyAllPlayers('notifAddTokenScepter', '', [
+                            'player_name' => $this->getActivePlayerName(),
                             'player_id' => $player_id,
                             'token' => 'scepter',
                             'card_id' => $card_id,
@@ -16167,14 +16167,14 @@ class Game extends Table
                         break;
                     case 'throwAllChooseResources':
                         //wind
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifEffect',
                             clienttranslate(
                                 '${player_name} uses the ${card_name_trans} effect'
                             ),
                             [
                                 'i18n' => ['card_name_trans'],
-                                'player_name' => self::getActivePlayerName(),
+                                'player_name' => $this->getActivePlayerName(),
                                 'card_name' => $card_info['name'],
                                 'card_name_trans' => $card_info['name'],
                             ]
@@ -16190,7 +16190,7 @@ class Game extends Table
                             $notifPlayerArgs['dice2'] = $side['type'];
                             $notifPlayerArgs['roll'] = true;
 
-                            self::notifyAllPlayers(
+                            $this->notifyAllPlayers(
                                 'notifBlessing',
                                 '',
                                 $notifPlayerArgs
@@ -16223,7 +16223,7 @@ class Game extends Table
                         );
 
                         if ($die_number == 1 || $die_number == 2) {
-                            self::notifyAllPlayers(
+                            $this->notifyAllPlayers(
                                 'notifEffect',
                                 clienttranslate(
                                     '${player_name} gains a minor blessing due to ${card_name_trans} effect'
@@ -16300,7 +16300,7 @@ class Game extends Table
                             }
 
                             if ($reduce != 0) {
-                                self::notifyAllPlayers(
+                                $this->notifyAllPlayers(
                                     'notifEffect',
                                     clienttranslate(
                                         '${player_name} looses ${ressources} due to ${card_name_trans} effect'
@@ -16323,7 +16323,7 @@ class Game extends Table
 
                         if ($vp != 0) {
                             $this->increaseVP($player_id, $vp);
-                            self::notifyAllPlayers(
+                            $this->notifyAllPlayers(
                                 'notifEffect',
                                 clienttranslate(
                                     '${player_name} gains ${ressources} due to ${card_name_trans} effect'
@@ -16367,7 +16367,7 @@ class Game extends Table
                                 }
 
                                 if (count($lost) != 0) {
-                                    self::notifyAllPlayers(
+                                    $this->notifyAllPlayers(
                                         'notifEffect',
                                         clienttranslate(
                                             '${player_name} looses ${ressources} due to ${card_name_trans} effect'
@@ -16400,7 +16400,7 @@ class Game extends Table
                                 $player_id,
                                 $gain['moonshard']
                             );
-                            self::notifyAllPlayers(
+                            $this->notifyAllPlayers(
                                 'notifEffect',
                                 clienttranslate(
                                     '${player_name} gains ${ressources} due to ${card_name_trans} effect'
@@ -16458,7 +16458,7 @@ class Game extends Table
                                 ] = $this->buildRessourceNotif(
                                     $notifPlayerArgs
                                 );
-                                self::notifyAllPlayers(
+                                $this->notifyAllPlayers(
                                     'notifBlessing',
                                     '${player_name} gets ${ressources}',
                                     $notifPlayerArgs
@@ -16482,7 +16482,7 @@ class Game extends Table
                             'ressources'
                         ] = $this->buildRessourceNotif($notifPlayerArgs);
                         $notifPlayerArgs['nbFeats'] = $nbFeats;
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifBlessing',
                             clienttranslate(
                                 '${player_name} gets ${ressources} (${nbFeats} exploit(s))'
@@ -16526,7 +16526,7 @@ class Game extends Table
                         ] = $this->buildRessourceNotif($notifPlayerArgs);
                         $notifPlayerArgs['nbSide'] = $nbSide;
                         $notifPlayerArgs['vp'] = '[VP]';
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifBlessing',
                             '${player_name} gets ${ressources} (${nbSide} die face(s) with ${vp})',
                             $notifPlayerArgs
@@ -16547,7 +16547,7 @@ class Game extends Table
                         $notifPlayerArgs[
                             'ressources'
                         ] = $this->buildRessourceNotif($notifPlayerArgs);
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifBlessing',
                             clienttranslate(
                                 '${player_name} uses ${ressources} to forge any die face'
@@ -16559,14 +16559,14 @@ class Game extends Table
                         break;
                     case 'gainTurn':
                         // eternal Fire
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifEffect',
                             clienttranslate(
                                 '${player_name} gets a new turn due to ${card_name_trans} effect'
                             ),
                             [
                                 'i18n' => ['card_name_trans'],
-                                'player_name' => self::getActivePlayerName(),
+                                'player_name' => $this->getActivePlayerName(),
                                 'card_name' => $card_info['name'],
                                 'card_name_trans' => $card_info['name'],
                             ]
@@ -16605,14 +16605,14 @@ class Game extends Table
 
                             if ($players['position'] != 'begin') {
                                 //left hand
-                                self::notifyAllPlayers(
+                                $this->notifyAllPlayers(
                                     'notifEffect',
                                     clienttranslate(
                                         '${player_name} uses the ${card_name_trans} effect. ${ousted_player_name} is ousted'
                                     ),
                                     [
                                         'i18n' => ['card_name_trans'],
-                                        'player_name' => self::getActivePlayerName(),
+                                        'player_name' => $this->getActivePlayerName(),
                                         'ousted_player' =>
                                         $players['player_color'],
                                         'ousted_player_name' =>
@@ -16635,7 +16635,7 @@ class Game extends Table
                                         'nb_vp_bear',
                                         (int)$player_id
                                     );
-                                    self::notifyAllPlayers(
+                                    $this->notifyAllPlayers(
                                         'notifBlessing',
                                         clienttranslate(
                                             '${player_name} gets ${ressources} from the Great Bear'
@@ -16660,7 +16660,7 @@ class Game extends Table
                                         'nb_vp_bear',
                                         $all_player_id
                                     );
-                                    self::notifyAllPlayers(
+                                    $this->notifyAllPlayers(
                                         'notifBlessing',
                                         clienttranslate(
                                             '${player_name} gets ${ressources} from the Great Bear'
@@ -16676,7 +16676,7 @@ class Game extends Table
                                 // move ousted player
                                 $this->dbSetPosition($all_player_id, 'begin');
 
-                                self::notifyAllPlayers('notifMovePawn', '', [
+                                $this->notifyAllPlayers('notifMovePawn', '', [
                                     'player_color' => $this->loadPlayersBasicInfos()[
                                         $all_player_id
                                     ]['player_color'],
@@ -16690,7 +16690,7 @@ class Game extends Table
                                 $notifPlayerArgs['dice2'] = $side['type'];
                                 $notifPlayerArgs['roll'] = true;
 
-                                self::notifyAllPlayers(
+                                $this->notifyAllPlayers(
                                     'notifBlessing',
                                     '',
                                     $notifPlayerArgs
@@ -16723,7 +16723,7 @@ class Game extends Table
                             $this->exploits->countCardInLocation('M2') == 0
                         ) {
                             $remainingThrows = 1;
-                            self::notifyAllPlayers(
+                            $this->notifyAllPlayers(
                                 'notifEffect',
                                 clienttranslate(
                                     'No more available exploit that cost 1 ${fireshard} or 1 ${moonshard}.'
@@ -16744,7 +16744,7 @@ class Game extends Table
                         $this->resourceChoiceHelper->dbSetChoice($player_id, ResourceChoice::RC_SIDE_CHOICE);
                         $ressourceChoice = true;
                         $this->setGameStateValue('goddessChoice', 1);
-                        self::notifyAllPlayers(
+                        $this->notifyAllPlayers(
                             'notifEffect',
                             clienttranslate(
                                 '${player_name} chooses the visible face of each die'
@@ -16807,7 +16807,7 @@ class Game extends Table
                 $remainingThrows
             );
             //$this->debugVTO(2305535);
-            self::notifyAllPlayers(
+            $this->notifyAllPlayers(
                 'updateCounters',
                 '',
                 $this->getPlayersRessources()
@@ -16869,13 +16869,13 @@ class Game extends Table
                         unset($notifPlayerArgs['vp']);
                     }
                     $this->tokens->moveToken($tokenId, 'used');
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifRemoveMemoryToken',
                         clienttranslate(
                             '${player_name} collect the Memory token and get ${ressources}'
                         ),
                         [
-                            'player_name' => self::getActivePlayerName(),
+                            'player_name' => $this->getActivePlayerName(),
                             'tokenId' => $tokenId,
                             'ressources' => $this->buildRessourceNotif(
                                 $notifPlayerArgs
@@ -16884,7 +16884,7 @@ class Game extends Table
                     );
 
                     $this->generateNotifLoyalty($notifPlayerArgs);
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'updateCounters',
                         '',
                         $this->getPlayersRessources()
@@ -16968,9 +16968,9 @@ class Game extends Table
 
     public function debugSetPos($pos)
     {
-        $player_id = self::getCurrentPlayerId(); // !! We must only return informations visible by this player !!
+        $player_id = $this->getCurrentPlayerId(); // !! We must only return informations visible by this player !!
         $this->tokens->setTokenState('position_' . $player_id, $pos);
-        self::notifyAllPlayers('notifTitanMove', '', [
+        $this->notifyAllPlayers('notifTitanMove', '', [
             'player_name' => $this->loadPlayersBasicInfos()[$player_id][
                 'player_name'
             ],
@@ -16983,7 +16983,7 @@ class Game extends Table
 
         // Goddess
         //$this->tokens->setTokenState('position_' . $player_id, $pos);
-        //self::notifyAllPlayers("notifMazeMove",'' , [
+        //$this->notifyAllPlayers("notifMazeMove",'' , [
         //    'player_name'  => $this->loadPlayersBasicInfos()[$player_id]['player_name'],
         //    'player_color' => $this->loadPlayersBasicInfos()[$player_id]['player_color'],
         //    'player_id'    => $player_id,
@@ -16994,7 +16994,7 @@ class Game extends Table
     public function stEndPlayerTurn()
     {
         $currentPlayerNum = $this->getGameStateValue('currentPlayerNum');
-        $player_id = self::getActivePlayerId();
+        $player_id = $this->getActivePlayerId();
 
         $eternalFire = $this->getGameStateValue('eternalFire');
 
@@ -17015,13 +17015,13 @@ class Game extends Table
 
         // If this a not a new turn linked to the Eternal Fire
         if (!$eternalFire) {
-            self::activeNextPlayer();
-            $turnCount = self::getGameStateValue('turnCount');
-            $nbTurns = self::getGameStateValue('nbTurns');
+            $this->activeNextPlayer();
+            $turnCount = $this->getGameStateValue('turnCount');
+            $nbTurns = $this->getGameStateValue('nbTurns');
 
             if ($currentPlayerNum == $this->getGameStateValue('nbPlayers')) {
                 if ($turnCount < $nbTurns) {
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifEndTurn',
                         clienttranslate('End of turn ${turn}'),
                         [
@@ -17029,7 +17029,7 @@ class Game extends Table
                         ]
                     );
 
-                    self::incGameStateValue('turnCount', 1);
+                    $this->incGameStateValue('turnCount', 1);
 
                     $this->gamestate->nextState('nextTurn');
                 } else {
@@ -17060,7 +17060,7 @@ class Game extends Table
 
     public function stEndScoring()
     {
-        self::notifyAllPlayers('notifBeginScoring', '', []);
+        $this->notifyAllPlayers('notifBeginScoring', '', []);
         $players = $this->loadPlayersBasicInfos();
         foreach ($players as $player_id => $player) {
             $locations = [
@@ -17083,7 +17083,7 @@ class Game extends Table
 
                     $this->incStat($card_vp, 'nb_vp_exploit', $player_id);
 
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifEndScoring',
                         clienttranslate(
                             '${player_name} has won ${ressources} for the card ${card_name_trans}'
@@ -17115,7 +17115,7 @@ class Game extends Table
 
                 if ($reward < 0) {
                     $this->decreaseVP($player_id, $reward * -1);
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifEndScoringTitan',
                         clienttranslate(
                             '${player_name} looses ${ressources} due to its position on the Titan board'
@@ -17131,7 +17131,7 @@ class Game extends Table
                     );
                 } elseif ($reward > 0) {
                     $this->increaseVP($player_id, $reward);
-                    self::notifyAllPlayers(
+                    $this->notifyAllPlayers(
                         'notifEndScoringTitan',
                         clienttranslate(
                             '${player_name} gets ${ressources} due to its position on the Titan board'
@@ -17151,7 +17151,7 @@ class Game extends Table
 
         $this->calculateTieBreaker();
 
-        self::notifyAllPlayers(
+        $this->notifyAllPlayers(
             'updateCounters',
             '',
             $this->getPlayersRessources()
@@ -17284,20 +17284,20 @@ class Game extends Table
             // additon of value to know if we can allocate automatically the hammer
             $sql =
                 'ALTER TABLE DBPREFIX_player ADD hammer_auto int(1) DEFAULT 0';
-            self::applyDbUpgradeToAllDB($sql);
+            $this->applyDbUpgradeToAllDB($sql);
             // addition to know if dice have been rolled
             $sql = 'ALTER TABLE DBPREFIX_player ADD rolled int(1) DEFAULT 0';
-            self::applyDbUpgradeToAllDB($sql);
+            $this->applyDbUpgradeToAllDB($sql);
         }
 
         if ($from_version <= 1806302236) {
             //if (1 == 1) {
             $sql = 'ALTER TABLE DBPREFIX_player ADD twins int(1) DEFAULT 0';
-            self::applyDbUpgradeToAllDB($sql);
+            $this->applyDbUpgradeToAllDB($sql);
 
             $sql =
                 'ALTER TABLE DBPREFIX_sides MODIFY card_type VARCHAR(20) NOT NULL';
-            self::applyDbUpgradeToAllDB($sql);
+            $this->applyDbUpgradeToAllDB($sql);
 
             $sql = "CREATE TABLE IF NOT EXISTS DBPREFIX_token (
                 token_key varchar(32) NOT NULL,
@@ -17305,7 +17305,7 @@ class Game extends Table
                 token_state int(10),
                 PRIMARY KEY (token_key)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8";
-            self::applyDbUpgradeToAllDB($sql);
+            $this->applyDbUpgradeToAllDB($sql);
 
             $tokensToInit = [];
             $players = $this->getPlayersAdditionnalInfo();
@@ -17383,7 +17383,7 @@ class Game extends Table
         if ($from_version < 2012021756) {
             $sql =
                 'ALTER TABLE DBPREFIX_player ADD res_ancient int(1) DEFAULT 0';
-            self::applyDbUpgradeToAllDB($sql);
+            $this->applyDbUpgradeToAllDB($sql);
         }
 
         if ($from_version <= 2012031120) {
@@ -17393,7 +17393,7 @@ class Game extends Table
             if (is_null($result)) {
                 $sql =
                     'ALTER TABLE DBPREFIX_player ADD res_ancient int(1) DEFAULT 0';
-                self::applyDbUpgradeToAllDB($sql);
+                $this->applyDbUpgradeToAllDB($sql);
             }
         }
 
