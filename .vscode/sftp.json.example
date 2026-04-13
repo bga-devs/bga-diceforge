@@ -8,7 +8,10 @@
     "password": "${SFTP_PASSWORD}",
     "uploadOnSave": true,
     "ignore": [
+        "bga-framework.d.ts",
+        "_ide_helper.php",
         ".git",
+        ".github",
         ".prettierignore",
         ".prettierrcold",
         ".vscode",
