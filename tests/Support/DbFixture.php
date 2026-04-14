@@ -27,18 +27,10 @@ class DbFixture
 
     public static function setUp(MysqliDb $db): void
     {
+        // Clean up any leftover tables from previous test runs
+        self::tearDown($db);
+
         $mysqli = $db->getMysqli();
-
-        // Discover table names from dbmodel.sql so we can drop them too
-        $gameTableNames = self::parseTableNames(self::DBMODEL);
-
-        // Drop game tables first (may depend on player), then BGA base tables
-        foreach ($gameTableNames as $table) {
-            $mysqli->query("DROP TABLE IF EXISTS `$table`");
-        }
-        foreach (['stats', 'gamelog', 'global', 'player'] as $table) {
-            $mysqli->query("DROP TABLE IF EXISTS `$table`");
-        }
 
         // ------------------------------------------------------------------
         // BGA standard tables (normally created by the framework, not in repo)

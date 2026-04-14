@@ -7,6 +7,7 @@ use Bga\Games\diceforge\Framework\Db\Repository;
 use Bga\Games\diceforge\Tests\DbFixture;
 use Bga\Games\diceforge\Tests\TestGame;
 use Bga\Games\diceforge\Entities\Player;
+use Bga\Games\diceforge\State\StateRegistry;
 
 require_once __DIR__ . '/doubles/TestGame.php';
 require_once __DIR__ . '/fixtures/PlayerProvider.php';
@@ -23,11 +24,6 @@ class GameBeginnerTest extends TestCase
         $this->playerRepository = new Repository(Player::class, $this->db);
     }
 
-    protected function tearDown(): void
-    {
-        DbFixture::tearDown($this->db);
-    }
-
     public static function playerProvider(): array
     {
         return PlayerProvider::playerSets();
@@ -39,14 +35,18 @@ class GameBeginnerTest extends TestCase
     #[DataProvider('playerProvider')]
     public function testGameSetup(array $players): void
     {
-        $game = new TestGame($this->db);
+        $game = $this->initializeGame();
 
-        // Convert sequential player list to ID-keyed format expected by setupNewGame (starting from ID 1)
         $setupPlayers = [];
         foreach ($players as $player) {
             $setupPlayers[$player->id] = $player->toSetupArray();
         }
-        $game->setupNewGame($setupPlayers);
+
+        # BGA Framework calls setupNewGame
+        $result = $game->setupNewGame($setupPlayers);
+        $expected_current_state = StateRegistry::BEGIN_TURN;
+        $this->assertSame($expected_current_state->id(), $result);
+
         $playerNo = 1;
         foreach ($players as $player) {
             $player->playerNo = $playerNo;
@@ -55,7 +55,38 @@ class GameBeginnerTest extends TestCase
 
         $this->assertPlayersInserted($players);
         $this->assertSame(1, $game->getMethodCallCount('reloadPlayersBasicInfos'));
-        $this->assertSame($game->getGameStateValue('firstPlayerId'), $players[0]->id);
+
+        $expectedGameState = [
+            'firstPlayerId' => $players[0]->id,
+            'nbPlayers' => count($players),
+            'isGameSetup' => 1,
+            'currentPlayerNum' => 0,
+            'turnCount' => 1,
+        ];
+        $this->assertGameStateValues($game, $expectedGameState);
+
+        # Current state has one action, BGA Framwork calls it
+        $nextActionMethod = new ReflectionMethod(TestGame::class, $expected_current_state->action());
+        $nextActionMethod->invoke($game);
+        #TODO assert stBeginTurn was called
+        $expecedNotifyAllPlayersCalls = [
+            [
+                'type' => 'notifBeginTurn',
+                'log' => 'Turn ${turn}/${totalTurns} begins',
+                'args' => [
+                    'totalTurns' => 9,
+                    'turn' => 1,
+                ],
+            ],
+        ];
+        $this->assertSame($expecedNotifyAllPlayersCalls, $game->getNotifyAllPlayersCalls());
+
+        $this->assertSame((string)$players[0]->id, $game->getActivePlayerId());
+
+        $expectedGameState['currentPlayerNum'] = 1;
+        $this->assertGameStateValues($game, $expectedGameState);
+
+
     }
 
     /**
@@ -81,5 +112,33 @@ class GameBeginnerTest extends TestCase
         $this->assertSame($actual->name, $expected->name, "Player {$expected->id} name mismatch");
         $this->assertSame($actual->score, $expected->score, "Player {$expected->id} score mismatch");
         $this->assertSame($actual->color, $expected->color, "Player {$expected->id} color mismatch");
+    }
+
+    /**
+     * Assert multiple game state values at once.
+     *
+     * @param TestGame $game
+     * @param array<string, mixed> $expectedValues Key-value pairs of state keys and expected values
+     */
+    private function assertGameStateValues(TestGame $game, array $expectedValues): void
+    {
+        foreach ($expectedValues as $key => $expectedValue) {
+            $this->assertSame($expectedValue, $game->getGameStateValue($key), "Game state value mismatch for key '{$key}'");
+        }
+    }
+
+    /**
+     * Initialize a game instance with the state machine configuration.
+     */
+    private function initializeGame(): TestGame
+    {
+        $game = new TestGame($this->db);
+
+        // Load state machine configuration
+        require __DIR__ . '/../../states.inc.php';
+        /** @var array $machinestates */
+        $game->gamestate->_setStates($machinestates);
+
+        return $game;
     }
 }

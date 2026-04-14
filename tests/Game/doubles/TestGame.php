@@ -16,10 +16,13 @@ class TestGame extends Game
         'reloadPlayersBasicInfos' => 0,
     ];
 
+    /** @var array<int, array{type: string, log: string, args: array}> Track notifyAllPlayers calls */
+    private array $notifyAllPlayersCalls = [];
+
     /**
      * Expose protected setupNewGame method for tests.
      */
-    public function setupNewGame($players, $options = [])
+    public function setupNewGame($players, $options = []): int
     {
         $result = parent::setupNewGame($players, $options);
 
@@ -78,5 +81,29 @@ class TestGame extends Game
         }
 
         return $values;
+    }
+
+    /**
+     * Override notifyAllPlayers to track all calls.
+     */
+    public function notifyAllPlayers(string $notificationType, string $notificationLog, array $notificationArgs): void
+    {
+        parent::notifyAllPlayers($notificationType, $notificationLog, $notificationArgs);
+
+        $this->notifyAllPlayersCalls[] = [
+            'type' => $notificationType,
+            'log' => $notificationLog,
+            'args' => $notificationArgs,
+        ];
+    }
+
+    /**
+     * Get all notifyAllPlayers calls made during the test.
+     *
+     * @return array<int, array{type: string, log: string, args: array}>
+     */
+    public function getNotifyAllPlayersCalls(): array
+    {
+        return $this->notifyAllPlayersCalls;
     }
 }
