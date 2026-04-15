@@ -1,33 +1,25 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Bga\Games\diceforge\Framework\Db\MysqliDb;
+use Bga\Games\diceforge\Tests\DbTestCase;
 use Bga\Games\diceforge\Tests\DbFixture;
 use Bga\Games\diceforge\Entities\Player;
 use Bga\Games\diceforge\ResourceChoiceHelper;
 use DiceForge\Resources\ResourceChoice;
 
-class ResourceChoiceHelperTest extends TestCase
+class ResourceChoiceHelperTest extends DbTestCase
 {
-    private MysqliDb $db;
     private ResourceChoiceHelper $helper;
 
     protected function setUp(): void
     {
-        $this->db = DbFixture::createDb();
-        DbFixture::setUp($this->db);
+        parent::setUp();
 
         foreach ([7, 42, 99, 77, 100, 1] as $id) {
-            DbFixture::insertPlayer($this->db, $id, new Player($id, "Player $id", "000000"));
+            DbFixture::insertPlayer(self::$db, $id, new Player($id, "Player $id", "000000"));
         }
 
-        $this->helper = new ResourceChoiceHelper($this->db);
-    }
-
-    protected function tearDown(): void
-    {
-        DbFixture::tearDown($this->db);
+        $this->helper = new ResourceChoiceHelper(self::$db);
     }
 
     #[DataProvider('dbSetChoiceProvider')]
@@ -35,7 +27,7 @@ class ResourceChoiceHelperTest extends TestCase
     {
         $this->helper->dbSetChoice($playerId, $choice);
 
-        $result = $this->db->getMysqli()->query(
+        $result = self::$db->getMysqli()->query(
             "SELECT ressource_choice FROM player WHERE player_id = $playerId"
         );
         $row = $result->fetch_assoc();
@@ -54,7 +46,7 @@ class ResourceChoiceHelperTest extends TestCase
     #[DataProvider('getRessourceChoiceProvider')]
     public function testGetRessourceChoice(int $dbValue, ResourceChoice $expected, int|string $playerId): void
     {
-        $this->db->getMysqli()->query(
+        self::$db->getMysqli()->query(
             "UPDATE player SET ressource_choice = $dbValue WHERE player_id = $playerId"
         );
 
@@ -74,7 +66,7 @@ class ResourceChoiceHelperTest extends TestCase
 
     public function testGetRessourceChoiceInvalidIntThrows(): void
     {
-        $this->db->getMysqli()->query(
+        self::$db->getMysqli()->query(
             "UPDATE player SET ressource_choice = 99 WHERE player_id = 1"
         );
 

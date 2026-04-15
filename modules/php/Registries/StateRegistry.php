@@ -1,8 +1,9 @@
 <?php
 
-namespace Bga\Games\diceforge\State;
+namespace Bga\Games\diceforge\Registries;
 
 use Bga\GameFramework\StateType;
+use Bga\Games\diceforge\Framework\Entities\State;
 
 enum StateRegistry
 {

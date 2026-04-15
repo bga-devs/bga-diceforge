@@ -59,6 +59,36 @@ class Repository
     }
 
     /**
+     * Find an entity by multiple criteria (useful for composite keys or unique constraints).
+     * Usage: $stat = $repo->findBy(['stats_type' => 'nb_vp_die', 'stats_player_id' => 42]);
+     *
+     * @param array<string, mixed> $criteria Column name => value pairs
+     * @return T|null
+     */
+    public function findBy(array $criteria): ?object
+    {
+        if (empty($criteria)) {
+            return null;
+        }
+
+        $meta = $this->meta();
+        $whereParts = [];
+        foreach ($criteria as $colName => $value) {
+            if ($value === null) {
+                $whereParts[] = "`$colName` IS NULL";
+            } else {
+                $escapedValue = "'" . $this->db->escape((string) $value) . "'";
+                $whereParts[] = "`$colName` = $escapedValue";
+            }
+        }
+
+        $row = $this->db->getObjectFromDB(
+            "SELECT * FROM `{$meta['table']}` WHERE " . implode(' AND ', $whereParts)
+        );
+        return empty($row) ? null : $this->hydrate($row, $meta);
+    }
+
+    /**
      * @return list<T>
      */
     public function findAll(): array
@@ -86,7 +116,7 @@ class Repository
             $allValues[$colName] = $prop->getValue($entity);
         }
 
-        $escape  = fn (mixed $v): string => "'" . $this->db->escape((string) $v) . "'";
+        $escape  = fn (mixed $v): string => $v === null ? 'NULL' : "'" . $this->db->escape((string) $v) . "'";
         $colList = implode(', ', array_map(fn ($c) => "`$c`", array_keys($allValues)));
         $valList = implode(', ', array_map($escape, array_values($allValues)));
 
@@ -176,7 +206,7 @@ class Repository
             $prop  = $ref->getProperty($propName);
             $value = $row[$colName];
             $type  = $prop->getType();
-            if ($type instanceof \ReflectionNamedType && $type->isBuiltin()) {
+            if ($value !== null && $type instanceof \ReflectionNamedType && $type->isBuiltin()) {
                 settype($value, $type->getName());
             }
             $prop->setValue($entity, $value);

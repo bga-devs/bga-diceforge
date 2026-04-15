@@ -5,6 +5,9 @@ namespace Bga\Games\diceforge\Tests;
 use Bga\Games\diceforge\Game;
 use Bga\Games\diceforge\Framework\Db\Repository;
 use Bga\Games\diceforge\Entities\Player;
+use Bga\Games\diceforge\Framework\Entities\Stat;
+use Bga\Games\diceforge\Registries\TableStatRegistry;
+use Bga\Games\diceforge\Registries\PlayerStatRegistry;
 
 /**
  * TestGame extends Game to expose protected methods for testing.
@@ -35,6 +38,20 @@ class TestGame extends Game
             $player->playerNo = $playerNo;
             $playerRepository->save($player);
             $playerNo++;
+        }
+
+        // Seed all stats with default value 0
+        $statRepository = new Repository(Stat::class, $this->db);
+
+        # id is auto-increment and the value 0 means "please auto-assign"
+        foreach (TableStatRegistry::cases() as $stat) {
+            $statRepository->save(new Stat(0, $stat->id(), null, 0));
+        }
+
+        foreach ($allPlayers as $player) {
+            foreach (PlayerStatRegistry::cases() as $stat) {
+                $statRepository->save(new Stat(0, $stat->id(), $player->id, 0));
+            }
         }
 
         return $result;
@@ -105,5 +122,23 @@ class TestGame extends Game
     public function getNotifyAllPlayersCalls(): array
     {
         return $this->notifyAllPlayersCalls;
+    }
+
+    /**
+     * Override incStat to use Repository and Stats entity for testing.
+     * Increments a stat value in the database using the Stats entity.
+     * Creates the stat if it doesn't exist.
+     */
+    public function incStat(int $inc, string $name, ?int $playerId = null, bool $bDoNotLoop = false): void
+    {
+        $statRepository = new Repository(Stat::class, $this->db);
+
+        $typeId = $playerId === null
+            ? TableStatRegistry::fromName($name)->id()
+            : PlayerStatRegistry::fromName($name)->id();
+
+        $stat = $statRepository->findBy(['stats_type' => $typeId, 'stats_player_id' => $playerId]);
+        $stat->value += $inc;
+        $statRepository->save($stat);
     }
 }

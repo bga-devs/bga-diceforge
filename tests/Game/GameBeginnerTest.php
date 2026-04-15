@@ -1,27 +1,23 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Bga\Games\diceforge\Framework\Db\MysqliDb;
 use Bga\Games\diceforge\Framework\Db\Repository;
-use Bga\Games\diceforge\Tests\DbFixture;
+use Bga\Games\diceforge\Tests\DbTestCase;
 use Bga\Games\diceforge\Tests\TestGame;
 use Bga\Games\diceforge\Entities\Player;
-use Bga\Games\diceforge\State\StateRegistry;
+use Bga\Games\diceforge\Registries\StateRegistry;
 
 require_once __DIR__ . '/doubles/TestGame.php';
 require_once __DIR__ . '/fixtures/PlayerProvider.php';
 
-class GameBeginnerTest extends TestCase
+class GameBeginnerTest extends DbTestCase
 {
-    private MysqliDb $db;
     private Repository $playerRepository;
 
     protected function setUp(): void
     {
-        $this->db = DbFixture::createDb();
-        DbFixture::setUp($this->db);
-        $this->playerRepository = new Repository(Player::class, $this->db);
+        parent::setUp();
+        $this->playerRepository = new Repository(Player::class, self::$db);
     }
 
     public static function playerProvider(): array
@@ -68,7 +64,9 @@ class GameBeginnerTest extends TestCase
         # Current state has one action, BGA Framwork calls it
         $nextActionMethod = new ReflectionMethod(TestGame::class, $expected_current_state->action());
         $nextActionMethod->invoke($game);
-        #TODO assert stBeginTurn was called
+        $expected_current_state = StateRegistry::BEGIN_PLAYER_TURN;
+        $this->assertSame($expected_current_state->id(), $game->gamestate->state()['id']);
+
         $expecedNotifyAllPlayersCalls = [
             [
                 'type' => 'notifBeginTurn',
@@ -86,6 +84,13 @@ class GameBeginnerTest extends TestCase
         $expectedGameState['currentPlayerNum'] = 1;
         $this->assertGameStateValues($game, $expectedGameState);
 
+        $statRepository = new Repository(\Bga\Games\diceforge\Framework\Entities\Stat::class, self::$db);
+        $turnsStat = $statRepository->findBy([
+            'stats_type' => \Bga\Games\diceforge\Registries\TableStatRegistry::turns_number->id(),
+            'stats_player_id' => null,
+        ]);
+        $this->assertNotNull($turnsStat, 'Table stat turns_number should exist');
+        $this->assertSame(1.0, $turnsStat->value);
 
     }
 
@@ -132,7 +137,7 @@ class GameBeginnerTest extends TestCase
      */
     private function initializeGame(): TestGame
     {
-        $game = new TestGame($this->db);
+        $game = new TestGame(self::$db);
 
         // Load state machine configuration
         require __DIR__ . '/../../states.inc.php';

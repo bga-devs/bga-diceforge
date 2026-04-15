@@ -1,6 +1,6 @@
 <?php
 
-namespace Bga\Games\diceforge\State;
+namespace Bga\Games\diceforge\Framework\Entities;
 
 use Bga\GameFramework\StateType;
 
